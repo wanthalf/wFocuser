@@ -1,0 +1,15 @@
+myFP2ELibs Libraries, and in that folder 
+There should be ZIP files
+	myHalfStepperESP32
+	myOLED
+	myDallasTemperature
+	myfp2eIRemoteESP8266
+
+Import these into the Arduino IDE first. Use the Sketch Library Add ZIP Library to import them.
+Do not edit or replace any of these files. They have been edited and modified to use with the myFP2ESP controllers.
+
+
+For the Graphics OLED Library
+	esp8266-oled-ssd1306-master.zip
+	download from https://github.com/ThingPulse/esp8266-oled-ssd1306
+	v4.0.0

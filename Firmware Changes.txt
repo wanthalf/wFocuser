@@ -1,0 +1,333 @@
+200
+Move to board config files that are JSON descriptors of board configuration for pins etc
+Add board handling routines into myFocuserData
+Add web Config pages [management server] to select board config files that will reconfigure the hardware board settings
+Add additional board config checks when selecting board configurations
+Add additional code checks when trying to enable/disable board options in management server
+Add additional code checks and new code when trying to enable/disable board options
+Add new config file [board_congfig.jsn) in /data to save board hardware pin designations and board config details
+Add board definition json files in /data/boards for each supported board
+Add custom board definition file in /data/boards to allow a specific user defined configuration
+Automatically load specified DRVBRD config file on reboot following a firmware reprogram
+Delete myBoardTypes.h no longer needed
+Move DRVBRD defines into focuserconfig.h
+Move HOMEPOSITIONSWITCH, TEMPERATUREPROBE, INOUTLEDS, BACKLASH, PUSHBUTTONS to management server
+Move list of defined board numbers to generalDefinitions.h
+Rewrite myBoards.cpp to get rid of defines and use board config pins instead [found in mySetupData at runtime]
+Rewrite temp.cpp routine to allow runtime loading of temperature pin from board config data
+Rewrite displays.cpp to allow runtime loading of I2C data and I2C Clock pins from board config data for OLED_TEXT
+Rewrite pushbutton code to allow runtime loading of pushbuttons pins from board config data
+Rewrite in-outleds code to allow runtime loading of led pins from board config data
+Rewrite irremoted code to allow runtime loading of irremote pins from board config data
+Rewrite HPS_alert code to allow runtime loading of hpsw pin from board config data
+Rewrite all hpsw checks to use HPS_alert() instead of trying to read the board pin directly
+Rewrite code in comms.h for handling sendpaket( float value)
+Rewrite driverboard code to remove #ifdef and also no need to pass board name when instantiation of object
+Rewrite init_pushbuttons() to return bool state
+Rewrite init_inoutleds() to return bool state
+Rewrite init_homepositionswitch() to return bool state
+
+
+Remaining code to rewrite
+-------------------------
+OLED_Graphic - needs to use mySetupData->get_brdsda() and mySetupData->get_brdsck() instead of using hardcoded pin data
+irremote - needs to use runtime mySetupData->get_brdirpin() instead of hardpin IRrecv irrecv(RECV_PIN);
+customconfig web pages
+
+
+
+148
+Add dummy pin defines to board configs to prevent compiler objections
+
+147
+Add WEMOSDRV8825H (Holger) to myBoards.h/.cpp and myBoardTypes.h
+
+146
+Fix for a number of compiler warnings
+Fix for missing brackets in line 1141 in myFP2ESP.ino
+
+145
+Move HOMEPOSITIONSWITCH to Management Server
+
+144
+Fix for RSSI
+
+143
+Add rssi calls to comms.h and management server and webserver interfaces
+
+142
+managementserver.cpp - line 985 change to DELETE LINE Serial.print
+Add stepmode up to 256 for future support of Trimac steppers
+Rename temprecision to tempresolution
+Disable TIMEDTESTS in generalDefinitions.h
+Fix error of reboot cause by Enabling/Disabling temperature probe
+
+141
+Change driverboard->halt() - no need to return stepcount
+Fix for using Serial.print commands in MachineStateBacklash - changed to DebugPrint
+Fix for 2nd network credential not being updated [readwificonifg() ]
+Fix for Home Position Switch not working in Backlash
+
+140
+Fix IR_HALT compile error if IRREMOTE is enabled
+Fix MDNS compile errors if MDNSSERVER is enabled
+Fix for Backlash
+Fix for oledtextmsg compile issues when OLED_TEXT enabled
+Change stepmode to int type (mySetupData and DriverBoard) to allow Trimac drivers in a future release
+Add generic get/set interface calls
+Add additional comms calls
+Add comms calls to support myFocuserPro2 INDI driver
+Add MotorSpeedDelay web page and comms calls
+Allow INDI to be used over TCP/IP as well as Serial
+Add additional WiFi logon credentials as a fallback
+Add additional calls on webserver, temp, position, ismoving,
+Fix for webserver not restarting
+
+130
+Fix for print(F()) errors
+Fix for OLEDTEXT compile error
+Fix for Focuser position not being updated on display when moving
+Fix for HalfStepperESP32 amd mystepper library code - must reinstall
+Fix for fcurrentPosition compilation errors in some options
+Fix for PRO2EL293D28BYJ48 and PRO2EL293DNEMA to use myStepper library
+Fix error in update_irremote() for focuser position
+Fix compilation error for station mode in setup() re OLEDGRAPHICS
+Fix error in ASCOM SERVER root page
+Add temperature XHTML update to webserver home page wsindex.html
+Add HPSW messages to generaldefinitions.h/.cpp
+Completed test for all driver boards L9110S, L293D, ULN2003, L293DMINI, L298N, DRV8825
+
+126
+Rewrite web/management/ascom-remote server send page routines
+Move focuserposition to driverboard.cpp, simplifies a lot of code
+Implement timing statements for some code functions [to support debugging and optimization]
+Implement HTTP_GET functions for most web/management/ascom server pages
+Optimize web/management server code
+Optimize html files and code handling routines for Webserver and Management server
+Use Timer interrupts to move motor
+Use common speed setting MSPEED for each driverboard
+Remove speed settings in driverboard
+Remove references to driverboard->setmotorspeed
+Remove IRREMOTE from ESP8266 as those boards do not have support for IRREMOTE on PCB
+Remove joystick speed code - now redundant 
+Add ability to change temp between C/F on management web server page
+Add webserver and management server page fonts/colors/layout
+Add additional management web server page into 4 pages
+Add management server page2 to display services to ENABLE/DISABLE WEBSERVER/ASCOMREMOTESERVER/TEMPERATUREPROBE
+   and IN-OUT LEDS
+Add management server page3 to display backlash settings
+Add management server page4 to customize web page colors
+Add management server page5 to display webpicker
+Add SHOWSTARTMESSAGE to management webserver and remove define from focuserconfig.h
+Add SHOWHPSWMESSAGES to management webserver and remove define from focuserconfig.h
+Add MANAGEMENTFORCEDOWNLOAD to management webserver and remove define from focuserconfig.h
+Add INOUTLEDS to management webserver and remove define from focuserconfig.h
+Add BACKLASH to management webserver and remove define from focuserconfig.h
+Add TEMPERATUREPROBE to management webserver and remove define from focuserconfig.h
+Add WEBSERVER to management webserver and remove define from focuserconfig.h
+Add ASCOMREMOTESERVER to management webserver and remove define from focuserconfig.h
+Add SaveNow() into focuserSetupData so settings are saved immediately before rebooting
+Add debug statements for printing available HEAP memory to aid debugging
+Fix for motorspeed setting when using joystick or infrared remote - esp32drv8825
+Fix for presets not being saved
+Fix for FocuserSetupData.cpp - ESP8266 - check if file exists BEFORE attempting to delete it [avoid potential crash]
+Fis for FocuserSetupData.cpp - ESP8266 - issues related to file access [avoid potential crash]
+Fix for Presets on webserver presets page
+Fix bug in debug statement for mdnsserver
+Fix for OLED text on Management and Web server pages
+Fix for display of temperature on Web Server pages
+Fix for low heap memory - release web/management/ascom server strings after sending pages
+Fix for low heap memory - only build strings for web/management/ascom server pages as required
+Rewrite myBoards.cpp driverboard initialization code
+Implement myfp2eIRemoteESP8266 library to handle IRREMOTE to reduce space footprint
+Fix for focuser moving to 0 on reload
+Fix for random reboots related to focusersetupdata.cpp
+Fix for IRRemote key mapping for "5"
+Change webserver index page to reload target position at regular intervals
+
+122
+Fix for OLED text on Management and Web server pages
+Fix for display of temperature on Web Server pages
+Add ability to change temp between C/F on management web server page
+Presets fix
+Fix for listspiffsfiles
+
+r121
+Fix issue with Home Position Switch
+
+r120
+Fix issue with tcpserver on esp8266 [port cannot be changed dynamically]
+reverse direction fix (and home position switch now obeys it to)
+
+r119
+Add alpacadiscovery protocol support (UDP port 32227, IPv4)
+Move ASCOMGUID into ascom definitions rather than hard coded
+Fix setfeatures
+Fix stepmode
+On Webserver - Add ability to change TCP/IP port
+Add TCP/IP port to LCD display
+Fix code in management server to check for updated port numbers that change
+Increase SPIFF file size for data_per.jsn
+
+r118
+Display temperature on OLED and Webserver according to tempmode state (C or F)
+Add Display Enable/Disable to management console and  Web-server
+Change Web-server default refresh rate to 60s [now using dynamic page update]
+Reduce number of strings used in Management server and  Web-server
+Add IP/DRVBRD info to Move webpage to make consistent with other web pages
+Fix port number in webserver notfound page
+Convert dynamic web page constants to strings into generaldefinitions.h
+Add file upload to SPIFFs into management server
+
+r117
+Update copyright notice to include year 2020
+When rebooting, check for MDNS and free resources
+Fix code in display_oledtext_page2 to display correct port numbers for web/ascom servers
+Add READWIFICONFIG as a focuser-config parameter - will read SSID and PASSWORD from wificonfig.json file
+Add change port number for mDNS server to management console
+Add Start and Stop mDNS server to management console
+Check if service is running before attempting to stop service
+Add check if MANAGEMENT server is defined without ACCESSPOINT or STATIONMODE defined
+Improve layout of management console and web server pages to reduce code overhead
+Move focuser presets on webpage to /presets page
+Add link on main webpage to presets page
+remove un-needed CRLF and spaces from data/*.html pages
+Add dynamic web page update to  Web-server /move page xhttp
+Add HALT to  Web-server /move page
+Add focuser position and ismoving to presets webpage, add dynamic web page update xhhtp
+Add ismoving dynamic update to  Web-server home page xhttp
+Add halt button and move button to focuser presets web page
+Add presets button to move web page
+Delete move buttons from main web server page (they are on /move)
+Add support for OLED 1.3" displays using SSH1106 driver chip to OLEDTEXT
+Add support for OLED 1.3" displays using SSH1106 driver chip to OLEDGRAPHICS
+Fix check for OLED display types and driver types
+Fix issue with OLED not working on PRO2ESP32R3WEMOS board
+
+116
+Add ~finalizer for myBoards class
+Fix logic error in Management server list files for ESP8266
+Add DebugPrint when starting WiFi.begin()
+Add DebugPrint to print error message of SPIFFS.begin() fails
+Change temperature/oled update checks to use TimeCheck()
+Release memory for servers ( Web-server and ascomserver) if they are stopped
+Fix ESP8266 errors in defining  Web-servers and include files
+Shorten some names used in SPIFFS file for data_per.jsn
+Fix error in starting ascomremoteserver for ESP8266
+Add reboot controller button in Management Console
+Change all defined strings to uppercase and remove unused strings
+Refine Debug and Trace statements in management and web server code
+For OLEDTEXT, add detection for I2C display presence
+For OLEDTEXT, add checks in routine for displayfound == true
+
+115
+Add duckdns mdns otaupdate etc to management page msindex.html
+Fix duckdns incorrect define and checks in focuserconfig.h
+Add duckdnsstate to main .ino
+Rename otaserverstate to otaupdatestate
+Add code in management server to handle duckdns state
+Add refreshrate for webpages into management console
+Add /move page to  Web-server
+Add range check for focuser position and presets on  Web-server
+Add range check for focuser position and maxsteps on ascom server setup
+Improve speed of management and  Web-server pages
+Fix issue with IRREMOTE - change to new library
+Fix issue with JOYSTICK when moving and release of coil power
+In State_Idle, when parking, enforce rule of releasemotor only if coilpower is false
+Add TRACE macro
+Increase data_per.jsn size to 1023
+
+114
+Fix LOCALSERIAL issue
+Add INDI config so can work in LOCALSERIAL with INDI
+Fix local serial issues line to serialline
+Fix for serial.begin() ifdef LOCALSERIAL
+Fix for using localserial with INDI serial driver for myFocuserPro2
+Fix case 64: comms.h for check focuser position against maxstep
+Fix readtemp to read_temp in graphics oled and ascom server temp routines
+Change debugprint recstr in comms.h
+Fix define for oledgraphics in focuserconfig.h
+Implement static pages for ascom server in SPIFFS
+Add code to handle new static pages in ascom server
+Make small changes to header portions of all server html pages
+
+113
+Fix Bluetooth running on WEMOS ESP32
+Fix LOCALSERIAL compilation errors
+Move  Web-serverPORT to SPIFFS and allow MANAGEMENT SERVER to change the  Web-server port
+
+112
+Add management interface on port 6060
+
+111
+Fix temperature precision being set on boot
+Move code inline
+Build web pages in SPIFFS, add dynamic processor
+Improve joystick code
+Add calibration of joystick to pdf
+Create joystick calibation and test programs in Test-programs folder
+
+110
+Add focuser presets [0-9] to use with software or infrared remote controller - stored in SPIFFS
+Add options for a different joystick (2-Axis PS2 Arduino style)
+Restore motorspeed before move [in case joystick has changed the speed]. 
+ascomserver, comms, infraredremote, joystick,  Web-server
+
+109
+Add ASCOM REMOTE ALPACA Management interface
+
+108
+Add 2-axis joystick 
+Add joystick to list of controller features
+
+107
+Allow mDNS service for most controller modes, change to port 8080
+
+106
+For revision 4 ESP32 boards, add HOME POSITION SWITCH
+Add mDNS for STATIONMODE/ Web-server
+For revision 4 ESP32 boards, add HOME POSITION SWITCH to PCB
+Add define for HOMEPOSITIONSWITCH
+Add definitions into generalDefinitions.h and myBoards.h for HPSW
+Add code to handle HPSW into myFP2ESP.ino
+
+105 04 November 2019
+Add ASCOM Alpaca REMOTE support
+code reduction/speed improvement in comms
+separation of ascomserver, comms, display, temperature,  Web-server definitions and code into separate files
+
+104 02 November 2019
+Improve  Web-server support
+ Web-server: add halt button to  Web-server
+ Web-server: add setpos and gotopos buttons for position
+ Web-server: fix bug for value of focuser position when updated
+ Web-server: add board information and copyright
+ Web-server: fix bug in motorspeed
+ Web-server: add define for refresh rate of page
+bracket ConnectionStatus in loop() if using ascom remote or  Web-server
+add requirement to have either ACCESSPOINT or STATIONMODE defined
+add requirement to have either ACCESSPOINT or STATIONMODE or BLUETOOTHMODE or LOCALSERIAL defined
+implement controller features: Case 58: Get controller features
+fix case 54 to return correct value for SSID when running in different modes
+fix error in stepmode for PRO2ESP32DRV8825
+fix setstepperspeed in DriverBoard constructor for PRO2EULN2003
+fix error in oled display I2C begin, use DRVBRD == instead of defined()
+improve stepper motor speed on  Web-server
+fix error in case 30 as there is potential issue
+oleltext: Change displaypage2 to show controller mode being used
+esp_comms() now disabled if using ascom remote or  Web-server
+
+103
+Add  Web-server
+
+102
+Add PRO2ESP32R3WEMOS
+Running ok on ESP32, have wired 470uf to VIN/GND and adjusted current
+Add IR Mappings file
+Add OTA (over the air updates)
+Add LOCALSERIAL (may not work yet on all boards - does not work on L293D ESP8266 Motor Shield)
+Fix display enabled bug
+Remove EEPROM support, now always SPIFF
+Remove motorspeedchange and motorspeedthreshold code
+Add stub cases in ESP_Communication() for myFocuserPro2 support when in LOCALSERIAL mode
+Extract resource strings in generalDefinitions.h file

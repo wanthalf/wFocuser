@@ -1,0 +1,62 @@
+<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta http-equiv=refresh content="%RAT%"><title>myFP2ESP WEB SERVER</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:sans-serif;" text="%TXC%" bgcolor="%BKC%"><h2 style="color: #%TIC%">myFP2ESP Controller</h2><p>&copy; R. Brown, Holger M, 2019-2021. All rights reserved<br>Firmware Version=%VER%, Driverboard=%NAM%</p><p><form action="/" method="post"><b>Position </b><span id="POS">%CPO%</span> <input type="text" name="fp" size ="15" value="%CPO%"> <input type="submit" name="setpos" value="Set"> <input type="submit" name="gotopos" value="Goto"> (Target = <span id="TAR">%TPO%</span>)</form></p><b><form action="/" method="post">MaxSteps </b><input type="text" name="fm" size ="15" value=%MAX%> <input type="submit" value="Set"></form></p><p><form action="/" method="post"><b>IsMoving</b> = <span id="MOV">%MOV%</span> <input type="hidden" name="ha" value="true"><input type="submit" value="HALT"></form></p><p><form action="/" method="post"><b>Temp</b> = <span id="TMP">%TEM%</span> %TUN%, <b>Temp Resolution </b><input type="text" name="tr" size ="3" value="%TPR%"> <input type="submit" value="Set"></form></p><p><form action="/" method="post" ><b>Stepmode </b> %SMB%  <input type="hidden" name="sm" value="true"><input type="submit" value="Set"></form></p><p><form action="/" method="post" ><b>Motorspeed: </b> %MSB% <input type="hidden" name="ms" value="true"><input type="submit" value="Set"></form></p><p><form action="/" method="post"><b>Coilpower </b> %CPB% <input type="hidden" name="cp" value="true"><input type="submit" value="Set"></form></p><p><b><form action="/" method="post">Reverse Direction </b> %RDB% <input type="hidden" name="rd" value="true"><input type="submit" value="Set"></form></p><p>%OLE%</p><hr><p><table><tr><td><form action="/move" method="GET"><input type="submit" value="MOVE-PAGE"></form></td><td><form action="/presets" method="GET"><input type="submit" value="PRESETS-PAGE"></form></td><td><form action="/" method="GET"><input type="submit" value="HOME-PAGE"></form></td></tr></table></p>
+<script>
+function getposition() {
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+ if (this.readyState == 4 && this.status == 200) {
+  document.getElementById("POS").innerHTML = this.responseText;
+}
+};
+xhttp.open("GET", "position", true);
+xhttp.send();
+}
+setInterval(function(){	
+getposition();
+}, 1500);
+</script>
+<script>
+function gettarget() {
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+ if (this.readyState == 4 && this.status == 200) {
+  document.getElementById("TAR").innerHTML = this.responseText;
+}
+};
+xhttp.open("GET", "target", true);
+xhttp.send();
+}
+setInterval(function(){	
+gettarget();
+}, 4126);
+</script>
+<script>
+function getismoving() {
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+ if (this.readyState == 4 && this.status == 200) {
+  document.getElementById("MOV").innerHTML = this.responseText;
+}
+};
+xhttp.open("GET", "ismoving", true);
+xhttp.send();
+}
+setInterval(function(){	
+getismoving();
+}, 666);
+</script>
+<script>
+function gettemp() {
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+ if (this.readyState == 4 && this.status == 200) {
+  document.getElementById("TMP").innerHTML = this.responseText;
+}
+};
+xhttp.open("GET", "temp", true);
+xhttp.send();
+}
+setInterval(function(){	
+gettemp();
+}, 2666);
+</script>
+</body></html>

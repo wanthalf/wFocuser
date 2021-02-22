@@ -1,0 +1,37 @@
+Each board configuration uses a common template. To add a custom board, edit the 00.jsn file and designate its vaious fields are per below
+
+{ "board":"CUSTOM","maxstepmode":32,""stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
+
+The fields are
+board		Text field denoting boardname (myFP2Exxx for ESP8266 and myFP2ESP32xxx for ESP32)
+maxstepmode	integer number defining maximum stepmode for the board.
+stepmode	integer number specifying stepmode that board is configured for
+sda		integer pin number for I2C SDA pin
+sck		integer pin number for I2C SCK pin
+enpin		integer pin number for Enable pin of driver board
+steppin		integer pin number for Step pin of driver board
+dirpin		integer pin number for Direction pin of driver board
+temppin		integer pin number for Temperature Sensor pin
+hpswpin		integer pin number for Home Position pin
+inledpin	integer pin number for In LED
+outledpin	integer pin number for Out LED
+pb1pin		integer pin number for Push button In
+pb2pin		integer pin number for Push button Out
+irpin		integer pin number for Infra Red remote controller sensor
+stepsrev	integer number for STEPSPERREVOLUTION that represents the number
+			of steps for one reolution of the stepper motor
+fixedsmode	integer number for stepmode where the stepmode is defined by jumpers
+brdpins		Interger array of 4 pin numbers that represet input to the driver board
+			[MS1/MS2/MS3 for DRV8825 and IN1/IN2/IN3/IN4 for other board types]
+msdelay		unsigned long number representing delay between steps when stepping the motor
+
+
+Any field set to -1 indicates the pin is unassigned (not used)
+
+After saving the 00.jsn file, copy the file to the /src/myFP2ESP/data/boards folder. 
+
+In focuserconfig.h set the DRVBRD to CUSTOMBRD
+
+
+
+
