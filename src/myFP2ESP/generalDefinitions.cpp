@@ -4,7 +4,7 @@
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // ======================================================================
 
-const char* programVersion        = "200";
+const char* programVersion        = "201";
 const char* ProgramAuthor         = "(c) R BROWN 2020";
 
 const char* STATEMOVINGSTR        = ">Moving";

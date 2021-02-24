@@ -21,14 +21,14 @@
 // ESP8266 Boards
 //#define DRVBRD WEMOSDRV8825H                    // driver definition for Holger
 //#define DRVBRD WEMOSDRV8825
-//#define DRVBRD PRO2EULN2003
+#define DRVBRD PRO2EULN2003
 //#define DRVBRD PRO2EDRV8825
 //#define DRVBRD PRO2EL293DNEMA
 //#define DRVBRD PRO2EL293D28BYJ48
 //#define DRVBRD PRO2EL298N
 //#define DRVBRD PRO2EL293DMINI
 //#define DRVBRD PRO2EL9110S
-#define DRVBRD CUSTOMBRD
+//#define DRVBRD CUSTOMBRD
 // ESP32 Boards
 //#define DRVBRD PRO2ESP32DRV8825
 //#define DRVBRD PRO2ESP32ULN2003
@@ -49,7 +49,7 @@
 // If you need no support for OLED skip this section. To enable the 
 // OLED TEXT or GRAPHIC DISPLAY uncomment the related line. 
 
-//#define OLED_MODE OLED_TEXT   // OLED text only mode
+#define OLED_MODE OLED_TEXT   // OLED text only mode
 //#define OLED_MODE OLED_GRAPHIC  // OLED graphic mode
 
 // ======================================================================

@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 200
+// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 201
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -1208,7 +1208,7 @@ void setup()
 #endif
 
   myoled->oledtextmsg(CONNECTEDSTR, -1, true, true);
-  delay(100);                                   // keep delays small else issue with ASCOM
+  delay(10);                                    // keep delays small else issue with ASCOM
 
   tcpipserverstate = STOPPED;
   mdnsserverstate = STOPPED;
@@ -1221,7 +1221,7 @@ void setup()
 
   HDebugPrint("Heap = ");
   HDebugPrintf("%u\n", ESP.getFreeHeap());
-  HDebugPrintln("setup(): tcpip server");
+  DebugPrintln("setup(): start tcp/ip server");
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
   rssi = getrssi();                             // get network strength
   // Starting TCP Server
@@ -1230,7 +1230,7 @@ void setup()
   start_tcpipserver();
   DebugPrintln(GETLOCALIPSTR);
   ESP32IPAddress = WiFi.localIP();
-  delay(100);                                   // keep delays small else issue with ASCOM
+  delay(10);                                    // keep delays small else issue with ASCOM
   DebugPrintln(TCPSERVERSTARTEDSTR);
   myoled->oledtextmsg(TCPSERVERSTARTEDSTR, -1, false, true);
   HDebugPrint("Heap = ");
@@ -1264,8 +1264,10 @@ void setup()
   // Serial.println("setup(): driverboard");
   // ensure targetposition will be same as focuser position
   // otherwise after loading driverboard focuser will start moving immediately
+  DebugPrintln("driver board: start");
   ftargetPosition = mySetupData->get_fposition();
   driverboard = new DriverBoard(mySetupData->get_fposition() );
+  DebugPrinttln("driver board: end");
   // ensure driverboard position is same as setupData
   DebugPrintln(DRVBRDDONESTR);
   myoled->oledtextmsg(DRVBRDDONESTR, -1, false, true);

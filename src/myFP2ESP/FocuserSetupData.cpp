@@ -167,12 +167,12 @@ byte SetupData::LoadConfiguration()
   // Process board configuration
   delay(10);
   // Open board_config.jsn file for reading
-  Serial.print("Default board config file:");
-  Serial.println(filename_boardconfig);
+  DebugPrint("Default board config file:");
+  DebugPrintln(filename_boardconfig);
   File bfile = SPIFFS.open(filename_boardconfig, "r");
   if (!bfile)
   {
-    Serial.println("no board config file, load default values");
+    DebugPrinttln("no board config file, load default values");
     LoadDefaultBoardData();
     delay(10);
     retval = 4;
@@ -182,8 +182,8 @@ byte SetupData::LoadConfiguration()
     delay(10);
     // Reading board_config.jsn
     String board_data = bfile.readString();               // read content of the text file
-    Serial.print("LoadConfiguration(): Board_data= ");
-    Serial.println(board_data);                             // ... and print on serial
+    DebugPrint("LoadConfiguration(): Board_data= ");
+    DebugPrintln(board_data);                             // ... and print on serial
     bfile.close();
 
     // Allocate a temporary JsonDocument
@@ -193,7 +193,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_brd, board_data);
     if (error)
     {
-      Serial.println("Failed to deserialize board config file, using default config");
+      DebugPrintln("Failed to deserialize board config file, using default config");
       LoadDefaultBoardData();
     }
     else
@@ -1008,21 +1008,21 @@ void SetupData::StartDelayedUpdate(String & org_data, String new_data)
 boolean SetupData:: LoadBrdConfigStart(String brdfile)
 {
   delay(10);
-  File bfile = SPIFFS.open(brdfile, "w");         // Open file for writing
+  File bfile = SPIFFS.open(brdfile, "r");               // Open file for writing
+  DebugPrint("LoadBrdConfigStart: ");
+  DebugPrintln(brdfile);  
   if (!bfile)
   {
     TRACE();
-    Serial.println("LoadBrdConfigStart: ");
-    Serial.print(brdfile);
-    Serial.println("File not found");
+    DebugPrintln("File not found");
     return false;
   }
   else
   {
     // read file and deserialize
-    String fdata = bfile.readString();                 // read content of the text file
+    String fdata = bfile.readString();                  // read content of the text file
     DebugPrint("LoadBrdConfigStart: Data= ");
-    DebugPrintln(fdata);                               // ... and print on serial
+    DebugPrintln(fdata);                              // ... and print on serial
     bfile.close();
 
     // Allocate a temporary JsonDocument
@@ -1075,14 +1075,17 @@ void SetupData::LoadDefaultBoardData()
   // Focuser driver board data - Open specific board config .jsn file for reading
 
   String brdfile = "/boards/" + String(DefaultBoardNumber) + ".jsn";
+  DebugPrint("brdfile: " );
+  DebugPrintln(brdfile);
+
   if ( LoadBrdConfigStart(brdfile) == true )
   {
-    Serial.println("LoadDefaultBoardData(): Loaded default DRV board: OK");
+    DebugPrintln("LoadDefaultBoardData(): Loaded default DRV board: OK");
   }
   else
   {
     DebugPrintln("LoadDefaultBoardData(): Loaded default DRV board: Fail");
-    Serial.println("LoadDefaultBoardData(): Create Unknown Board Config File");
+    DebugPrintln("LoadDefaultBoardData(): Create Unknown Board Config File");
     this->board         = "Unknown";
     this->maxstepmode   = -1;
     this->stepmode      =  1;              // full step
@@ -1121,7 +1124,7 @@ boolean SetupData::WriteBoardConfiguration()
   if (!bfile)
   {
     TRACE();
-    Serial.println(CREATEFILEFAILSTR);
+    DebugPrintln(CREATEFILEFAILSTR);
     return false;
   }
   else
@@ -1156,17 +1159,17 @@ boolean SetupData::WriteBoardConfiguration()
     doc_brd["msdelay"]      = this->msdelay;
 
     // Serialize JSON to file
-    Serial.println("Writing to board file");
+    DebugPrintln("Writing to board file");
     if (serializeJson(doc_brd, bfile) == 0)
     {
       TRACE();
-      Serial.println(WRITEFILEFAILSTR);
+      DebugPrintln(WRITEFILEFAILSTR);
       bfile.close();                                     // Close the file
       return false;
     }
     else
     {
-      Serial.println(WRITEFILESUCCESSSTR);
+      DebugPrintln(WRITEFILESUCCESSSTR);
       bfile.close();                                     // Close the file
     }
   }
@@ -1178,8 +1181,8 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
   // generate board configuration from json string
   delay(10);
 
-  Serial.print("CreateBoardConfigfromjson. Board_data= ");
-  Serial.println(jsonstr);                             // ... and print on serial
+  DebugPrint("CreateBoardConfigfromjson. Board_data= ");
+  DebugPrintln(jsonstr);                             // ... and print on serial
   // Allocate a temporary Json Document
   DynamicJsonDocument doc_brd(DEFAULTBOARDSIZE + 100);
 
@@ -1187,7 +1190,7 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
   DeserializationError error = deserializeJson(doc_brd, jsonstr);
   if (error)
   {
-    Serial.println("Deserializae board : Fail");
+    DebugPrintln("Deserializae board : Fail");
     LoadDefaultBoardData();
     return false;
   }
@@ -1198,7 +1201,7 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
       "dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,
       "stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
     */
-    Serial.println("Deserializa board : OK");
+    DebugPrintln("Deserializa board : OK");
     this->board         = doc_brd["board"].as<char*>();
     this->maxstepmode   = doc_brd["maxstepmode"];
     this->stepmode      = doc_brd["stepmode"];
@@ -1222,10 +1225,10 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
     }
     this->msdelay        = doc_brd["msdelay"];                    // motor speed delay - do not confuse with motorspeed
 
-    Serial.println("Board configuration file loaded");
+    DebugPrintln("Board configuration file loaded");
 
     SaveBoardConfigNow();
-    Serial.println("board_config.jsn created");
+    DebugPrintln("board_config.jsn created");
     return true;
   }
 }

@@ -1,3 +1,6 @@
+201
+Fix for board config not loading properly after firmware update
+
 200
 Move to board config files that are JSON descriptors of board configuration for pins etc
 Add board handling routines into myFocuserData
