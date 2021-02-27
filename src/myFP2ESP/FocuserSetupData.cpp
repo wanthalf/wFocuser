@@ -172,7 +172,7 @@ byte SetupData::LoadConfiguration()
   File bfile = SPIFFS.open(filename_boardconfig, "r");
   if (!bfile)
   {
-    DebugPrinttln("no board config file, load default values");
+    DebugPrintln("no board config file, load default values");
     LoadDefaultBoardData();
     delay(10);
     retval = 4;
@@ -1480,8 +1480,8 @@ void SetupData::ListDir(const char * dirname, uint8_t levels)
 
   DebugPrint("Listing directory: {");
 #if defined(ESP8266)
-  Serial.println("SetupData::ListDir() does not work on ESP8266");
-  // this does not work;
+  DebugPrintln("SetupData::ListDir() does not work on ESP8266");
+  return;
 #else
   File root = SPIFFS.open(dirname);
   delay(10);

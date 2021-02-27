@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 201
+// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 202
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -1267,7 +1267,7 @@ void setup()
   DebugPrintln("driver board: start");
   ftargetPosition = mySetupData->get_fposition();
   driverboard = new DriverBoard(mySetupData->get_fposition() );
-  DebugPrinttln("driver board: end");
+  DebugPrintln("driver board: end");
   // ensure driverboard position is same as setupData
   DebugPrintln(DRVBRDDONESTR);
   myoled->oledtextmsg(DRVBRDDONESTR, -1, false, true);

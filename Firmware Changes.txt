@@ -21,7 +21,7 @@ Rewrite temp.cpp routine to allow runtime loading of temperature pin from board 
 Rewrite displays.cpp to allow runtime loading of I2C data and I2C Clock pins from board config data for OLED_TEXT
 Rewrite pushbutton code to allow runtime loading of pushbuttons pins from board config data
 Rewrite in-outleds code to allow runtime loading of led pins from board config data
-Rewrite irremoted code to allow runtime loading of irremote pins from board config data
+Rewrite irremote code to allow runtime loading of irremote pins from board config data
 Rewrite HPS_alert code to allow runtime loading of hpsw pin from board config data
 Rewrite all hpsw checks to use HPS_alert() instead of trying to read the board pin directly
 Rewrite code in comms.h for handling sendpaket( float value)
