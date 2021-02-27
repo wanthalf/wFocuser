@@ -1,3 +1,7 @@
+205
+Fix for truncated board names showing for get firmware (case 4: comms.h)
+Fix for some motor board .jsn files [wrong values/pins]
+
 204
 Add references to myoled-> in ManagementServer.cpp, comms.h and webserver.cpp
 Add Display_On() and Display_Off() to oled class and remove defines in management.cpp display handling code

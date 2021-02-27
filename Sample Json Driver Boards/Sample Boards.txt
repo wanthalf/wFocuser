@@ -1,23 +1,29 @@
+Board definitions
+
+#define WEMOSDRV8825          35          // if using a drv8825 you also need to set DRV8825STEPMODE in myBoards.h     
+#define PRO2EDRV8825          36          // if using a drv8825 you also need to set DRV8825STEPMODE in myBoards.h
+#define PRO2EDRV8825BIG       37          // if using a drv8825 you also need to set DRV8825STEPMODE in myBoards.h
+#define PRO2EULN2003          38
+#define PRO2EL293DNEMA        39          // Motor shield ESP8266 with NEMA motor
+#define PRO2EL293D28BYJ48     40          // Motor shield ESP8266 with 28BYJ48 motor
+#define PRO2EL298N            41          // uses PCB layout for ULN2003
+#define PRO2EL293DMINI        42          // uses PCB layout for ULN2003
+#define PRO2EL9110S           43          // uses PCB layout for ULN2003
+#define WEMOSDRV8825H         50          // this is for Holger
+
+#define PRO2ESP32DRV8825      44
+#define PRO2ESP32ULN2003      45
+#define PRO2ESP32L298N        46
+#define PRO2ESP32L293DMINI    47
+#define PRO2ESP32L9110S       48          // uses PCB layout for ULN2003
+#define PRO2ESP32R3WEMOS      49          // https://www.ebay.com/itm/R3-Wemos-UNO-D1-R32-ESP32-WIFI-Bluetooth-CH340-Devolopment-Board-For-Arduino/264166013552
+
+#define CUSTOMBRD             99          // For a user custom board see 0.jsn in /data/boards folder
+
+
 // ESP8266 Boards
 
-// WEMOSDRV8825H // Holger's WEMOS, special settings
-#define TEMPPIN       2
-#define I2CDATAPIN    4
-#define I2CCLKPIN     5
-#define DIRPIN        13                // D7 GPIOP13
-#define STEPPIN       12                // D6 GPIO12
-#define ENABLEPIN     14                // D5 GPIO14
-#define MSPEED        2000
-#define INPBPIN       -1                 // not supported
-#define OUTPBPIN      -1                 // not supported
-#define INLEDPIN      -1                 // not supported
-#define OUTLEDPIN     -1                 // not supported
-#define IRPIN         -1                 // not supported
-#define HPSWPIN       -1                 // not supported
-#endif
-{ "board":"WEMOSDRV8825H","maxstepmode":32,""stepmode":4,"sda":4,"sck":5,"enpin":14,"steppin":12,"dirpin":13,"temppin":4,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":-1,"fixedsmode":4,"brdpins":[-1,-1,-1,-1],"msdelay":2000 }
-
-// WEMOSDRV8825
+// 35.jsn WEMOSDRV8825 [Jumpers on DRV8825 daughter board]
 #define TEMPPIN       4
 #define I2CDATAPIN    2
 #define I2CCLKPIN     1
@@ -33,7 +39,8 @@
 #define HPSWPIN       -1                 // not supported
 { "board":"WEMOSDRV8825","maxstepmode":32,""stepmode":4,"sda":2,"sck":1,"enpin":14,"steppin":12,"dirpin":13,"temppin":4,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":-1,"fixedsmode":4,"brdpins":[-1,-1,-1,-1],"msdelay":8000 }
 
-// PRO2EDRV8825
+
+// 36.jsn PRO2EDRV8825 [Jumpers on DRV8825 daughter board]
 #define TEMPPIN       10
 #define I2CDATAPIN    5
 #define I2CCLKPIN     4
@@ -49,7 +56,26 @@
 #define HPSWPIN       -1                 // not supported
 { "board":"PRO2EDRV8825","maxstepmode":32,""stepmode":4,"sda":5,"sck":4,"enpin":14,"steppin":12,"dirpin":13,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":-1,"fixedsmode":4,"brdpins":[-1,-1,-1,-1],"msdelay":8000 }
 
-// PRO2EULN2003
+
+// 37.jsn PRO2EDRV8825BIG [Jumpers on DRV8825 daughter board]
+#define TEMPPIN       2
+#define I2CDATAPIN    4
+#define I2CCLKPIN     5
+#define DIRPIN        13                // D7 GPIOP13
+#define STEPPIN       12                // D6 GPIO12
+#define ENABLEPIN     14                // D5 GPIO14
+#define MSPEED        6000
+#define INPBPIN       -1                 // not supported
+#define OUTPBPIN      -1                 // not supported
+#define INLEDPIN      -1                 // not supported
+#define OUTLEDPIN     -1                 // not supported
+#define IRPIN         -1                 // not supported
+#define HPSWPIN       -1                 // not supported
+#endif
+{ "board":"PRO2EDRV8825BIG","maxstepmode":32,"stepmode":1,"sda":5,"sck":4,"enpin":14,"steppin":12,"dirpin":13,"temppin":2,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[-1,-1,-1,-1],"msdelay":6000 }
+
+
+// 38.jsn PRO2EULN2003
 #define TEMPPIN       10
 #define I2CDATAPIN    5
 #define I2CCLKPIN     4
@@ -64,9 +90,10 @@
 #define OUTLEDPIN     -1                 // not supported
 #define IRPIN         -1                 // not supported
 #define HPSWPIN       -1                 // not supported
-{ "board":"PRO2EULN2003","maxstepmode":2,""stepmode":1,"sda":5,"sck":4,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":2048,"fixedsmode":1,"brdpins":[-1,-1,-1,-1],"msdelay":17500 }
+{ "board":"PRO2EULN2003","maxstepmode":2,""stepmode":1,"sda":5,"sck":4,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":2048,"fixedsmode":1,"brdpins":[13,12,14,2],"msdelay":17500 }
 
-// PRO2EL293DNEMA
+
+// 39.jsn PRO2EL293DNEMA
 #define TEMPPIN       10                 // Temperature somehow does not work now for this shield
 #define I2CDATAPIN    12                 // GPIO12 is D6
 #define I2CCLKPIN     14                 // GPIO14 is D5
@@ -81,9 +108,10 @@
 #define OUTLEDPIN     -1                 // not supported
 #define IRPIN         -1                 // not supported
 #define HPSWPIN       -1                 // not supported
-{ "board":"PRO2EL293DNEMA","maxstepmode":2,""stepmode":1,"sda":12,"sck":14,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[5,0,4,2],"msdelay":10500 }
+{ "board":"PRO2EL293DNEMA","maxstepmode":1,""stepmode":1,"sda":12,"sck":14,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[5,0,4,2],"msdelay":10500 }
 
-// PRO2EL293D28BYJ48
+
+// 40.jsn PRO2EL293D28BYJ48
 #define TEMPPIN       10
 #define I2CDATAPIN    12
 #define I2CCLKPIN     14
@@ -98,9 +126,10 @@
 #define OUTLEDPIN     -1                 // not supported
 #define IRPIN         -1                 // not supported
 #define HPSWPIN       -1                 // not supported
-{ "board":"PRO2EL293D28BYJ48","maxstepmode":2,""stepmode":1,"sda":12,"sck":14,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[5,0,4,2],"msdelay":17500 }
+{ "board":"PRO2EL293D28BYJ48","maxstepmode":1,""stepmode":1,"sda":12,"sck":14,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[5,0,4,2],"msdelay":17500 }
 
-// PRO2EL298N
+
+// 41.jsn PRO2EL298N
 #define TEMPPIN       10
 #define I2CDATAPIN    5
 #define I2CCLKPIN     4
@@ -117,7 +146,8 @@
 #define HPSWPIN       -1                 // not supported
 { "board":"PRO2EL298N","maxstepmode":2,""stepmode":1,"sda":5,"sck":4,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[13,12,14,2],"msdelay":16500 }
 
-// PRO2EL293DMINI         
+
+// 42.jsn PRO2EL293DMINI         
 #define TEMPPIN       10
 #define I2CDATAPIN    5
 #define I2CCLKPIN     4
@@ -134,7 +164,8 @@
 #define HPSWPIN       -1                 // not supported
 { "board":"PRO2EL293DMINI","maxstepmode":2,""stepmode":1,"sda":5,"sck":4,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[13,12,14,2],"msdelay":16500 }
 
-// PRO2EL9110S            
+
+// 43.jsn PRO2EL9110S            
 #define TEMPPIN       10
 #define I2CDATAPIN    5
 #define I2CCLKPIN     4
@@ -152,9 +183,27 @@
 { "board":"PRO2EL293DMINI","maxstepmode":2,""stepmode":1,"sda":5,"sck":4,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[13,12,14,2],"msdelay":8000 }
 
 
+// 50.jsn WEMOSDRV8825H // Holger's WEMOS, special settings
+#define TEMPPIN       2
+#define I2CDATAPIN    4
+#define I2CCLKPIN     5
+#define DIRPIN        13                // D7 GPIOP13
+#define STEPPIN       12                // D6 GPIO12
+#define ENABLEPIN     14                // D5 GPIO14
+#define MSPEED        2000
+#define INPBPIN       -1                 // not supported
+#define OUTPBPIN      -1                 // not supported
+#define INLEDPIN      -1                 // not supported
+#define OUTLEDPIN     -1                 // not supported
+#define IRPIN         -1                 // not supported
+#define HPSWPIN       -1                 // not supported
+#endif
+{ "board":"WEMOSDRV8825H","maxstepmode":32,""stepmode":4,"sda":4,"sck":5,"enpin":14,"steppin":12,"dirpin":13,"temppin":4,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":-1,"fixedsmode":4,"brdpins":[-1,-1,-1,-1],"msdelay":2000 }
+
+
 // ESP32 Boards
 
-// PRO2ESP32DRV8825
+// 44.jsn PRO2ESP32DRV8825
 #define TEMPPIN       13
 #define I2CDATAPIN    21                // D21 is SDA
 #define I2CCLKPIN     22                // D22 is SCL
@@ -173,10 +222,7 @@
 #define OUTPBPIN      35
 { "board":"PRO2ESP32DRV8825","maxstepmode":32,""stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
 
-// PRO2ESP32ULN2003
-// PRO2ESP32L298N
-// PRO2ESP32L293DMINI
-// PRO2ESP32L9110S
+// 45.jsn PRO2ESP32ULN2003
 #define TEMPPIN       13                  //
 #define I2CDATAPIN    21                  // D21 is SDA
 #define I2CCLKPIN     22                  // D22 is SCL
@@ -193,8 +239,24 @@
 #define OUTPBPIN      35
 { "board":"PRO2ESP32ULN2003","maxstepmode":2,""stepmode":1,"sda":21,"sck":22,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":2048,"fixedsmode":-1,"brdpins":[14,27,26,25],"msdelay":8000 }
 
+
+// 46.jsn PRO2ESP32L298N
 { "board":"PRO2ESP32L298N","maxstepmode":2,""stepmode":1,"sda":21,"sck":22,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":2048,"fixedsmode":-1,"brdpins":[14,27,26,25],"msdelay":8000 }
 
+
+// 47.jsn PRO2ESP32L293DMINI
 { "board":"PRO2ESP32L293DMINI","maxstepmode":2,""stepmode":1,"sda":21,"sck":22,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":2048,"fixedsmode":-1,"brdpins":[14,27,26,25],"msdelay":8000 }
 
+
+// 48.jsn PRO2ESP32L9110S
 { "board":"PRO2ESP32L9110S","maxstepmode":2,""stepmode":1,"sda":21,"sck":22,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":2048,"fixedsmode":-1,"brdpins":[14,27,26,25],"msdelay":8000 }
+
+
+// 49.jsn PRO2ESP32R3WEMOS [Jumpers on DRV8825 daughter board]
+{ "board":"PRO2ESP32R3WEMOS","maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":27,"dirpin":26,"temppin":13,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":-1,"fixedsmode":1,"brdpins":[-1,-1,-1,-1],"msdelay":8000 }
+
+
+CUSTOM BOARD
+// 99.jsn CUSTOM
+{ "board":"CUSTOM","maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
+

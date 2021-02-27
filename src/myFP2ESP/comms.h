@@ -168,7 +168,7 @@ void ESP_Communication()
         char buffer[32];
         char tempstr[20];
         String brdname = mySetupData->get_brdname();
-        brdname.toCharArray(tempstr, sizeof(brdname));
+        brdname.toCharArray(tempstr, brdname.length() + 1);
         snprintf(buffer, sizeof(buffer), "%s\r\n%s", tempstr, programVersion );
         SendPaket('F', buffer);
       }
