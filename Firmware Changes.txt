@@ -1,3 +1,9 @@
+203
+Fix for ULN2003 board definition using wrong pin numbers
+
+202
+Fix for DebugPrinttt errors
+
 201
 Fix for board config not loading properly after firmware update
 
