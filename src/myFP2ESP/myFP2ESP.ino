@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 203
+// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 204
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -247,7 +247,7 @@ bool    managementserverstate;
 bool    tcpipserverstate;
 bool    otaupdatestate;
 bool    duckdnsstate;
-bool    displaystate;
+bool    displaystate;                       // true if a display was found
 bool    reboot;                             // flag used to indicate a reboot has occurred
 int     tprobe1;                            // true if a temperature probe was detected
 float   lasttemp;                           // last valid temp reading
@@ -1010,7 +1010,10 @@ void setup()
 #else
   myoled = new OLED_NON;
   displaystate = false;
+  DebugPrintln(F("#if OLED_MODE else"));  
 #endif // #ifdef OLED_MODE
+  DebugPrint("Display state: ");
+  DebugPrintln(displaystate);
 
   HDebugPrint("Heap = ");
   HDebugPrintf("%u\n", ESP.getFreeHeap());

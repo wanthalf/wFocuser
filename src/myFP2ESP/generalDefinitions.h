@@ -368,14 +368,18 @@ extern const char* FSFILENOTFOUNDSTR;
 
 #define MDNSTOPSTR                "<form action=\"/\" method=\"post\"><input type=\"hidden\" name=\"stopmdns\" value=\"true\"><input type=\"submit\" value=\"STOP\"></form>"
 #define MDNSSTARTSTR              "<form action=\"/\" method=\"post\"><input type=\"hidden\" name=\"startmdns\" value=\"true\"><input type=\"submit\" value=\"START\"></form>"
-#define DISPLAYONSTR              "<form action=\"/\" method=\"post\"><b>Display: </b><input type=\"hidden\" name=\"di\" value=\"doff\" Checked><input type=\"submit\" value=\"Turn Off\"></form>"
-#define DISPLAYOFFSTR             "<form action=\"/\" method=\"post\"><b>Display: </b><input type=\"hidden\" name=\"di\" value=\"don\"><input type=\"submit\" value=\"Turn On\"></form>"
-#define STARTSCREENONSTR          "<form action=\"/\" method=\"post\"><b>Startscreen: </b><input type=\"hidden\" name=\"ss\" value=\"ssoff\" Checked><input type=\"submit\" value=\"Turn Off\"></form>"
-#define STARTSCREENOFFSTR         "<form action=\"/\" method=\"post\"><b>Startscreen: </b><input type=\"hidden\" name=\"ss\" value=\"sson\"><input type=\"submit\" value=\"Turn On\"></form>"
-#define STARTHPSWMONSTR           "<form action=\"/\" method=\"post\"><b>HPSW Messages: </b><input type=\"hidden\" name=\"hp\" value=\"hpoff\" Checked><input type=\"submit\" value=\"Turn Off\"></form>"
-#define STARTHPSWMOFFSTR          "<form action=\"/\" method=\"post\"><b>HPSW Messages: </b><input type=\"hidden\" name=\"hp\" value=\"hpon\"><input type=\"submit\" value=\"Turn On\"></form>"
-#define STARTFMDLONSTR            "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdoff\" Checked><input type=\"submit\" value=\"Turn Off\"></form>"
-#define STARTFMDLOFFSTR           "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdon\"><input type=\"submit\" value=\"Turn On\"></form>"
+
+#define DISPLAYONSTR              "<form action=\"/\" method=\"post\"><b>DISPLAY: </b><input type=\"hidden\" name=\"di\" value=\"doff\" Checked><input type=\"submit\" value=\"Disable\"></form>"
+#define DISPLAYOFFSTR             "<form action=\"/\" method=\"post\"><b>DISPLAY: </b><input type=\"hidden\" name=\"di\" value=\"don\"><input type=\"submit\" value=\"Enable\"></form>"
+
+#define STARTSCREENONSTR          "<form action=\"/\" method=\"post\"><b>Startscreen: </b><input type=\"hidden\" name=\"ss\" value=\"ssoff\" Checked><input type=\"submit\" value=\"Disable\"></form>"
+#define STARTSCREENOFFSTR         "<form action=\"/\" method=\"post\"><b>Startscreen: </b><input type=\"hidden\" name=\"ss\" value=\"sson\"><input type=\"submit\" value=\"Enable\"></form>"
+
+#define STARTHPSWMONSTR           "<form action=\"/\" method=\"post\"><b>HPSW Messages: </b><input type=\"hidden\" name=\"hp\" value=\"hpoff\" Checked><input type=\"submit\" value=\"Disable\"></form>"
+#define STARTHPSWMOFFSTR          "<form action=\"/\" method=\"post\"><b>HPSW Messages: </b><input type=\"hidden\" name=\"hp\" value=\"hpon\"><input type=\"submit\" value=\"Enable\"></form>"
+
+#define STARTFMDLONSTR            "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdoff\" Checked><input type=\"submit\" value=\"Disable\"></form>"
+#define STARTFMDLOFFSTR           "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdon\"><input type=\"submit\" value=\"Enable\"></form>"
 
 #define NOTDEFINEDSTR             "not defined in firmware"
 

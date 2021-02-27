@@ -1,3 +1,15 @@
+204
+Add references to myoled-> in ManagementServer.cpp, comms.h and webserver.cpp
+Add Display_On() and Display_Off() to oled class and remove defines in management.cpp display handling code
+Add Display_On() and Display_Off() stub routines in OLED_GRAPHIC class
+Add checks around display methods that check displaystate - removes defines for ManagementServer.cpp and WebServer.cpp
+Change code to use displaystate instead of using #if OLED_MODE or OLED_TEXT
+Change all Serial.print in management.cpp/MANAGEMENT_predefinedboard1() to DebugPrint
+Change web page output of MANAGEMENT_predefinedboard1() to include link to Home Page of Management Server
+Rewrite case 36 in comms.h to use displaystate instead of OLED_TEXT
+Rewrite WEBSERVER_handleroot() to use displaystate instead of OLED_TEXT
+Rewrite OLED page info on Management Server page1 [msindex1.html]
+
 203
 Fix for ULN2003 board definition using wrong pin numbers
 

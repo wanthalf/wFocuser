@@ -21,11 +21,15 @@
 #define STATICIPON    1
 #endif
 
+#include "displays.h"
+
 // ======================================================================
 // Extern Data
 // ======================================================================
 extern SetupData   *mySetupData;
 extern DriverBoard *driverboard;
+
+extern OLED_NON *myoled;
 
 #include "temp.h"
 extern TempProbe *myTempProbe;
@@ -43,6 +47,7 @@ extern bool managementserverstate;
 extern bool tcpipserverstate;
 extern bool otaupdatestate;
 extern bool duckdnsstate;
+extern bool displaystate;
 extern int  staticip;
 extern int  tprobe1;
 
@@ -235,7 +240,7 @@ void MANAGEMENT_displaydeletepage()
 void MANAGEMENT_handledeletefile()
 {
   String msg;
-  String df = mserver.arg("fname");                     // check server arguments, df has filenamemyoled
+  String df = mserver.arg("fname");                     // check server arguments, df has filename myoled
   if ( df != "" )                                       // check for file in spiffs
   {
     // spiffs was started earlier when server was started so assume it has started
@@ -758,7 +763,7 @@ void MANAGEMENT_buildadminpg3(void)
       MSpg.replace("%PBN%", String(ENABLEPBSTR));
       MSpg.replace("%PBL%", String(NOTENABLEDSTR));
     }
-    
+
     DebugPrintln(PROCESSPAGEENDSTR);
 
     // display heap memory for tracking memory loss?
@@ -884,7 +889,7 @@ void MANAGEMENT_handleadminpg3(void)
   {
     mySetupData->set_pbenable(0);
   }
-  
+
   MANAGEMENT_sendadminpg3();
 #ifdef TIMEMSHANDLEPG3
   Serial.print("ms_handlepg3: ");
@@ -1544,18 +1549,23 @@ void MANAGEMENT_buildadminpg1(void)
     }
 
     // display %OLE%
-#if (OLED_TEXT)
-    if ( mySetupData->get_displayenabled() == 1 )
+    DebugPrint(" MS: Display state: ");
+    DebugPrintln(displaystate);
+    if ( displaystate == true)
     {
-      MSpg.replace("%OLE%", String(DISPLAYONSTR));      // checked already
+      if ( mySetupData->get_displayenabled() == 1 )
+      {
+        MSpg.replace("%OLE%", String(DISPLAYONSTR));                // checked already
+      }
+      else
+      {
+        MSpg.replace("%OLE%", String(DISPLAYOFFSTR));               // not checked
+      }
     }
     else
     {
-      MSpg.replace("%OLE%", String(DISPLAYOFFSTR));     // not checked
+      MSpg.replace("%OLE%", " not defined in firmware");            // not checked
     }
-#else
-    MSpg.replace("%OLE%", "<b>Display:</b> not defined");
-#endif // #if (OLED_TEXT)
 
     // if oled display page group option update
     // %PG% is current page option, %PGO% is option binary string
@@ -1707,26 +1717,29 @@ void MANAGEMENT_handleadminpg1(void)
     }
   }
 
-  // if update display state
-  msg = mserver.arg("di");
-  if ( msg != "" )
+  if ( displaystate == true)
   {
-    DebugPrint("Set display state: ");
-    DebugPrintln(msg);
-    if ( msg == "don" )
+    // if update display state
+    msg = mserver.arg("di");
+    if ( msg != "" )
     {
-      mySetupData->set_displayenabled(1);
-#if (OLED_TEXT)
-      myoled->Display_On();
-#endif
+      DebugPrint("Set display state: ");
+      DebugPrintln(msg);
+      if ( msg == "don" )
+      {
+        mySetupData->set_displayenabled(1);
+        myoled->display_on();
+      }
+      else
+      {
+        mySetupData->set_displayenabled(0);
+        myoled->display_off();
+      }
     }
-    else
-    {
-      mySetupData->set_displayenabled(0);
-#if (OLED_TEXT)
-      myoled->Display_Off();
-#endif
-    }
+  }
+  else
+  {
+    MSpg.replace("%OLE%", "Display not defined in firmware");     // not checked
   }
 
   // if oled display page group option update
@@ -2170,31 +2183,34 @@ void MANAGEMENT_handleset(void)
     rflag = true;
   }
 
-  // display
-  value = mserver.arg("display");
-  if ( value != "" )
+  if ( displaystate == true )
   {
-    if ( value == "on" )
+    // display
+    value = mserver.arg("display");
+    if ( value != "" )
     {
-      DebugPrintln("display: ON");
-      mySetupData->set_displayenabled(1);
-#ifdef OLED_TEXT
-      myoled->Display_On();
-      rflag = true;
-#endif
-    }
-    else if ( value == "off" )
-    {
-      DebugPrintln("display: OFF");
-      if ( mySetupData->get_displayenabled() == 1)
+      if ( value == "on" )
       {
-        mySetupData->set_displayenabled(0);
-#ifdef OLED_TEXT
-        myoled->Display_Off();
+        DebugPrintln("display: ON");
+        mySetupData->set_displayenabled(1);
+        myoled->display_on();
         rflag = true;
-#endif
+      }
+      else if ( value == "off" )
+      {
+        DebugPrintln("display: OFF");
+        if ( mySetupData->get_displayenabled() == 1)
+        {
+          mySetupData->set_displayenabled(0);
+          myoled->display_off();
+          rflag = true;
+        }
       }
     }
+  }
+  else
+  {
+    MSpg.replace("%OLE%", "Display not defined in firmware");     // not checked
   }
 
   // motorspeed
@@ -2481,35 +2497,37 @@ void MANAGEMENT_predefinedboard1()
   if ( msg != "" )
   {
     brdnumber = msg.toInt();
-    Serial.print("predefined board number: ");
-    Serial.println(brdnumber);
+    DebugPrint("predefined board number: ");
+    DebugPrintln(brdnumber);
   }
 
   // load driver config from /boards based on driverbrd number
   boardname = "/boards/" + String(brdnumber) + ".jsn";
-  Serial.print("Board name of file = ");
-  Serial.println(boardname);
+  DebugPrint("Board name of file = ");
+  DebugPrintln(boardname);
 
   // try to load board definition from file
-  MSpg = "Predefined board numer: " + String(brdnumber) + "\n";
+
+  MSpg = "<html><head><title>Management Server</title></head><body>";
+  MSpg = MSpg + "Predefined board numer: " + String(brdnumber) + "\n";
   if ( SPIFFS.exists(boardname))
   {
-    Serial.println(FILEFOUNDSTR);
+    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open(boardname, "r");            // open file for read
-    Serial.println(READPAGESTR);
+    DebugPrintln(READPAGESTR);
     jsonstr = file.readString();                        // read contents into string
     file.close();
   }
   else
   {
-    Serial.println("Error: Could not load board config file");
+    DebugPrintln("Error: Could not load board config file");
     jsonstr = "";
   }
   MSpg = MSpg + jsonstr + "\n";
 
-  if( jsonstr != "" )
+  if ( jsonstr != "" )
   {
-    if( mySetupData->CreateBoardConfigfromjson(jsonstr) == true )
+    if ( mySetupData->CreateBoardConfigfromjson(jsonstr) == true )
     {
       MSpg = MSpg + "Changed board type: Success\n";
     }
@@ -2518,8 +2536,10 @@ void MANAGEMENT_predefinedboard1()
       MSpg = MSpg + "Changed board type: Fail\n";
       MSpg = MSpg + "Error in createBoardConfigfromjson(). Board type not set.\n";
     }
+    // add a home button
+    MSpg = MSpg + "<form action=\"/\" method=\"post\"><input type=\"submit\" value=\"Management Server HOME\"></form>";
   }
-
+  MSpg = MSpg + "</body></html>\n\n";
   MANAGEMENT_sendmyheader();
   MANAGEMENT_sendmycontent();
   MSpg = "";
@@ -2528,7 +2548,7 @@ void MANAGEMENT_predefinedboard1()
 void MANAGEMENT_buildpredefinedboard()
 {
   // MsPg size is around 3469 bytes.
-  
+
   // spiffs was started earlier when server was started so assume it has started
   DebugPrintln("buildpredefinedconfig: Start");
   if ( SPIFFS.exists("/predefbrd.html"))
@@ -2575,7 +2595,7 @@ void MANAGEMENT_buildpredefinedboard()
 
     // add code to handle reboot controller %BT%
     MSpg.replace("%BT%", String(CREBOOTSTR));
-    
+
     DebugPrintln(PROCESSPAGEENDSTR);
   }
   else

@@ -10,14 +10,18 @@
 // ======================================================================
 // EXTERNS
 // ======================================================================
-extern byte  isMoving;
-extern char  ipStr[];
-extern int   tprobe1;
-extern float lasttemp;
-extern char  mySSID[64];
+
+extern OLED_NON *myoled;
+
+extern byte          isMoving;
+extern char          ipStr[];
+extern int           tprobe1;
+extern float         lasttemp;
+extern char          mySSID[64];
 extern const char*   programVersion;
 extern unsigned long ftargetPosition;          // target position
 extern volatile bool halt_alert;
+extern bool          displaystate;
 extern SetupData     *mySetupData;
 extern DriverBoard*  driverboard;
 extern TempProbe     *myTempProbe;
@@ -113,7 +117,7 @@ void SendPaket(const char token, const float val, int i)    // i => decimal plac
   char temp[10];
   // Note Arduino snprintf does not support .2f
   //dtostrf(val, 7, i, temp);
-  ftoa(temp, val, i);  
+  ftoa(temp, val, i);
   snprintf(buff, sizeof(buff), "%c%s%c", token, temp, EOFSTR);
   SendMessage(buff);
 }
@@ -374,23 +378,24 @@ void ESP_Communication()
     case 36:
       // :360#    None    Disable Display
       // :361#    None    Enable Display
-#if defined(OLED_TEXT)
-      mySetupData->set_displayenabled((byte) (receiveString[3] - '0'));
-      if (mySetupData->get_displayenabled() == 1)
+      if ( displaystate == true )
       {
-        if ( displayfound == true )
+        mySetupData->set_displayenabled((byte) (receiveString[3] - '0'));
+        if (mySetupData->get_displayenabled() == 1)
         {
-          myoled->Display_On();
+          if ( displayfound == true )
+          {
+            myoled->display_on();
+          }
+        }
+        else
+        {
+          if ( displayfound == true )
+          {
+            myoled->display_off();
+          }
         }
       }
-      else
-      {
-        if ( displayfound == true )
-        {
-          myoled->Display_Off();
-        }
-      }
-#endif // ifdef OLED_TEXT
       break;
     case 37: // get displaystatus
       SendPaket('D', mySetupData->get_displayenabled());
@@ -500,7 +505,7 @@ void ESP_Communication()
     case 63: // get status of home position switch (hpsw pin 1=open, 0=closed)
       if ( mySetupData->get_hpswitchenable() == 1)
       {
-        SendPaket('H', !digitalRead(mySetupData->get_brdhpswpin()));    // return 1 if closed, 0 if open     
+        SendPaket('H', !digitalRead(mySetupData->get_brdhpswpin()));    // return 1 if closed, 0 if open
       }
       else
       {

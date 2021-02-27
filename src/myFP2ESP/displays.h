@@ -42,6 +42,8 @@ class OLED_NON
     virtual void update_oledtextdisplay(void);
     virtual void Update_Oled(const oled_state, const connection_status);
     virtual void oled_draw_reboot(void);
+    virtual void display_on(void);
+    virtual void display_off(void);
 
     byte  current_status = oled_on;
     byte  linecount = 0;
@@ -54,7 +56,9 @@ class OLED_TEXT : public SSD1306AsciiWire, public OLED_NON
     void oledtextmsg(String , int , boolean , boolean);
     void update_oledtext_position(void);
     void update_oledtextdisplay(void);
-  private:
+    void display_on(void);
+    void display_off(void);
+private:
     void displaylcdpage0(void);      // displaylcd screen
     void displaylcdpage1(void);
     void displaylcdpage2(void);
@@ -65,7 +69,6 @@ class OLED_TEXT : public SSD1306AsciiWire, public OLED_NON
     void display_oledtext_page2(void);
 };
 
-/*
 #ifdef USE_SSD1306
 class OLED_GRAPHIC : public SSD1306Wire, public OLED_NON
 #else
@@ -73,18 +76,18 @@ class OLED_GRAPHIC : public SH1106Wire, public OLED_NON
 #endif
 {
   public:
-    //    OLED_GRAPHIC(uint8_t _address, uint8_t _sda, uint8_t _scl);   // constructor
     OLED_GRAPHIC();
     void Update_Oled(const oled_state, const connection_status);
     void oledgraphicmsg(String &, int, boolean);
     void oled_draw_Wifi(int);
     void oled_draw_reboot(void);
-
+    void display_on(void);
+    void display_off(void);
+    
   private:
     void oled_draw_main_update(const connection_status);
     byte count_hb = 0;      // heart beat counter
     long timestamp;
 };
-*/
 
 #endif // #ifdef displays_h

@@ -21,15 +21,15 @@
 // EXTERNALS - PROTOTYPES
 // ======================================================================
 
-extern float lasttemp;
 extern unsigned long ftargetPosition;       // target position
+extern float lasttemp;
 extern char ipStr[];                        // ip address
 extern char mySSID[];
+extern bool displaystate;
 
 extern DriverBoard* driverboard;
 extern TempProbe    *myTempProbe;
 extern SetupData    *mySetupData;
-
 extern bool TimeCheck(unsigned long, unsigned long);
 
 //__ helper function
@@ -51,7 +51,8 @@ bool CheckOledConnected(void)
 #endif
 
   Wire.setClock(400000L);                               // 400 kHZ max. speed on I2C
-  Wire.beginTransmission(OLED_ADDR);                    //check if OLED display is present
+  
+  Wire.beginTransmission(OLED_ADDR);                    // check if OLED display is present
   if (Wire.endTransmission() != 0)
   {
     DebugPrintln(I2CDEVICENOTFOUNDSTR);
@@ -72,6 +73,8 @@ void OLED_NON::update_oledtext_position(void) {}
 void OLED_NON::update_oledtextdisplay(void) {}
 void OLED_NON::Update_Oled(const oled_state x, const connection_status y) {}
 void OLED_NON::oled_draw_reboot(void) {}
+void OLED_NON::display_on(void) {}
+void OLED_NON::display_off(void) {}
 
 OLED_NON::OLED_NON()  {}
 
@@ -86,8 +89,7 @@ OLED_NON::OLED_NON()  {}
 // These pins are not known at compile time so has to be setup inside the constructor
 
 //OLED_GRAPHIC::OLED_GRAPHIC(uint8_t _address, uint8_t _sda, uint8_t _scl)  :   SSD1306Wire(_address, _sda,_scl, GEOMETRY_128_64)
-/*
-OLED_GRAPHIC::OLED_GRAPHIC()  :  SSD1306Wire(OLED_ADDR, I2CDATAPIN, I2CCLKPIN, GEOMETRY_128_64) , OLED_NON()
+OLED_GRAPHIC::OLED_GRAPHIC()  :  SSD1306Wire(OLED_ADDR, 4, 5, GEOMETRY_128_64) , OLED_NON()
 {
   DebugPrintln(F("start init()"));
   this->init();             // init SSD1306Wire
@@ -124,7 +126,6 @@ void OLED_GRAPHIC::Update_Oled(const oled_state oled, const connection_status Co
     }
   }
 }
-
 
 void OLED_GRAPHIC::oledgraphicmsg(String &str, int val, boolean clrscr)
 {
@@ -222,7 +223,16 @@ void OLED_GRAPHIC::oled_draw_reboot(void)
   display();
 }
 
-*/
+void OLED_GRAPHIC::display_on(void)
+{
+  // do nothing here - sort out code later
+}
+
+void OLED_GRAPHIC::display_off(void)
+{
+  // do nothing here - sort out code later
+}
+
 
 // ======================================================================
 // Section OLED TEXT
@@ -428,6 +438,16 @@ void OLED_TEXT::update_oledtext_position(void)
   //  display();
 }
 
+void OLED_TEXT::display_on(void)
+{
+  Display_On();
+}
+
+void OLED_TEXT::display_off(void)
+{
+  Display_Off();
+}
+
 OLED_TEXT::OLED_TEXT(void)
 {
     // Setup the OLED
@@ -442,14 +462,15 @@ OLED_TEXT::OLED_TEXT(void)
   setFont(Adafruit5x7);
 //  setcolor(WHITE);                    // Draw white text
   clear();                              // clrscr OLED
+
+  displaystate = true;
+  
   Display_Normal();                     // black on white
   InverseCharOff();
 
-
-    Display_On();                       // display ON
-//    Display_Rotate(0);                // portrait, not rotated
-//    Display_Bright();
-
+  display_on();                         // display ON
+//  Display_Rotate(0);                  // portrait, not rotated
+//  Display_Bright();
 
   if ( mySetupData->get_showstartscreen() )
   {
@@ -458,12 +479,6 @@ OLED_TEXT::OLED_TEXT(void)
     println(ProgramAuthor);
   }    
 }
-
-// ======================================================================
-// OLED TEXT DISPLAY - CHANGE AT YOUR OWN PERIL
-// ======================================================================
-
-// Enclose function code in #ifdef - #endif so function declarations are visible
 
 void OLED_TEXT::display_oledtext_page0(void)           // displaylcd screen
 {

@@ -8,6 +8,7 @@
 #include "FocuserSetupData.h"
 #include "myBoards.h"
 #include "temp.h"
+#include "displays.h"
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #undef DEBUG_ESP_HTTP_SERVER                // prevent messages from WiFiServer 
@@ -30,10 +31,12 @@ extern bool  webserverstate;
 extern bool  reboot;
 extern int   tprobe1;
 extern float lasttemp;
+extern bool  displaystate;
 
 extern TempProbe    *myTempProbe;
 extern SetupData    *mySetupData;
 extern DriverBoard* driverboard;
+extern OLED_NON     *myoled;
 
 void WEBSERVER_sendpresets(void);
 void WEBSERVER_sendroot(void);
@@ -789,7 +792,7 @@ void WEBSERVER_buildhome(void)
       WSpg.replace("%TEM%", tpstr);
       WSpg.replace("%TUN%", " f");
     }
-    
+
     WSpg.replace("%TPR%", String(mySetupData->get_tempresolution()));
     String smbuffer = String(mySetupData->get_brdstepmode());
     switch ( mySetupData->get_brdstepmode() )
@@ -898,18 +901,21 @@ void WEBSERVER_buildhome(void)
     }
     WSpg.replace("%RDB%", rdbuffer);
     // display
-#if defined(OLED_MODE)
-    if ( mySetupData->get_displayenabled() == 1 )
+    if ( displaystate == true )
     {
-      WSpg.replace("%OLE%", String(DISPLAYONSTR));      // checked already
+      if ( mySetupData->get_displayenabled() == 1 )
+      {
+        WSpg.replace("%OLE%", String(DISPLAYONSTR));      // checked already
+      }
+      else
+      {
+        WSpg.replace("%OLE%", String(DISPLAYOFFSTR));
+      }
     }
     else
     {
-      WSpg.replace("%OLE%", String(DISPLAYOFFSTR));
+      WSpg.replace("%OLE%", "<b>OLED:</b> Display not defined");
     }
-#else
-    WSpg.replace("%OLE%", "<b>OLED:</b> Display not defined");
-#endif // #if defined(OLED_MODE)
     DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
@@ -1096,36 +1102,40 @@ void WEBSERVER_handleroot()
       temp = 12;
     }
     mySetupData->set_tempresolution(temp);
-    if( mySetupData->get_temperatureprobestate() == 1 )       // if probe enabled
+    if ( mySetupData->get_temperatureprobestate() == 1 )      // if probe enabled
     {
-      if( tprobe1 != 0 )                                      // if there was a probe found
+      if ( tprobe1 != 0 )                                     // if there was a probe found
       {
         myTempProbe->temp_setresolution((byte)temp);          // set resolution
       }
     }
   }
 
-  // if update display state
-  String d_str = webserver->arg("di");
-  if ( d_str != "" )
+  if ( displaystate == true )
   {
-    DebugPrint("root() -set display state: ");
-    DebugPrintln(d_str);
-    if ( d_str == "don" )
+    // if update display state
+    String d_str = webserver->arg("di");
+    if ( d_str != "" )
     {
-      mySetupData->set_displayenabled(1);
-#if (OLED_TEXT)
-      myoled->Display_On();
-#endif // #if (OLED_TEXT)
-    }
-    else
-    {
-      mySetupData->set_displayenabled(0);
-#if (OLED_TEXT)
-      myoled->Display_Off();
-#endif // #if (OLED_TEXT)
+      DebugPrint("root() -set display state: ");
+      DebugPrintln(d_str);
+      if ( d_str == "don" )
+      {
+        mySetupData->set_displayenabled(1);
+        myoled->display_on();
+      }
+      else
+      {
+        mySetupData->set_displayenabled(0);
+        myoled->display_off();
+      }
     }
   }
+  else
+  {
+    DebugPrint("OLED not defined in firmware");
+  }
+
   WEBSERVER_sendroot();
 #ifdef TIMEWSROOTHANDLE
   Serial.print("ws_handleroot: ");

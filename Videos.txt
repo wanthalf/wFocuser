@@ -1,0 +1,26 @@
+Videos for myFP2E/myFP2ESP
+
+myFP2ESP v201
+https://youtu.be/eWjKfe6tBCc 
+
+myFP2ESP ASCOM ALPACA REMOTE Focuser
+https://youtu.be/GT1Z0U_KAHI 
+
+myFP2ESP Webserver
+https://youtu.be/wvPuq8IRIrA 
+
+myFP2E DRV8825 ESP32 ASCOM FOCUSER
+https://youtu.be/xhkGDNLkp4A 
+
+myFP2E L293D ESP8266 Update
+https://youtu.be/OeuAR6T15bY 
+
+myFocuserPro2E ESP8266 WiFi and L293D Shield
+https://youtu.be/pJeu5f40Hko 
+
+myFocuserPro2E ESP8266 WiFi and DRV8825 Part2
+https://youtu.be/7UhIwJS8AEg 
+
+myFocuserPro2E ESP8266 WiFi and ULN2003 part1
+https://youtu.be/o1UVqP6QM2Q 
+
