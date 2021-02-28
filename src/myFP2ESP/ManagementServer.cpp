@@ -5,8 +5,9 @@
 // ======================================================================
 
 #include <Arduino.h>
+#include "focuserconfig.h"              
+//#include "boarddefs.h"                    // included as part of focuserconfig.h"
 #include "myBoards.h"
-#include "focuserconfig.h"
 #include "FocuserSetupData.h"
 #include "images.h"
 #include "generalDefinitions.h"
@@ -26,13 +27,11 @@
 // ======================================================================
 // Extern Data
 // ======================================================================
-extern SetupData   *mySetupData;
-extern DriverBoard *driverboard;
-
-extern OLED_NON *myoled;
-
+extern SetupData    *mySetupData;
+extern DriverBoard  *driverboard;
+extern OLED_NON     *myoled;
 #include "temp.h"
-extern TempProbe *myTempProbe;
+extern TempProbe    *myTempProbe;
 
 extern volatile bool halt_alert;
 extern unsigned long ftargetPosition;
@@ -188,7 +187,7 @@ bool MANAGEMENT_handlefileread(String path)
   else
   {
     TRACE();
-    DebugPrintln(FILENOTFOUNDSTR);
+    DebugPrintln("file not found");
     return false;                                       // if the file doesn't exist, return false
   }
 }
@@ -212,10 +211,8 @@ void MANAGEMENT_displaydeletepage()
   if ( SPIFFS.exists("/msdelete.html") )                // check for the webpage
   {
     File file = SPIFFS.open("/msdelete.html", "r");     // open it
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
-    DebugPrintln(PROCESSPAGESTARTSTR);
 
     // Web page colors
     String bcol = mySetupData->get_wp_backcolor();
@@ -226,13 +223,12 @@ void MANAGEMENT_displaydeletepage()
     MSpg.replace("%TIC%", ticol);
     String hcol = mySetupData->get_wp_headercolor();
     MSpg.replace("%HEC%", hcol);
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     TRACE();
-    DebugPrintln(FSFILENOTFOUNDSTR);
-    MSpg = FILENOTFOUNDSTR;
+    DebugPrintln("file not found");
+    MSpg = "file not found";
   }
   mserver.send(NORMALWEBPAGE, F(TEXTPAGETYPE), MSpg);
 }
@@ -252,12 +248,14 @@ void MANAGEMENT_handledeletefile()
     if ( SPIFFS.exists(df))
     {
       if ( SPIFFS.remove(df))
+      {
         msg = "The file is deleted: " + df;
+      }
       mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, msg);
     }
     else
     {
-      msg = String(FILENOTFOUNDSTR) + df;               // file does not exist
+      msg = "file not found" + df;               // file does not exist
       mserver.send(NOTFOUNDWEBPAGE, PLAINTEXTPAGETYPE, msg);
     }
   }
@@ -318,10 +316,9 @@ void MANAGEMENT_buildnotfound(void)
     // open file for read
     File file = SPIFFS.open("/msnotfound.html", "r");
     // read contents into string
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();
     file.close();
-    DebugPrintln(PROCESSPAGESTARTSTR);
+
     // process for dynamic data
     // Web page colors
     String bcol = mySetupData->get_wp_backcolor();
@@ -337,13 +334,12 @@ void MANAGEMENT_buildnotfound(void)
     // add code to handle reboot controller
     MSpg.replace("%BT%", String(CREBOOTSTR));
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     TRACE();
-    DebugPrintln(FSFILENOTFOUNDSTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("file not found");
+    MSpg = "file not found";
   }
   delay(10);                                            // small pause so background tasks can run
 }
@@ -362,10 +358,8 @@ void MANAGEMENT_buildupload(void)
   if ( SPIFFS.exists("/msupload.html"))                 // load page from fs - wsupload.html
   {
     File file = SPIFFS.open("/msupload.html", "r");     // open file for read
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -379,13 +373,12 @@ void MANAGEMENT_buildupload(void)
     MSpg.replace("%NAM%", mySetupData->get_brdname());
     // add code to handle reboot controller
     MSpg.replace("%BT%", String(CREBOOTSTR));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     TRACE();
-    DebugPrintln(FSFILENOTFOUNDSTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("file not found");
+    MSpg = "file not found";
   }
   delay(10);                                            // small pause so background tasks can run
 }
@@ -432,7 +425,7 @@ void MANAGEMENT_handlefileupload(void)
     }
     else
     {
-      mserver.send(INTERNALSERVERERROR, String(PLAINTEXTPAGETYPE), String(CANNOTCREATEFILESTR));
+      mserver.send(INTERNALSERVERERROR, String(PLAINTEXTPAGETYPE), "Err: create file");
     }
   }
 }
@@ -445,12 +438,10 @@ void MANAGEMENT_buildadminpg5(void)
 #endif
   if ( SPIFFS.exists("/msindex5.html"))                 // constructs admin page 5 of management server
   {
-    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open("/msindex5.html", "r");     // open file for read
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
-    DebugPrintln(PROCESSPAGESTARTSTR);
+    
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -470,14 +461,13 @@ void MANAGEMENT_buildadminpg5(void)
     // display heap memory for tracking memory loss?
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read file
     TRACE();
-    DebugPrintln(BUILDDEFAULTPAGESTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("file not found");
+    MSpg = "file not found";
   }
 #ifdef TIMEMSBUILDPG5
   Serial.print("ms_buildpg5: ");
@@ -511,12 +501,9 @@ void MANAGEMENT_buildadminpg4(void)
 #endif
   if ( SPIFFS.exists("/msindex4.html"))                 // constructs admin page 4 of management server
   {
-    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open("/msindex4.html", "r");     // open file for read
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -544,20 +531,16 @@ void MANAGEMENT_buildadminpg4(void)
 
     MSpg.replace("%BT%", String(CREBOOTSTR));           // add code to handle reboot controller
 
-    TRACE();
-    DebugPrintln(PROCESSPAGEENDSTR);
-
     // display heap memory for tracking memory loss?
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read index file from SPIFFS
     TRACE();
-    DebugPrintln(BUILDDEFAULTPAGESTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("file not found");
+    MSpg = "file not found";
   }
 #ifdef TIMEMSBUILDPG4
   Serial.print("ms_buildpg4: ");
@@ -703,12 +686,10 @@ void MANAGEMENT_buildadminpg3(void)
   // spiffs was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/msindex3.html"))                 // constructs admin page 3 of management server
   {
-    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open("/msindex3.html", "r");     // open file for read
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
-    DebugPrintln(PROCESSPAGESTARTSTR);
+
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -724,26 +705,26 @@ void MANAGEMENT_buildadminpg3(void)
     if ( mySetupData->get_backlash_in_enabled() )
     {
       MSpg.replace("%BIE%", String(DISABLEBKINSTR));
-      MSpg.replace("%STI%", String(ENABLEDSTR));
+      MSpg.replace("%STI%", "Enabled");
     }
     else
     {
       MSpg.replace("%BIE%", String(ENABLEBKINSTR));
-      MSpg.replace("%STI%", String(NOTENABLEDSTR));
+      MSpg.replace("%STI%", "Disabled");
     }
     if ( mySetupData->get_backlash_out_enabled() )
     {
       MSpg.replace("%BOE%", String(DISABLEBKOUTSTR));
-      MSpg.replace("%STO%", String(ENABLEDSTR));
+      MSpg.replace("%STO%", "Enabled");
     }
     else
     {
       MSpg.replace("%BOE%", String(ENABLEBKOUTSTR));
-      MSpg.replace("%STO%", String(NOTENABLEDSTR));
+      MSpg.replace("%STO%", "Disabled");
     }
 
-    MSpg.replace("%BIS%", String(BLINSTEPSTR));
-    MSpg.replace("%BOS%", String(BLOUTSTEPSTR));
+    MSpg.replace("%BIS%",  String(BLINSTEPSTR));
+    MSpg.replace("%BOS%",  String(BLOUTSTEPSTR));
     MSpg.replace("%bins%", String(mySetupData->get_backlashsteps_in()));
     MSpg.replace("%bous%", String(mySetupData->get_backlashsteps_out()));
 
@@ -756,27 +737,24 @@ void MANAGEMENT_buildadminpg3(void)
     if ( mySetupData->get_pbenable() == 1)
     {
       MSpg.replace("%PBN%", String(DISABLEPBSTR));      // button
-      MSpg.replace("%PBL%", String(ENABLEDSTR));        // state
+      MSpg.replace("%PBL%", "Enabled");        // state
     }
     else
     {
       MSpg.replace("%PBN%", String(ENABLEPBSTR));
-      MSpg.replace("%PBL%", String(NOTENABLEDSTR));
+      MSpg.replace("%PBL%", "Disabled");
     }
-
-    DebugPrintln(PROCESSPAGEENDSTR);
 
     // display heap memory for tracking memory loss?
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-    DebugPrintln(PROCESSPAGEENDSTR);
-  }
+    }
   else
   {
     // could not read file
     TRACE();
-    DebugPrintln(BUILDDEFAULTPAGESTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("file not found");
+    MSpg = "file not found";
   }
 #ifdef TIMEMSBUILDPG3
   Serial.print("ms_buildpg3: ");
@@ -907,13 +885,10 @@ void MANAGEMENT_buildadminpg2(void)
   DebugPrintln("management: FS mounted");               // constructs admin page 2 of management server
   if ( SPIFFS.exists("/msindex2.html"))
   {
-    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open("/msindex2.html", "r");     // open file for read
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -931,12 +906,12 @@ void MANAGEMENT_buildadminpg2(void)
     if ( tcpipserverstate == RUNNING )
     {
       MSpg.replace("%TBT%", String(STOPTSSTR));
-      MSpg.replace("%TST%", SERVERSTATERUNSTR);
+      MSpg.replace("%TST%", "Running");
     }
     else
     {
       MSpg.replace("%TBT%", String(STARTTSSTR));
-      MSpg.replace("%TST%", SERVERSTATESTOPSTR);
+      MSpg.replace("%TST%", "Stopped");
     }
 #if defined(ESP8266)
     // esp8266 cannot change port of server
@@ -955,12 +930,12 @@ void MANAGEMENT_buildadminpg2(void)
     if ( webserverstate == RUNNING )
     {
       MSpg.replace("%WBT%", String(STOPWSSTR));
-      MSpg.replace("%WST%", String(SERVERSTATERUNSTR));
+      MSpg.replace("%WST%", "Running");
     }
     else
     {
       MSpg.replace("%WBT%", String(STARTWSSTR));
-      MSpg.replace("%WST%", String(SERVERSTATESTOPSTR));
+      MSpg.replace("%WST%", "Stopped");
     }
     // Webserver Port number %WPO%, %WBT%refresh Rate %WRA%
     MSpg.replace("%WPO%", "<form action=\"/msindex2\" method =\"post\">Port: <input type=\"text\" name=\"wp\" size=\"6\" value=" + String(mySetupData->get_webserverport()) + "> <input type=\"submit\" name=\"setwsport\" value=\"Set\"></form>");
@@ -970,12 +945,12 @@ void MANAGEMENT_buildadminpg2(void)
     if ( ascomserverstate == RUNNING )
     {
       MSpg.replace("%AST%", String(STOPASSTR));
-      MSpg.replace("%ABT%", String(SERVERSTATERUNSTR));
+      MSpg.replace("%ABT%", "Running");
     }
     else
     {
       MSpg.replace("%AST%", String(STARTASSTR));
-      MSpg.replace("%ABT%", String(SERVERSTATESTOPSTR));
+      MSpg.replace("%ABT%", "Stopped");
     }
     MSpg.replace("%APO%", "<form action=\"/msindex2\" method =\"post\">Port: <input type=\"text\" name=\"ap\" size=\"8\" value=" + String(mySetupData->get_ascomalpacaport()) + "> <input type=\"submit\" name=\"setasport\" value=\"Set\"></form>");
 
@@ -983,47 +958,47 @@ void MANAGEMENT_buildadminpg2(void)
     if ( mySetupData->get_temperatureprobestate() == 1 )
     {
       MSpg.replace("%TPP%", String(DISABLETEMPSTR));    // button
-      MSpg.replace("%TPE%", String(ENABLEDSTR));        // state
+      MSpg.replace("%TPE%", "Enabled");                 // state
     }
     else
     {
       MSpg.replace("%TPP%", String(ENABLETEMPSTR));
-      MSpg.replace("%TPE%", String(NOTENABLEDSTR));
+      MSpg.replace("%TPE%", "Disabled");
     }
     // Temperature Mode %TEM%
     // Celcius=1, Fahrenheit=0
     if ( mySetupData->get_tempmode() == 1 )
     {
       // celsius - Change to Fahrenheit
-      MSpg.replace("%TEM%", String(DISPLAYFSTR));
+      MSpg.replace("%TEM%", "Fahrenheit");
     }
     else
     {
       // Fahrenheit - change to celsius
-      MSpg.replace("%TEM%", String(DISPLAYCSTR));
+      MSpg.replace("%TEM%", "Celsius");
     }
 
     // INOUT LEDS ENABLE/DISABLE, State %INL%, Button %INO%
     if ( mySetupData->get_inoutledstate() == 1)
     {
       MSpg.replace("%INO%", String(DISABLELEDSTR));     // button
-      MSpg.replace("%INL%", String(ENABLEDSTR));        // state
+      MSpg.replace("%INL%", "Enabled");                 // state
     }
     else
     {
       MSpg.replace("%INO%", String(ENABLELEDSTR));
-      MSpg.replace("%INL%", String(NOTENABLEDSTR));
+      MSpg.replace("%INL%", "Disabled");
     }
 
     if ( mySetupData->get_hpswitchenable() == 1)
     {
       MSpg.replace("%HPO%", String(DISABLEHPSWSTR));   // button
-      MSpg.replace("%HPL%", String(ENABLEDSTR));       // state
+      MSpg.replace("%HPL%", "Enabled");                 // state
     }
     else
     {
       MSpg.replace("%HPO%", String(ENABLEHPSWSTR));
-      MSpg.replace("%HPL%", String(NOTENABLEDSTR));
+      MSpg.replace("%HPL%", "Disabled");
     }
 
     // add code to handle reboot controller %BT%
@@ -1032,14 +1007,13 @@ void MANAGEMENT_buildadminpg2(void)
     // display heap memory for tracking memory loss, %HEA%
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read file
     TRACE();
-    DebugPrintln(BUILDDEFAULTPAGESTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("file not found");
+    MSpg = "file not found";
   }
 #ifdef TIMEMSBUILDPG2
   Serial.print("ms_buildpg2: ");
@@ -1457,13 +1431,10 @@ void MANAGEMENT_buildadminpg1(void)
   // spiffs was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/msindex1.html"))                 // constructs home page of management server
   {
-    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open("/msindex1.html", "r");     // open file for read
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -1620,14 +1591,13 @@ void MANAGEMENT_buildadminpg1(void)
     // display heap memory for tracking memory loss?
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read file
     TRACE();
-    DebugPrintln(BUILDDEFAULTPAGESTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("File not found");
+    MSpg = "File not found";
   }
 #ifdef TIMEMSBUILDPG1
   Serial.print("ms_buildpg1: ");
@@ -2512,15 +2482,13 @@ void MANAGEMENT_predefinedboard1()
   MSpg = MSpg + "Predefined board numer: " + String(brdnumber) + "\n";
   if ( SPIFFS.exists(boardname))
   {
-    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open(boardname, "r");            // open file for read
-    DebugPrintln(READPAGESTR);
     jsonstr = file.readString();                        // read contents into string
     file.close();
   }
   else
   {
-    DebugPrintln("Error: Could not load board config file");
+    DebugPrintln("Err: Could not load board config file");
     jsonstr = "";
   }
   MSpg = MSpg + jsonstr + "\n";
@@ -2534,7 +2502,7 @@ void MANAGEMENT_predefinedboard1()
     else
     {
       MSpg = MSpg + "Changed board type: Fail\n";
-      MSpg = MSpg + "Error in createBoardConfigfromjson(). Board type not set.\n";
+      MSpg = MSpg + "Err in createBoardConfigfromjson(). Board type not set.\n";
     }
     // add a home button
     MSpg = MSpg + "<form action=\"/\" method=\"post\"><input type=\"submit\" value=\"Management Server HOME\"></form>";
@@ -2553,13 +2521,10 @@ void MANAGEMENT_buildpredefinedboard()
   DebugPrintln("buildpredefinedconfig: Start");
   if ( SPIFFS.exists("/predefbrd.html"))
   {
-    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open("/predefbrd.html", "r");    // open file for read
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -2595,15 +2560,13 @@ void MANAGEMENT_buildpredefinedboard()
 
     // add code to handle reboot controller %BT%
     MSpg.replace("%BT%", String(CREBOOTSTR));
-
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read file
     TRACE();
-    DebugPrintln(BUILDDEFAULTPAGESTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("File not found");
+    MSpg = "File not found";
   }
 }
 
@@ -2624,13 +2587,10 @@ void MANAGEMENT_buildconfigpg()
   DebugPrintln("buildconfigpg: Start");
   if ( SPIFFS.exists("/config.html"))
   {
-    DebugPrintln(FILEFOUNDSTR);
     File file = SPIFFS.open("/config.html", "r");       // open file for read
-    DebugPrintln(READPAGESTR);
     MSpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -2649,14 +2609,13 @@ void MANAGEMENT_buildconfigpg()
     // display heap memory for tracking memory loss, %HEA%
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read file
     TRACE();
-    DebugPrintln(BUILDDEFAULTPAGESTR);
-    MSpg = MANAGEMENTNOTFOUNDSTR;
+    DebugPrintln("File not found");
+    MSpg = "File not found";
   }
 }
 
@@ -2689,8 +2648,8 @@ void start_management(void)
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln(FSNOTSTARTEDSTR);
-    DebugPrintln(SERVERSTATESTOPSTR);
+    DebugPrintln("Err: spiffs not started");
+    DebugPrintln("stop management server");
     managementserverstate = STOPPED;
     return;
   }
@@ -2745,7 +2704,7 @@ void start_management(void)
   mserver.begin();
   managementserverstate = RUNNING;
   TRACE();
-  DebugPrintln(SERVERSTATESTARTSTR);
+  DebugPrintln("management server started");
   delay(10);                                            // small pause so background tasks can run
 }
 
@@ -2756,11 +2715,11 @@ void stop_management(void)
     mserver.stop();
     managementserverstate = STOPPED;
     TRACE();
-    DebugPrintln(SERVERSTATESTOPSTR);
+      DebugPrintln("management server stopped");
   }
   else
   {
-    DebugPrintln(SERVERNOTRUNNINGSTR);
+      DebugPrintln("management server not running");
   }
 }
 

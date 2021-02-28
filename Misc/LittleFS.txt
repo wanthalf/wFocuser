@@ -1,0 +1,67 @@
+LittleFS for ESP8266
+- SPIFFS now deprecated on ESP8266 Arduino Core
+- Not supported on ESP32
+- Some Libraries like AsyncWebServer etc still use SPIFFS
+
+
+
+
+ESP8266LittleFS is the equivalent tool for LittleFS.
+
+Download the 2.6.0 or later version of the upload tool: https://github.com/earlephilhower/arduino-esp8266littlefs-plugin/releases
+
+Install
+In your Arduino sketchbook directory, create tools directory if it doesn’t exist yet.
+Unpack the tool into tools directory (the path will look like <home_dir>/Arduino/tools/ESP8266LittleFS/xxxxxx) 
+
+To upload a LittleFS filesystem use Tools > ESP8266 LittleFS Data Upload
+
+
+SPIFFS.begin()
+or LittleFS.begin()
+
+SPIFFS.end()
+or LittleFS.end()
+
+SPIFFS.format()
+or LittleFS.format()
+
+SPIFFS.open(path, mode)
+or LittleFS.open(path, mode)
+
+SPIFFS.exists(path)
+or LittleFS.exists(path)
+
+LittleFS.mkdir(path)
+LittleFS.rmdir(path)
+
+SPIFFS.openDir(path)
+or LittleFS.openDir(path)
+
+SPIFFS.remove(path)
+or LittleFS.remove(path)
+
+SPIFFS.rename(pathFrom, pathTo)
+or LittleFS.rename(pathFrom, pathTo)
+
+FSInfo fs_info;
+SPIFFS.info(fs_info);
+or LittleFS.info(fs_info);
+
+Dir dir = SPIFFS.openDir("/data");
+// or Dir dir = LittleFS.openDir("/data");
+while (dir.next()) {
+    Serial.print(dir.fileName());
+    if(dir.fileSize()) {
+        File f = dir.openFile("r");
+        Serial.println(f.size());
+    }
+}
+
+// Filesystem:
+//   testdir/
+//           file1
+Dir d = LittleFS.openDir("testdir/");
+File f = d.openFile("r");
+// f.name() == "file1", f.fullName() == "testdir/file1"
+

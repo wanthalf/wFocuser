@@ -7,6 +7,8 @@
 #ifndef comms_h
 #define comms_h
 
+#include "focuserconfig.h"
+
 // ======================================================================
 // EXTERNS
 // ======================================================================
@@ -62,7 +64,7 @@ char *ftoa(char *a, double f, int precision)
 
 void SendMessage(const char *str)
 {
-  DebugPrint(SENDSTR);
+  DebugPrint("Send:");
   DebugPrintln(str);
 
 #if defined(ACCESSPOINT) || defined(STATIONMODE)  // for Accesspoint or Station mode

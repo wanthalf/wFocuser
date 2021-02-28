@@ -89,11 +89,9 @@ void WEBSERVER_buildnotfound(void)
   if ( SPIFFS.exists("/wsnotfound.html"))               // load page from fs - wsnotfound.html
   {
     File file = SPIFFS.open("/wsnotfound.html", "r");   // open file for read
-    DebugPrintln(READPAGESTR);
     WSpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     WSpg.replace("%IP%", ipStr);
     WSpg.replace("%POR%", String(mySetupData->get_webserverport()));
@@ -107,13 +105,11 @@ void WEBSERVER_buildnotfound(void)
     WSpg.replace("%TIC%", ticol);
     String hcol = mySetupData->get_wp_headercolor();
     WSpg.replace("%HEC%", hcol);
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     TRACE();
-    DebugPrintln(FSFILENOTFOUNDSTR);
-    DebugPrintln(BUILDDEFAULTPAGESTR);
+    DebugPrintln("not found");
     WSpg = WEBSERVERNOTFOUNDSTR;
   }
   delay(10);                                            // small pause so background tasks can run
@@ -136,11 +132,9 @@ void WEBSERVER_buildpresets(void)
   if ( SPIFFS.exists("/wspresets.html"))                // load page from fs - wspresets.html
   {
     File file = SPIFFS.open("/wspresets.html", "r");    // open file for read
-    DebugPrintln(READPAGESTR);
     WSpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     WSpg.replace("%BKC%", bcol);
@@ -169,14 +163,12 @@ void WEBSERVER_buildpresets(void)
     WSpg.replace("%WSP7%", String(mySetupData->get_focuserpreset(7)));
     WSpg.replace("%WSP8%", String(mySetupData->get_focuserpreset(8)));
     WSpg.replace("%WSP9%", String(mySetupData->get_focuserpreset(9)));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read preset file from SPIFFS
     TRACE();
-    DebugPrintln(FSFILENOTFOUNDSTR);
-    DebugPrintln(BUILDDEFAULTPAGESTR);
+    DebugPrintln("not found");
     WSpg = WEBSERVERNOTFOUNDSTR;
   }
 #ifdef TIMEWSBUILDPRESETS
@@ -631,11 +623,9 @@ void WEBSERVER_buildmove(void)
   if ( SPIFFS.exists("/wsmove.html"))                   // load page from fs - wsmove.html
   {
     File file = SPIFFS.open("/wsmove.html", "r");       // open file for read
-    DebugPrintln(READPAGESTR);
     WSpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     WSpg.replace("%BKC%", bcol);
@@ -653,14 +643,12 @@ void WEBSERVER_buildmove(void)
     WSpg.replace("%CPO%", String(driverboard->getposition()));
     WSpg.replace("%TPO%", String(ftargetPosition));
     WSpg.replace("%MOV%", String(isMoving));
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read move file from SPIFFS
     TRACE();
-    DebugPrintln(FSFILENOTFOUNDSTR);
-    DebugPrintln(BUILDDEFAULTPAGESTR);
+    DebugPrintln("not found");
     WSpg = WEBSERVERNOTFOUNDSTR;
   }
 #ifdef TIMEWSBUILDMOVE
@@ -677,7 +665,6 @@ void WEBSERVER_sendmove(void)
   Serial.println(millis());
 #endif
   WEBSERVER_buildmove();
-  DebugPrintln(SENDPAGESTR);
   WEBSERVER_sendmyheader();
   WEBSERVER_sendmycontent();
   WSpg = "";
@@ -719,9 +706,9 @@ void WEBSERVER_handlemove()
     newtemp = ( newtemp > (long)mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : newtemp;
     ftargetPosition = (unsigned long) newtemp;
     DebugPrint("Move = "); DebugPrintln(fmv_str);
-    DebugPrint(CURRENTPOSSTR);
+    DebugPrint("Position:");
     DebugPrintln(driverboard->getposition());
-    DebugPrint(TARGETPOSSTR);
+    DebugPrint("Target");
     DebugPrintln(ftargetPosition);
   }
 
@@ -744,11 +731,9 @@ void WEBSERVER_buildhome(void)
   if ( SPIFFS.exists("/wsindex.html"))                  // load page from fs - wsindex.html
   {
     File file = SPIFFS.open("/wsindex.html", "r");      // open file for read
-    DebugPrintln(READPAGESTR);
     WSpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     WSpg.replace("%BKC%", bcol);
@@ -916,14 +901,12 @@ void WEBSERVER_buildhome(void)
     {
       WSpg.replace("%OLE%", "<b>OLED:</b> Display not defined");
     }
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
     // could not read index file from SPIFFS
     TRACE();
-    DebugPrintln(FSFILENOTFOUNDSTR);
-    DebugPrintln(BUILDDEFAULTPAGESTR);
+    DebugPrintln("not found");
     WSpg = WEBSERVERNOTFOUNDSTR;
   }
 #ifdef TIMEWSROOTBUILD
@@ -1202,8 +1185,8 @@ void setup_webserver(void)
 
   webserver->onNotFound(WEBSERVER_handlenotfound);
   webserver->begin();
+  DebugPrintln("start web server");
   mySetupData->set_webserverstate(1);
-  DebugPrintln(SERVERSTATESTARTSTR);
   HDebugPrint("Heap after  start_webserver = ");
   HDebugPrintf("%u\n", ESP.getFreeHeap());
   delay(10);                                        // small pause so background tasks can run
@@ -1214,8 +1197,8 @@ void start_webserver(void)
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln(FSNOTSTARTEDSTR);
-    DebugPrintln(SERVERSTATESTOPSTR);
+    DebugPrintln("spiffs not started");
+    DebugPrintln("stop webserver");
     mySetupData->set_webserverstate(0);     // disable web server
     return;
   }
@@ -1223,7 +1206,7 @@ void start_webserver(void)
   {
     WSpg.reserve(MAXWEBPAGESIZE);
   }
-  DebugPrintln(STARTWEBSERVERSTR);
+  DebugPrintln("start web server");
   HDebugPrint("Heap before start_webserver = ");
   HDebugPrintf("%u\n", ESP.getFreeHeap());
   HDebugPrintf("%u\n", ESP.getFreeHeap());
@@ -1252,12 +1235,12 @@ void stop_webserver(void)
     delete webserver;             // free the webserver pointer and associated memory/code
     mySetupData->set_webserverstate(0);
     TRACE();
-    DebugPrintln(SERVERSTATESTOPSTR);
+    DebugPrintln("web server stopped");
     WSpg = "";
   }
   else
   {
-    DebugPrintln(SERVERNOTRUNNINGSTR);
+    DebugPrintln("web server not running");
   }
   webserverstate = STOPPED;
   delay(10);                      // small pause so background tasks can run

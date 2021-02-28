@@ -16,13 +16,13 @@
 #include <WiFiServer.h>
 #include <WiFiClient.h>
 
-extern SetupData   *mySetupData;
-extern DriverBoard* driverboard;
+extern SetupData     *mySetupData;
+extern DriverBoard*  driverboard;
 extern unsigned long ftargetPosition;       // target position
 extern volatile bool halt_alert;
+
 extern char   ipStr[]; 
 extern byte   isMoving;                     // is the motor currently moving
-extern String MSpg;
 extern bool   ascomserverstate;
 extern bool   ascomdiscoverystate;
 extern float  lasttemp;
@@ -62,7 +62,7 @@ extern WebServer mserver;
 WiFiUDP ASCOMDISCOVERYUdp;
 char packetBuffer[255];                                 // buffer to hold incoming UDP packet
 
-String ASpg;                                            // url:/setup/v1/focuser/0/setup
+String       ASpg;                                      // url:/setup/v1/focuser/0/setup
 unsigned int ASCOMClientID;
 unsigned int ASCOMClientTransactionID;
 unsigned int ASCOMServerTransactionID = 0;
@@ -100,7 +100,7 @@ void checkASCOMALPACADiscovery(void)
   int packetSize = ASCOMDISCOVERYUdp.parsePacket();
   if (packetSize)
   {
-    DebugPrint("ASCOM ALPACA Discovery: Rcd packet size: ");
+    DebugPrint("ASCOM Discovery: Rcd packet size: ");
     DebugPrintln(packetSize);
     DebugPrint("From ");
     IPAddress remoteIp = ASCOMDISCOVERYUdp.remoteIP();
@@ -119,13 +119,13 @@ void checkASCOMALPACADiscovery(void)
 
     if (len < 16)                                     // No undersized packets allowed
     {
-      DebugPrintln("Packet is undersized");
+      DebugPrintln("err: Packet undersized");
       return;
     }
 
     if (strncmp("alpacadiscovery1", packetBuffer, 16) != 0)    // 0-14 "alpacadiscovery", 15 ASCII Version number of 1
     {
-      DebugPrintln("Packet is not correct format");
+      DebugPrintln("err: Packet not correct format");
       return;
     }
 
@@ -273,16 +273,16 @@ void ASCOM_Create_Setup_Focuser_HomePage()
 
   // construct setup page of ascom server
   // header
+  DebugPrint("get pg: ");
   if ( SPIFFS.begin())
   {
     if ( SPIFFS.exists("/assetup.html"))
     {
       File file = SPIFFS.open("/assetup.html", "r");    // open file for read
-      DebugPrintln(READPAGESTR);                        // read contents into string
       ASpg = file.readString();
       file.close();
 
-      DebugPrintln(PROCESSPAGESTARTSTR);
+      DebugPrintln("start");
       // process for dynamic data
       String bcol = mySetupData->get_wp_backcolor();
       ASpg.replace("%BKC%", bcol);
@@ -302,17 +302,19 @@ void ASCOM_Create_Setup_Focuser_HomePage()
       ASpg.replace("%RDB%", rdbuffer);
       ASpg.replace("%SMB%", smbuffer);
       ASpg.replace("%MSB%", msbuffer);
-      DebugPrintln(PROCESSPAGEENDSTR);
+      DebugPrintln("end");
       eflag = 0;
     }
     else
     {
       eflag = 1;                                        // assetup.html not found
+      DebugPrintln("not found");
     }
   }
   else
   {
     // spiffs not started
+    DebugPrintln("err: spiffs");
     eflag = 1;
   }
   if ( eflag == 1 )
@@ -480,15 +482,14 @@ void ASCOM_handle_setup()
   // The web page must describe the overall device, including name, manufacturer and version number.
   // content-type: text/html
   String ASpg;
+  DebugPrintln("ASCOM_handle_setup()");
   // spiffs was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/ashomepage.html"))               // read ashomepage.html from FS
   {
     File file = SPIFFS.open("/ashomepage.html", "r");   // open file for read
-    DebugPrintln(READPAGESTR);
     ASpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln(PROCESSPAGESTARTSTR);
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     ASpg.replace("%BKC%", bcol);
@@ -502,12 +503,10 @@ void ASCOM_handle_setup()
     ASpg.replace("%ALP%", String(mySetupData->get_ascomalpacaport()));
     ASpg.replace("%PRV%", String(programVersion));
     ASpg.replace("%PRN%", mySetupData->get_brdname());
-    DebugPrintln(PROCESSPAGEENDSTR);
   }
   else
   {
-    DebugPrintln("ascomserver: Error file ashomepage.html not found");
-    DebugPrintln("ascomserver: build_default_homepage");
+    DebugPrintln("err: pg not found");
     ASpg = ASCOMSERVERNOTFOUNDSTR;
   }
   ASCOMServerTransactionID++;
@@ -646,13 +645,13 @@ void ASCOM_handle_focuser_setup()
     mySetupData->set_brdstepmode(temp1);
   }
 
-  DebugPrintln( "root() -build homepage");
+  DebugPrintln("build homepage");
 
   ASCOM_Create_Setup_Focuser_HomePage();                // construct the homepage now
 
   // send the homepage to a connected client
   ASCOMServerTransactionID++;
-  DebugPrintln("root() - send homepage");
+  DebugPrintln("send homepage");
   ASCOM_sendmyheader();
   ASCOM_sendmycontent();
   ASpg = "";
@@ -1197,32 +1196,31 @@ void ASCOM_handleRoot()
   // spiffs was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/ashomepage.html"))               // read ashomepage.html from FS
   {
-    DebugPrintln("ascomserver: ashomepage.html found");
+    DebugPrintln("ashomepage.html found");
     File file = SPIFFS.open("/ashomepage.html", "r");   // open file for read
-    DebugPrintln("ascomserver: read page into string");
+    DebugPrintln("read pg");
     ASpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln("ascomserver: processing page start");
+    DebugPrintln("process pg");
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
-    MSpg.replace("%BKC%", bcol);
+    ASpg.replace("%BKC%", bcol);
     String txtcol = mySetupData->get_wp_textcolor();
-    MSpg.replace("%TXC%", txtcol);
+    ASpg.replace("%TXC%", txtcol);
     String ticol = mySetupData->get_wp_titlecolor();
-    MSpg.replace("%TIC%", ticol);
+    ASpg.replace("%TIC%", ticol);
     String hcol = mySetupData->get_wp_headercolor();
-    MSpg.replace("%HEC%", hcol);
+    ASpg.replace("%HEC%", hcol);
     ASpg.replace("%IPS%", ipStr);
     ASpg.replace("%ALP%", String(mySetupData->get_ascomalpacaport()));
     ASpg.replace("%PRV%", String(programVersion));
     ASpg.replace("%PRN%", mySetupData->get_brdname());
-    DebugPrintln("ascomserver: processing page done");
+    DebugPrintln("done");
   }
   else
   {
-    DebugPrintln("ascomserver: Error occurred finding SPIFFS file ashomepage.html");
-    DebugPrintln("ascomserver: build_default_homepage");
+    DebugPrintln("err: not found ashomepage.html");
     ASpg = ASCOMSERVERNOTFOUNDSTR;
   }
   ASCOMServerTransactionID++;
@@ -1237,8 +1235,8 @@ void start_ascomremoteserver(void)
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln(FSNOTSTARTEDSTR);
-    DebugPrintln(SERVERSTATESTOPSTR);
+    DebugPrintln("Err: spiffs");
+    DebugPrintln("Stop ASCOM service");
     ascomserverstate = STOPPED;
     return;
   }
@@ -1290,7 +1288,7 @@ void start_ascomremoteserver(void)
   ascomserver->on("/api/v1/focuser/0/supportedactions",   HTTP_GET, ASCOM_handlesupportedactionsget);
   ascomserver->begin();
   ascomserverstate = RUNNING;
-  DebugPrintln("start ascom server: RUNNING");
+  DebugPrintln("ascom server: RUNNING");
   HDebugPrint("Heap after  start_ascomremoteserver = ");
   HDebugPrintf("%u\n", ESP.getFreeHeap());
   delay(10);                                            // small pause so background tasks can run
@@ -1308,7 +1306,7 @@ void stop_ascomremoteserver(void)
   }
   else
   {
-    DebugPrintln(SERVERNOTRUNNINGSTR);
+    DebugPrintln("ascomserver not running");
   }
 
   if ( ascomdiscoverystate == STOPPED )
@@ -1318,7 +1316,7 @@ void stop_ascomremoteserver(void)
   }
   else
   {
-    DebugPrintln(SERVERNOTRUNNINGSTR);
+    DebugPrintln("ascomserver not running");
   }
   delay(10);                                            // small pause so background tasks can run
 }

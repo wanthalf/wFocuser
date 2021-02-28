@@ -6,6 +6,7 @@
 // ======================================================================
 
 #include <Arduino.h>
+#include "boarddefs.h"
 
 #ifndef focuserconfig_h
 #define focuserconfig_h
@@ -19,7 +20,7 @@
 // Uncomment only your board - ONLY ONE BOARD SHOULD BE UNCOMMENTED
 
 // ESP8266 Boards
-//#define DRVBRD WEMOSDRV8825H                    // driver definition for Holger
+#define DRVBRD WEMOSDRV8825H                    // driver definition for Holger
 //#define DRVBRD WEMOSDRV8825
 //#define DRVBRD PRO2EULN2003
 //#define DRVBRD PRO2EDRV8825
@@ -30,7 +31,7 @@
 //#define DRVBRD PRO2EL9110S
 //#define DRVBRD CUSTOMBRD
 // ESP32 Boards
-#define DRVBRD PRO2ESP32DRV8825
+//#define DRVBRD PRO2ESP32DRV8825
 //#define DRVBRD PRO2ESP32ULN2003
 //#define DRVBRD PRO2ESP32L298N
 //#define DRVBRD PRO2ESP32L293DMINI
@@ -49,7 +50,7 @@
 // If you need no support for OLED skip this section. To enable the 
 // OLED TEXT or GRAPHIC DISPLAY uncomment the related line. 
 
-#define OLED_MODE OLED_TEXT       // OLED text only mode
+//#define OLED_MODE OLED_TEXT       // OLED text only mode
 //#define OLED_MODE OLED_GRAPHIC  // OLED graphic mode
 
 // ======================================================================
@@ -117,7 +118,7 @@
 
 
 // ======================================================================
-// DO NOT CHANGE: THESE DEFINITIONS NOW OBSOLETE
+// DO NOT CHANGE: THESE DEFINITIONS NOW DEPRECATED
 // ======================================================================
 
 // To enable In and Out Pushbuttons [ESP32 only], uncomment the next line
@@ -244,7 +245,7 @@
 #endif
 #endif
 
-#if (DRVBRD == PRO2EL293DNEMA || DRVBRD == PRO2EL293D28BYJ48)
+#if ((DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48))
 #ifdef LOCALSERIAL
 #halt // ERROR - LOCALSERIAL not supported L293D Motor Shield [ESP8266] boards
 #endif
@@ -278,6 +279,12 @@
 #ifdef MANAGEMENT
 #if !defined(ACCESSPOINT) && !defined(STATIONMODE)
 #halt // ERROR You must have ACCESSPOINT or STATIONMODE defined to enable the MANAGEMENT console
+#endif
+#endif
+
+#ifdef BLUETOOTHMODE
+#if defined(ESP8266)
+#halt // ERROR Bluetooth only available on ESP32 boards
 #endif
 #endif
 

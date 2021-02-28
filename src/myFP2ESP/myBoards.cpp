@@ -6,7 +6,8 @@
 
 #include <Arduino.h>
 #include "generalDefinitions.h"
-//#include "focuserconfig.h"
+#include "focuserconfig.h"
+//#include "boarddefs.h"                    // included as part of focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 

@@ -1,3 +1,17 @@
+206
+Add pop-up dialog box whenever reboot controller is chosen from web page on Management Server
+Add preprocessor check for BLUETOOTHMODE - Halt if target is ESP8266
+Initialize ipStr[] 
+Fix for ipStr error when using LocalSerial mode
+Fix for LocalSerial mode, to match void return of ESP_Communication() in loop()
+Fix for ASCOM ALPACA REMOTE Server / page not showing all text
+Increase MSpg size for MANAGEMENT Server to reserve 3700 bytes
+Increase ASpg size for ASCOM Server to reserve 2200 bytes
+Remove MSpg reference in ASCOM server
+Remove unnecessary debug statements
+Remove unnecessary [not used] defines and strings
+Extract board defines into boarddefs.h and have classes include this [fixes issue of DRVBRD not being defined on some code]
+
 205
 Fix for truncated board names showing for get firmware (case 4: comms.h)
 Fix for some motor board .jsn files [wrong values/pins]

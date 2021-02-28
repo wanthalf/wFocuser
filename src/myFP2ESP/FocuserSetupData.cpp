@@ -31,7 +31,7 @@ SetupData::SetupData(void)
 
   if (!SPIFFS.begin())
   {
-    DebugPrintln("FS !mounted");
+    DebugPrintln("FS not mounted");
     DebugPrintln("Formatting, please wait...");
     SPIFFS.format();
     DebugPrintln("Format FS done");
@@ -54,7 +54,7 @@ byte SetupData::LoadConfiguration()
   delay(10);
   if (!dfile)
   {
-    DebugPrintln("LoadConfiguration: Persistant data file not found. Create Defaults.");
+    DebugPrintln("Err: no Persistant data file. create defaults.");
     LoadDefaultPersistantData();
     delay(10);
   }
@@ -73,7 +73,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_per, fdata);
     if (error)
     {
-      DebugPrintln("Failed to read persistant data file, using default configuration");
+      DebugPrintln("Err: no persistant data file. create defaults.");
       LoadDefaultPersistantData();
     }
     else
@@ -129,7 +129,7 @@ byte SetupData::LoadConfiguration()
   dfile = SPIFFS.open(filename_variable, "r");
   if (!dfile)
   {
-    DebugPrintln("LoadConfiguration: Variable data not found, load default values");
+    DebugPrintln("Err: no Variable data found. create defaults.");
     LoadDefaultVariableData();
     retval = 1;
   }
@@ -147,7 +147,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_var, fdata);
     if (error)
     {
-      DebugPrintln("Fail reading variable data file, using default configuration");
+      DebugPrintln("Err: no variable data file. create defaults.");
       LoadDefaultVariableData();
       retval = 2;
     }
@@ -162,7 +162,7 @@ byte SetupData::LoadConfiguration()
     }
   }
   dfile.close();
-  DebugPrintln("config file variable data loaded");
+  DebugPrintln("variable data loaded");
 
   // Process board configuration
   delay(10);
@@ -172,7 +172,7 @@ byte SetupData::LoadConfiguration()
   File bfile = SPIFFS.open(filename_boardconfig, "r");
   if (!bfile)
   {
-    DebugPrintln("no board config file, load default values");
+    DebugPrintln("err: no board config file. create defaults.");
     LoadDefaultBoardData();
     delay(10);
     retval = 4;
@@ -193,7 +193,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_brd, board_data);
     if (error)
     {
-      DebugPrintln("Failed to deserialize board config file, using default config");
+      DebugPrintln("Err: deserialize board config file, create defaults.");
       LoadDefaultBoardData();
     }
     else
@@ -1478,13 +1478,13 @@ void SetupData::ListDir(const char * dirname, uint8_t levels)
   // TODO
   // THIS DOES NOT WORK ON ESP8266!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  DebugPrint("Listing directory: {");
 #if defined(ESP8266)
   DebugPrintln("SetupData::ListDir() does not work on ESP8266");
-  return;
 #else
   File root = SPIFFS.open(dirname);
   delay(10);
+  DebugPrint("Listing directory: {");
+  
   if (!root)
   {
     DebugPrintln(" - failed to open directory");

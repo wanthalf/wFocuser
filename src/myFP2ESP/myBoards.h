@@ -6,7 +6,6 @@
 
 #include "focuserconfig.h"              // because of DRVBRD
 #include "generalDefinitions.h"
-// boardtypes now in generalDefinitions.h
 
 #ifndef myBoards_h
 #define myBoards_h

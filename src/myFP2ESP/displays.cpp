@@ -9,8 +9,9 @@
 // ======================================================================
 
 #include <Arduino.h>
-#include "myBoards.h"
 #include "focuserconfig.h"
+//#include "boarddefs.h"                    // included as part of focuserconfig.h"
+#include "myBoards.h"
 #include "FocuserSetupData.h"
 #include "images.h"
 #include "generalDefinitions.h"
@@ -23,9 +24,9 @@
 
 extern unsigned long ftargetPosition;       // target position
 extern float lasttemp;
-extern char ipStr[];                        // ip address
-extern char mySSID[];
-extern bool displaystate;
+extern char  ipStr[];                       // ip address
+extern char  mySSID[];
+extern bool  displaystate;
 
 extern DriverBoard* driverboard;
 extern TempProbe    *myTempProbe;
@@ -55,7 +56,7 @@ bool CheckOledConnected(void)
   Wire.beginTransmission(OLED_ADDR);                    // check if OLED display is present
   if (Wire.endTransmission() != 0)
   {
-    DebugPrintln(I2CDEVICENOTFOUNDSTR);
+    DebugPrintln("Display not found");
     return false;
   }
   return true;
@@ -336,16 +337,16 @@ void OLED_TEXT::displaylcdpage2(void)
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
   setCursor(0, 0);
 #if defined(ACCESSPOINT)
-  println(ACCESSPOINTSTR);
+  println("Access point");
 #endif
 #if defined(STATIONMODE)
-  println(STATIONMODESTR);
+  println("Station mode");
 #endif
-  print(SSIDSTR);
+  print("SSID:");
   print(mySSID);
   println();
 
-  print(IPADDRESSSTR);
+  print("IP  :");
   print(ipStr);
   println();
 #endif // if defined(ACCESSPOINT) || defined(STATIONMODE)
@@ -353,36 +354,36 @@ void OLED_TEXT::displaylcdpage2(void)
   if ( mySetupData->get_webserverstate() == 1)
   {
     setCursor(0, 0);
-    println(WEBSERVERSTR);
+    println("Web server");
 #if defined(ACCESSPOINT)
-    println(ACCESSPOINTSTR);
+    println("Access point");
 #endif
 #if defined(STATIONMODE)
-    println(STATIONMODESTR);
+    println("Station mode");
 #endif
-    print(IPADDRESSSTR);
+    print("IP  :");
     print(ipStr);
-    print(STARTSTR);
+    print("Port:");
     println(String(mySetupData->get_webserverport()));
   }
   if ( mySetupData->get_ascomserverstate() == 1)
   {
     setCursor(0, 0);
-    println(ASCOMREMOTESTR);
-    print(IPADDRESSSTR);
+    println("ASCOM REMOTE");
+    print("IP  :");
     print(ipStr);
-    print(STARTSTR);
+    print("Port:");
     println(mySetupData->get_ascomalpacaport());
   }
 
 #if defined(BLUETOOTHMODE)
   setCursor(0, 0);
-  print(BLUETOOTHSTR);
+  print("Bluetooth");
   println();
 #endif
 #if defined(LOCALSERIAL)
   setCursor(0, 0);
-  println(LOCALSERIALSTR);
+  println("Local serial");
 #endif
   //  display();
 }
@@ -576,20 +577,20 @@ void OLED_TEXT::display_oledtext_page2(void)
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
   setCursor(0, 0);
 #if defined(ACCESSPOINT)
-  print(ACCESSPOINTSTR);
+  print("Access Point");
   clearToEOL();
   println();
 #endif
 #if defined(STATIONMODE)
-  print(STATIONMODESTR);
+  print("Station mode");
   clearToEOL();
   println();
 #endif
-  print(SSIDSTR);
+  print("SSID:");
   print(mySSID);
   clearToEOL();
   println();
-  print(IPADDRESSSTR);
+  print("IP  :");
   print(ipStr);
   clearToEOL();
   println();
@@ -598,28 +599,28 @@ void OLED_TEXT::display_oledtext_page2(void)
   if ( mySetupData->get_webserverstate() == 1)
   {
     //setCursor(0, 0);
-    print(WEBSERVERSTR);
+    print("Web Server");
     clearToEOL();
     println();
-    print(IPADDRESSSTR);
+    print("IP  :");
     print(ipStr);
     clearToEOL();
     println();
-    print(PORTSTR);
+    print("Port:");
     print(String(mySetupData->get_webserverport()));
     clearToEOL();
     println();
   }
   if ( mySetupData->get_ascomserverstate() == 1)
   {
-    print(ASCOMREMOTESTR);
+    print("ASCOM REMOTE");
     clearToEOL();
     println();
-    print(IPADDRESSSTR);
+    print("IP  :");
     print(ipStr);
     clearToEOL();
     println();
-    print(PORTSTR);
+    print("Port:");
     print(mySetupData->get_ascomalpacaport());
     clearToEOL();
     println();
@@ -627,13 +628,13 @@ void OLED_TEXT::display_oledtext_page2(void)
 
 #if defined(BLUETOOTHMODE)
   setCursor(0, 0);
-  print(BLUETOOTHSTR);
+  print("Bluetooth");
   clearToEOL();
   println();
 #endif
 
 #if defined(LOCALSERIAL)
   setCursor(0, 0);
-  println(LOCALSERIALSTR);
+  println("Local Serial");
 #endif
 }

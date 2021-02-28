@@ -1,0 +1,26 @@
+myString.reserve(xxxx);
+
+Management Server
+Home 		1656
+Not found	1363
+pg2		1749
+pg3		1352
+pg4		1488
+pg5		2537
+list		
+delete		 495
+upload		1242
+[USE 2600]
+
+Web Server	
+Home		3374
+Move		2714
+Presets		3285
+Not Found	 517
+[USE 3400]
+
+ASCOM Remote
+Setup		 794
+Home		1876
+150
+[USE 2000]

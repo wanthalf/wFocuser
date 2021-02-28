@@ -63,19 +63,9 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define HPSWOPEN              0             // hpsw states refelect status of switch
 #define HPSWCLOSED            1
 
-#define MAXWEBPAGESIZE        3400
-#define MAXASCOMPAGESIZE      2200
-#define MAXMANAGEMENTPAGESIZE 3600          // largest page is MANAGEMENT_buildpredefinedboard() = 3469
-
-#ifndef SLOW
-#define SLOW                  0             // motorspeeds
-#endif
-#ifndef MED
-#define MED                   1
-#endif
-#ifndef FAST
-#define FAST                  2
-#endif
+#define MAXWEBPAGESIZE        4100          // largest = / = 3943
+#define MAXASCOMPAGESIZE      2200          // largest = /setuppage = 2042
+#define MAXMANAGEMENTPAGESIZE 3700          // largest = /msindex2 = 3568
 
 // ======================================================================
 // 2: DO NOT CHANGE
@@ -85,179 +75,11 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define moving_out            !moving_in
 #define moving_main           moving_in               
 
-#ifndef STEP1
-#define STEP1                 1             // stepmodes
-#endif
-#ifndef STEP2
-#define STEP2                 2
-#endif
-#ifndef STEP4
-#define STEP4                 4
-#endif
-#ifndef STEP8
-#define STEP8                 8
-#endif
-#ifndef STEP16
-#define STEP16                16
-#endif
-#ifndef STEP32
-#define STEP32                32
-#endif
-#ifndef STEP64
-#define STEP64                64
-#endif
-#ifndef STEP128
-#define STEP128               128
-#endif
-#ifndef STEP256
-#define STEP256               256
-#endif
-
 #define EOFSTR                '#'
 #define STARTCMDSTR           ':'
 
-// ======================================================================
-// 3: DEFINES FOR BOARD TYPES
-// ======================================================================
-#ifndef CUSTOMBRD
-#define CUSTOMBRD             99          // For a user custom board see 0.jsn in /data/boards folder
-#endif
-#ifndef WEMOSDRV8825
-#define WEMOSDRV8825          35          // if using a drv8825 you also need to set DRV8825STEPMODE in myBoards.h
-#endif
-#ifndef PRO2EDRV8825                     
-#define PRO2EDRV8825          36          // if using a drv8825 you also need to set DRV8825STEPMODE in myBoards.h
-#endif
-#ifndef PRO2EDRV8825BIG                   // PRO2EDRV8825BIG Board is now deprecated
-#define PRO2EDRV8825BIG       37          // if using a drv8825 you also need to set DRV8825STEPMODE in myBoards.h
-#endif
-#ifndef PRO2EULN2003
-#define PRO2EULN2003          38
-#endif
-#ifndef PRO2EL293DNEMA
-#define PRO2EL293DNEMA        39          // Motor shield ESP8266 with NEMA motor
-#endif
-#ifndef PRO2EL293D28BYJ48
-#define PRO2EL293D28BYJ48     40          // Motor shield ESP8266 with 28BYJ48 motor
-#endif
-#ifndef PRO2EL298N
-#define PRO2EL298N            41          // uses PCB layout for ULN2003
-#endif
-#ifndef PRO2EL293DMINI
-#define PRO2EL293DMINI        42          // uses PCB layout for ULN2003
-#endif
-#ifndef PRO2EL9110S
-#define PRO2EL9110S           43          // uses PCB layout for ULN2003
-#endif
-#ifndef PRO2ESP32DRV8825
-#define PRO2ESP32DRV8825      44
-#endif
-#ifndef PRO2ESP32ULN2003
-#define PRO2ESP32ULN2003      45
-#endif
-#ifndef PRO2ESP32L298N
-#define PRO2ESP32L298N        46
-#endif
-#ifndef PRO2ESP32L293DMINI
-#define PRO2ESP32L293DMINI    47          // uses PCB layout for ULN2003
-#endif
-#ifndef PRO2ESP32L9110S
-#define PRO2ESP32L9110S       48          // uses PCB layout for ULN2003
-#endif
-#ifndef PRO2ESP32R3WEMOS
-#define PRO2ESP32R3WEMOS      49          // https://www.ebay.com/itm/R3-Wemos-UNO-D1-R32-ESP32-WIFI-Bluetooth-CH340-Devolopment-Board-For-Arduino/264166013552
-#endif
-#ifndef WEMOSDRV8825H
-#define WEMOSDRV8825H         50          // this is for Holger
-#endif
-
 extern const char* programVersion;
 extern const char* ProgramAuthor;
-
-extern const char* STATEMOVINGSTR;
-extern const char* STATEAPPLYBACKLASH;
-extern const char* STATESETHOMEPOSITION;
-extern const char* STATEFINDHOMEPOSITION;
-extern const char* STATEDELAYAFTERMOVE;
-extern const char* STATEFINISHEDMOVE;
-extern const char* STATEIDLE;
-extern const char* STATEINITMOVE;
-extern const char* PORTSTR;
-extern const char* SENDSTR;
-extern const char* SERIALSTARTSTR;
-extern const char* DEBUGONSTR;
-extern const char* BLUETOOTHSTARTSTR;
-extern const char* ATTEMPTCONNSTR;
-extern const char* APSTARTFAILSTR;
-extern const char* SERVERREADYSTR;
-extern const char* STARTSTR;
-extern const char* ENDSTR;
-extern const char* PROGRESSSTR;
-extern const char* ERRORSTR;
-extern const char* READYSTR;
-extern const char* SETUPDRVBRDSTR;
-extern const char* DRVBRDDONESTR;
-extern const char* CHECKCPWRSTR;
-extern const char* CPWRRELEASEDSTR;
-extern const char* STARTAPSTR;
-extern const char* STARTSMSTR;
-extern const char* SETSTATICIPSTR;
-extern const char* ATTEMPTSSTR;
-extern const char* STARTTCPSERVERSTR;
-extern const char* TCPSERVERSTARTEDSTR;
-extern const char* GETLOCALIPSTR;
-extern const char* SETUPDUCKDNSSTR;
-extern const char* SETUPENDSTR;
-extern const char* STARTOTASERVICESTR;
-extern const char* SSIDSTR;
-extern const char* IPADDRESSSTR;
-extern const char* WIFIRESTARTSTR;
-extern const char* WIFIBEGINSTATUSSTR;
-extern const char* CHECKFORTPROBESTR;
-extern const char* ACCESSPOINTSTR;
-extern const char* STATIONMODESTR;
-extern const char* CONFIGSAVEDSTR;
-extern const char* RELEASEMOTORSTR;
-extern const char* LOOPSTARTSTR;
-extern const char* LOOPENDSTR;
-extern const char* TCPCLIENTCONNECTSTR;
-extern const char* TCPCLIENTDISCONNECTSTR;
-extern const char* APCONNECTFAILSTR;
-extern const char* CONNECTEDSTR;
-extern const char* I2CDEVICENOTFOUNDSTR;
-extern const char* ASCOMREMOTESTR;
-extern const char* REBOOTWSSTR;
-extern const char* REBOOTTCPSTR;
-extern const char* REBOOTCNTLRSTR;
-extern const char* REBOOTASCOMSTR;
-extern const char* ASCOMSERVERNOTDEFINEDSTR;
-extern const char* WEBSERVERNOTDEFINEDSTR;
-extern const char* SETPGOPTIONSTR;
-extern const char* SETPGTIMESTR;
-
-extern const char* MANAGEMENTNOTFOUNDSTR;
-extern const char* WEBSERVERNOTFOUNDSTR;
-extern const char* ASCOMSERVERNOTFOUNDSTR;
-
-extern const char* WRITEFILEFAILSTR;
-extern const char* WRITEFILESUCCESSSTR;
-extern const char* CREATEFILEFAILSTR;
-extern const char* CHECKWIFICONFIGFILESTR;
-extern const char* DESERIALIZEERRORSTR;
-extern const char* SERVERNOTRUNNINGSTR;
-
-extern const char* HPCLOSEDFPNOT0STR;
-extern const char* HPCLOSEDFP0STR;
-extern const char* HPMOVETILLOPENSTR;
-extern const char* HPMOVEOUTERRORSTR;
-extern const char* HPMOVEOUTSTEPSSTR;
-extern const char* HPMOVEOUTFINISHEDSTR;
-
-// temperature probe messages
-extern const char* TPROBESTR;
-extern const char* TPROBENOTFOUNDSTR;
-extern const char* GETTEMPPROBESSTR;
-extern const char* SETTPROBERESSTR;
 
 // web page color messages
 extern const char* BACKCOLORINVALIDSTR;
@@ -288,13 +110,6 @@ extern const char* BLUETOOTHSTR;
 extern const char* LOCALSERIALSTR;
 extern const char* FSFILENOTFOUNDSTR;
 
-// joystick messages
-#define UPDATEJOYSTICKSTR         "joystick: update joystick"
-#define JOYSTICKVALSTR            "Raw joyval:"
-#define JOYSTICKXINVALSTR         "X IN joyval:"
-#define JOYSTICKSPEEDSTR          ", Speed:"
-#define JOYSTICKXOUTVALSTR        "X OUT joyval:"
-
 // defines for ASCOMSERVER, MDNSSERVER, WEBSERVER
 #define ASCOMREMOTESTR            "ASCOM Remote: "
 #define WEBSERVERSTR              "Webserver: "
@@ -308,37 +123,17 @@ extern const char* FSFILENOTFOUNDSTR;
 #define PLAINTEXTPAGETYPE         "text/plain"
 #define JSONTEXTPAGETYPE          "text/json"
 #define JSONPAGETYPE              "application/json"
-#define FILENOTFOUNDSTR           "File not found"
-#define FILEFOUNDSTR              "File found"
-#define CANNOTCREATEFILESTR       "err: create file"
+#define FILENOTFOUNDSTR           "Not found"
+#define FILEFOUNDSTR              "Found"
 
-#define FSNOTSTARTEDSTR           "err: start FS"
-#define BUILDDEFAULTPAGESTR       "build default page"
-#define SPIFFSFILENOTFOUNDSTR     "file not found"
-#define READPAGESTR               "read page into string"
-#define PROCESSPAGESTARTSTR       "process page start"
-#define PROCESSPAGEENDSTR         "process page done"
-#define STARTASCOMSERVERSTR       "start ascom server"
-#define STOPASCOMSERVERSTR        "stop ascom server"
-#define STARTWEBSERVERSTR         "start web server"
-#define STOPWEBSERVERSTR          "stop web server"
-#define STOPMDNSSERVERSTR         "stop mdns server"
+#define MANAGEMENTNOTFOUNDSTR     "<html><head><title>Management Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
+#define WEBSERVERNOTFOUNDSTR      "<html><head><title>Web Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
+#define ASCOMSERVERNOTFOUNDSTR    "<html><head><title>ASCOM REMOTE Server</title></head><body><p>FS not started</p><p><p><a href=\"/setup/v1/focuser/0/setup\">Setup page</a></p></body></html>";
 
-#define SERVERSTATESTOPSTR        "STOPPED"
-#define SERVERSTATESTARTSTR       "STARTED"
-#define SERVERSTATERUNSTR         "RUNNING"
-#define SENDPAGESTR               "Send page"
-#define ENABLEDSTR                "Enabled"
-#define NOTENABLEDSTR             "Disabled"
-
-#define MANAGEMENTNOTFOUNDSTR   "<html><head><title>Management Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
-#define WEBSERVERNOTFOUNDSTR    "<html><head><title>Web Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
-#define ASCOMSERVERNOTFOUNDSTR  "<html><head><title>ASCOM REMOTE Server</title></head><body><p>FS not started</p><p><p><a href=\"/setup/v1/focuser/0/setup\">Setup page</a></p></body></html>";
-
-#define MDNSSTARTFAILSTR          "Err setting up MDNS responder"
+#define MDNSSTARTFAILSTR          "Err starting MDNS responder"
 #define MDNSSTARTEDSTR            "mDNS responder started"
 
-#define CREBOOTSTR                "<form action=\"/\" method=\"post\"><input type=\"hidden\" name=\"srestart\" value=\"true\"><input type=\"submit\" value=\"REBOOT CONTROLLER\"></form>"
+#define CREBOOTSTR                "<form action=\"/\" method=\"post\"><input type=\"hidden\" name=\"srestart\" value=\"true\"><input type=\"submit\" onclick=\"return confirm('Are you sure?')\" value=\"REBOOT CONTROLLER\"></form>"
 
 #define ENABLEBKINSTR             "<form action=\"/msindex3\" method=\"post\"><b>BL-IN State</b> [%STI%]: <input type=\"hidden\" name=\"enin\" value=\"true\"><input type=\"submit\" value=\"ENABLE\"></form>"
 #define DISABLEBKINSTR            "<form action=\"/msindex3\" method=\"post\"><b>BL-IN State</b> [%STI%]: <input type=\"hidden\" name=\"diin\" value=\"true\"><input type=\"submit\" value=\"DISABLE\"></form>"
@@ -380,8 +175,6 @@ extern const char* FSFILENOTFOUNDSTR;
 
 #define STARTFMDLONSTR            "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdoff\" Checked><input type=\"submit\" value=\"Disable\"></form>"
 #define STARTFMDLOFFSTR           "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdon\"><input type=\"submit\" value=\"Enable\"></form>"
-
-#define NOTDEFINEDSTR             "not defined in firmware"
 
 // ======================================================================
 // 2. TRACING -- DO NOT CHANGE
