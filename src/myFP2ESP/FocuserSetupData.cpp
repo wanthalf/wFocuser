@@ -13,11 +13,13 @@
 #endif
 
 #include "FocuserSetupData.h"
-//#include "generalDefinitions.h"         // should not be needed as FocuserSetupData.h includes this file
+//#include "generalDefinitions.h"       // should not be needed as FocuserSetupData.h includes this file
 
 // delay(10) required in ESP8266 code around file handling
 
-extern int DefaultBoardNumber;           // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+extern int brdfixedstepmode;            // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+#define FIXEDSTEPMODE 1
 
 SetupData::SetupData(void)
 {
@@ -284,7 +286,7 @@ boolean SetupData::SaveBoardConfiguration()
 // Saves the configuration to a file
 boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTravel)
 {
-  //Serial.println("SaveConfiguration:");
+  //DebugPrintln("SaveConfiguration:");
   if (this->fposition != currentPosition || this->focuserdirection != DirOfTravel)  // last focuser position
   {
     this->fposition = currentPosition;
@@ -1010,7 +1012,7 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
   delay(10);
   File bfile = SPIFFS.open(brdfile, "r");               // Open file for writing
   DebugPrint("LoadBrdConfigStart: ");
-  DebugPrintln(brdfile);  
+  DebugPrintln(brdfile);
   if (!bfile)
   {
     TRACE();
@@ -1055,7 +1057,18 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
       this->pb2pin        = doc_brd["pb2pin"];
       this->irpin         = doc_brd["irpin"];
       this->stepsperrev   = doc_brd["stepsrev"];
-      this->fixedstepmode = doc_brd["fixedsmode"];
+      switch ( DefaultBoardNumber )                                 // apply fixedstepmode to specific boards
+      {
+        case WEMOSDRV8825H:
+        case WEMOSDRV8825:
+        case PRO2EDRV8825BIG:
+        case PRO2EDRV8825:
+          this->fixedstepmode = brdfixedstepmode;                   // set fixedstepmode from focuserconfig.h FIXEDSTEPMODE
+          break;
+        default:
+          // ignore                                                 // do not apply to boards which do not use this value
+          break;
+      }
       for (int i = 0; i < 4; i++)
       {
         this->boardpins[i] = doc_brd["brdpins"][i];
@@ -1102,7 +1115,18 @@ void SetupData::LoadDefaultBoardData()
     this->pb1pin        = -1;
     this->irpin         = -1;
     this->stepsperrev   = -1;
-    this->fixedstepmode = -1;
+      switch ( DefaultBoardNumber )
+      {
+        case WEMOSDRV8825H:
+        case WEMOSDRV8825:
+        case PRO2EDRV8825BIG:
+        case PRO2EDRV8825:
+          this->fixedstepmode = brdfixedstepmode;                   // set fixedstepmode from focuserconfig.h FIXEDSTEPMODE
+          break;
+        default:
+          this->fixedstepmode = -1;
+          break;
+      }
     for (int i = 0; i < 4; i++)
     {
       this->boardpins[i] = -1;
@@ -1484,7 +1508,7 @@ void SetupData::ListDir(const char * dirname, uint8_t levels)
   File root = SPIFFS.open(dirname);
   delay(10);
   DebugPrint("Listing directory: {");
-  
+
   if (!root)
   {
     DebugPrintln(" - failed to open directory");

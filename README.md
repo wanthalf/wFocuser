@@ -17,7 +17,7 @@ https://sourceforge.net/projects/myfocuserpro2-esp32/files/ASCOM%20Drivers/
 
 # FIRMWARE
 The firmware is found on GitHub. Download as a zip file then extract the zip file to access the library files and firmware.  
-https://github.com/brownrb/myFP2EFirmware/releases
+https://github.com/brownrb/myFP2ESPFirmware/releases
 
 # PCB GERBER FILES  
 The Gerbers files for the PCB are found on Sourceforge.  

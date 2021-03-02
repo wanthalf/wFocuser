@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 206
+// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 207
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -225,10 +225,8 @@ OLED_NON *myoled;
 //moving_in   0||  0   |   1
 
 DriverBoard* driverboard;
-#ifdef DRVBRD
-int DefaultBoardNumber = DRVBRD;            // use this to create a default board configuration
-#endif
-
+int DefaultBoardNumber  = DRVBRD;           // use this to create a default board configuration
+int brdfixedstepmode    = FIXEDSTEPMODE;    // only used by boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
 unsigned long ftargetPosition;              // target position
 volatile bool halt_alert;
 
@@ -1269,7 +1267,7 @@ void setup()
 
   HDebugPrint("Heap = ");
   HDebugPrintf("%u\n", ESP.getFreeHeap());
-  // Serial.println("setup(): driverboard");
+  // DebugPrintln("setup(): driverboard");
   // ensure targetposition will be same as focuser position
   // otherwise after loading driverboard focuser will start moving immediately
   DebugPrintln("driver board: start");
@@ -1657,7 +1655,7 @@ void loop()
                 } // if (DirOfTravel != moving_main && backlash_count)
                 else
                 {
-                   Serial.println("false");
+                   DebugPrintln("false");
                 }
         */
       } // if (mySetupData->get_focuserdirection() != DirOfTravel)
@@ -1721,7 +1719,7 @@ void loop()
     //_______________________________State_Moving
 
     case State_Moving:
-      //Serial.println("S_M");
+      //DebugPrintln("S_M");
       if ( timerSemaphore == true )
       {
         // move has completed, the driverboard keeps track of focuser position

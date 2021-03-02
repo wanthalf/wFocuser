@@ -66,6 +66,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define MAXWEBPAGESIZE        4100          // largest = / = 3943
 #define MAXASCOMPAGESIZE      2200          // largest = /setuppage = 2042
 #define MAXMANAGEMENTPAGESIZE 3700          // largest = /msindex2 = 3568
+#define MAXCUSTOMBRDJSONSIZE   300
 
 // ======================================================================
 // 2: DO NOT CHANGE
@@ -126,6 +127,7 @@ extern const char* FSFILENOTFOUNDSTR;
 #define FILENOTFOUNDSTR           "Not found"
 #define FILEFOUNDSTR              "Found"
 
+#define MANAGEMENTISMOVINGSTR     "<html><head><title>Management Server</title></head><body><p>Focuser is Moving. Please try again once focuser has stopped</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define MANAGEMENTNOTFOUNDSTR     "<html><head><title>Management Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define WEBSERVERNOTFOUNDSTR      "<html><head><title>Web Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define ASCOMSERVERNOTFOUNDSTR    "<html><head><title>ASCOM REMOTE Server</title></head><body><p>FS not started</p><p><p><a href=\"/setup/v1/focuser/0/setup\">Setup page</a></p></body></html>";

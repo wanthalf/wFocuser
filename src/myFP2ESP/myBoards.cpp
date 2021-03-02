@@ -152,8 +152,8 @@ DriverBoard::DriverBoard(unsigned long startposition)
 #else
     // esp32
     clock_frequency = ESP.getCpuFreqMHz();    // returns the CPU frequency in MHz as an unsigned 8-bit integer
-    //Serial.print("Clock Freq: ");
-    //Serial.println(clock_frequency);
+    //DebugPrint("Clock Freq: ");
+    //DebugPrintln(clock_frequency);
 #endif
     String drvbrd = mySetupData->get_brdname();
 
@@ -391,8 +391,8 @@ void DriverBoard::releasemotor(void)
 void DriverBoard::movemotor(byte dir, bool updatefpos)
 {
   String drvbrd = mySetupData->get_brdname();
-  //Serial.print("movemotor() : ");
-  //Serial.println(dir);
+  //DebugPrint("movemotor() : ");
+  //DebugPrintln(dir);
   // only some boards have in out leds ESP32 only
   if (drvbrd.equals("PRO2ESP32ULN2003") || drvbrd.equals("PRO2ESP32L298N") || drvbrd.equals("PRO2ESP32L293DMINI") || drvbrd.equals("PRO2ESP32L9110S") || drvbrd.equals("PRO2ESP32DRV8825") )
   {
@@ -542,14 +542,14 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   DebugPrint(steps);
   DebugPrint(" ");
 
-  //Serial.print("initmove: ");
-  //Serial.print(dir);
-  //Serial.print(" : ");
-  //Serial.print(steps);
-  //Serial.print(" : ");
-  //Serial.print(motorspeed);
-  //Serial.print(" : ");
-  //Serial.println(leds);
+  //DebugPrint("initmove: ");
+  //DebugPrint(dir);
+  //DebugPrint(" : ");
+  //DebugPrint(steps);
+  //DebugPrint(" : ");
+  //DebugPrint(motorspeed);
+  //DebugPrint(" : ");
+  //DebugPrintln(leds);
 #if defined(ESP8266)
   unsigned long curspd = mySetupData->get_brdmsdelay();
   switch ( mySetupData->get_motorspeed() )

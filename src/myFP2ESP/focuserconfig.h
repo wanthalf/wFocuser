@@ -43,9 +43,21 @@
 // is created based on your board selection above.
 // In the MANAGEMENT server you can edit the board pin numbers and save the config.
 
+// ======================================================================
+// 2: SPECIFY FIXEDSTEPMODE
+// ======================================================================
+// For ESP8266 boards, set the fixedmode value to match the stepmode jumper
+// settings on the board [only one line can be enabled]
+// Applies to boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+#define FIXEDSTEPMODE 1
+//#define FIXEDSTEPMODE 2
+//#define FIXEDSTEPMODE 4
+//#define FIXEDSTEPMODE 8
+//#define FIXEDSTEPMODE 16
+//#define FIXEDSTEPMODE 32
 
 // ======================================================================
-// 2A: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
+// 3A: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
 // ======================================================================
 // If you need no support for OLED skip this section. To enable the 
 // OLED TEXT or GRAPHIC DISPLAY uncomment the related line. 
@@ -54,7 +66,7 @@
 //#define OLED_MODE OLED_GRAPHIC  // OLED graphic mode
 
 // ======================================================================
-// 2B: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
+// 3B: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
 // ======================================================================
 // only uncomment one of the following USE_SSxxxx lines depending upon your lcd type
 // For the OLED 128x64 0.96" display using the SSD1306 driver, uncomment the following line
@@ -65,7 +77,7 @@
 
 
 // ======================================================================
-// 3: SPECIFY HARDWARE OPTIONS
+// 4: SPECIFY HARDWARE OPTIONS
 // ======================================================================
 
 // To enable the 2-Axis Joystick [ESP32 only], uncomment the next line
@@ -79,7 +91,7 @@
 //#define INFRAREDREMOTE
 
 // ======================================================================
-// 4: SPECIFY CONTROLLER OPTIONS
+// 5: SPECIFY CONTROLLER OPTIONS
 // ======================================================================
 
 // to enable Bluetooth mode, uncomment the next line [ESP32 only]

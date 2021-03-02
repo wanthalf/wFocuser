@@ -5,7 +5,7 @@
 // ======================================================================
 
 #include <Arduino.h>
-#include "focuserconfig.h"              
+#include "focuserconfig.h"
 //#include "boarddefs.h"                    // included as part of focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
@@ -29,6 +29,8 @@
 // ======================================================================
 extern SetupData    *mySetupData;
 extern DriverBoard  *driverboard;
+extern int          DefaultBoardNumber;
+extern int          brdfixedstepmode;
 extern OLED_NON     *myoled;
 #include "temp.h"
 extern TempProbe    *myTempProbe;
@@ -98,6 +100,7 @@ WebServer mserver(MSSERVERPORT);
 #endif // if defined(esp8266)
 
 String MSpg;
+String BoardConfigJson;
 File   fsUploadFile;
 
 boolean ishexdigit( char c )
@@ -141,6 +144,7 @@ String MANAGEMENT_getcontenttype(String filename)
   return retval;
 }
 
+// sends html header to client
 void MANAGEMENT_sendmyheader(void)
 {
   //mserver.sendHeader(F(CACHECONTROLSTR), F(NOCACHENOSTORESTR));
@@ -154,6 +158,7 @@ void MANAGEMENT_sendmyheader(void)
   mserver.client().println();
 }
 
+// sends html page to web client
 void MANAGEMENT_sendmycontent()
 {
   mserver.client().print(MSpg);
@@ -192,6 +197,7 @@ bool MANAGEMENT_handlefileread(String path)
   }
 }
 
+// checks POST data for request reboot controller and performs reboot if required
 void MANAGEMENT_checkreboot(void)
 {
   String msg = mserver.arg("srestart");                 // if reboot controller
@@ -205,7 +211,77 @@ void MANAGEMENT_checkreboot(void)
   }
 }
 
-void MANAGEMENT_displaydeletepage()
+// handles POST from msdelete page
+void MANAGEMENT_handledeletefile()
+{
+  String df = mserver.arg("fname");                     // check server arguments, df has filename
+  if ( df != "" )                                       // check for file in spiffs
+  {
+    // spiffs was started earlier when server was started so assume it has started
+    // df = "/" + df;
+    if ( df[0] != '/')
+    {
+      df = '/' + df;
+    }
+    // load the msdeleteok.html file
+    if ( SPIFFS.exists("/msdeleteok.html"))             // load page from fs - wsnotfound.html
+    {
+      // open file for read
+      File file = SPIFFS.open("/msdeleteok.html", "r");
+      // read contents into string
+      MSpg = file.readString();
+      file.close();
+
+      String bcol = mySetupData->get_wp_backcolor();
+      MSpg.replace("%BKC%", bcol);
+      String txtcol = mySetupData->get_wp_textcolor();
+      MSpg.replace("%TXC%", txtcol);
+      String ticol = mySetupData->get_wp_titlecolor();
+      MSpg.replace("%TIC%", ticol);
+      String hcol = mySetupData->get_wp_headercolor();
+      MSpg.replace("%HEC%", hcol);
+      MSpg.replace("%VER%", String(programVersion));
+      MSpg.replace("%NAM%", mySetupData->get_brdname());
+
+      MSpg.replace("%FIL%", df );
+      // add code to handle reboot controller
+      MSpg.replace("%BT%", String(CREBOOTSTR));
+      MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
+
+      if ( SPIFFS.exists(df))
+      {
+        if ( SPIFFS.remove(df))
+        {
+          MSpg.replace("%STA%", "deleted.");
+        }
+        else
+        {
+          MSpg.replace("%STA%", "could not be deleted.");
+        }
+      }
+      else
+      {
+        MSpg.replace("%STA%", "does not exist.");
+      }
+    }
+    else // if ( SPIFFS.exists("/msdeleteok.html"))
+    {
+      // spiffs file msdeleteok.html did not exist
+      MSpg = "<html><head><title>Management Server</title></head><body><p>msdeleteok.html not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>";
+    }
+  }
+  else
+  {
+    // null argument has been passed
+    MSpg = "<html><head><title>Management Server</title></head><body><p>Null argument found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>";
+  }
+  MANAGEMENT_sendmyheader();
+  MANAGEMENT_sendmycontent();
+  MSpg = "";
+}
+
+// builds msdelete page
+void MANAGEMENT_deletepage()
 {
   // spiffs was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/msdelete.html") )                // check for the webpage
@@ -226,6 +302,7 @@ void MANAGEMENT_displaydeletepage()
   }
   else
   {
+    // msdelete.html not found
     TRACE();
     DebugPrintln("file not found");
     MSpg = "file not found";
@@ -233,39 +310,7 @@ void MANAGEMENT_displaydeletepage()
   mserver.send(NORMALWEBPAGE, F(TEXTPAGETYPE), MSpg);
 }
 
-void MANAGEMENT_handledeletefile()
-{
-  String msg;
-  String df = mserver.arg("fname");                     // check server arguments, df has filename myoled
-  if ( df != "" )                                       // check for file in spiffs
-  {
-    // spiffs was started earlier when server was started so assume it has started
-    //df = "/" + df;
-    if ( df[0] != '/')
-    {
-      df = '/' + df;
-    }
-    if ( SPIFFS.exists(df))
-    {
-      if ( SPIFFS.remove(df))
-      {
-        msg = "The file is deleted: " + df;
-      }
-      mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, msg);
-    }
-    else
-    {
-      msg = "file not found" + df;               // file does not exist
-      mserver.send(NOTFOUNDWEBPAGE, PLAINTEXTPAGETYPE, msg);
-    }
-  }
-  else
-  {
-    msg = "File field was empty";
-    mserver.send(BADREQUESTWEBPAGE, PLAINTEXTPAGETYPE, msg);
-  }
-}
-
+// lists all files in file system
 void MANAGEMENT_listFSfiles(void)
 {
   // spiffs was started earlier when server was started so assume it has started
@@ -308,6 +353,7 @@ void MANAGEMENT_listFSfiles(void)
 #endif
 }
 
+// builds /msnotfound page
 void MANAGEMENT_buildnotfound(void)
 {
   // spiffs was started earlier when server was started so assume it has started
@@ -344,6 +390,7 @@ void MANAGEMENT_buildnotfound(void)
   delay(10);                                            // small pause so background tasks can run
 }
 
+// handler when page or url not found
 void MANAGEMENT_handlenotfound(void)
 {
   MANAGEMENT_checkreboot();                             // if reboot controller;
@@ -352,6 +399,7 @@ void MANAGEMENT_handlenotfound(void)
   MSpg = "";
 }
 
+// builds msupload page
 void MANAGEMENT_buildupload(void)
 {
   // spiffs was started earlier when server was started so assume it has started
@@ -383,13 +431,7 @@ void MANAGEMENT_buildupload(void)
   delay(10);                                            // small pause so background tasks can run
 }
 
-void MANAGEMENT_displayfileupload(void)
-{
-  MANAGEMENT_buildupload();
-  mserver.send(NORMALWEBPAGE, TEXTPAGETYPE, MSpg);
-  MSpg = "";
-}
-
+// handles file upload selection by user
 void MANAGEMENT_handlefileupload(void)
 {
   HTTPUpload& upload = mserver.upload();
@@ -420,7 +462,7 @@ void MANAGEMENT_handlefileupload(void)
       fsUploadFile.close();
       DebugPrint("handleFileUpload Size: ");
       DebugPrintln(upload.totalSize);
-      mserver.sendHeader("Location", "/mssuccess.html");
+      mserver.sendHeader("Location", "/mssuccess");
       mserver.send(301);
     }
     else
@@ -430,6 +472,55 @@ void MANAGEMENT_handlefileupload(void)
   }
 }
 
+// handles a file upload success
+void MANAGEMENT_fileuploadsuccess(void)
+{
+  // mssuccess.html
+  if ( SPIFFS.exists("/mssuccess.html"))                // constructs mssuccess page of management server
+  {
+    File file = SPIFFS.open("/mssuccess.html", "r");    // open file for read
+    MSpg = file.readString();                           // read contents into string
+    file.close();
+
+    // process for dynamic data
+    String bcol = mySetupData->get_wp_backcolor();
+    MSpg.replace("%BKC%", bcol);
+    String txtcol = mySetupData->get_wp_textcolor();
+    MSpg.replace("%TXC%", txtcol);
+    String ticol = mySetupData->get_wp_titlecolor();
+    MSpg.replace("%TIC%", ticol);
+    String hcol = mySetupData->get_wp_headercolor();
+    MSpg.replace("%HEC%", hcol);
+    MSpg.replace("%VER%", String(programVersion));
+    MSpg.replace("%NAM%", mySetupData->get_brdname());
+
+    MSpg.replace("%BT%", String(CREBOOTSTR));           // add code to handle reboot controller
+
+    // display heap memory for tracking memory loss?
+    // only esp32?
+    MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
+  }
+  else
+  {
+    // could not read file
+    TRACE();
+    DebugPrintln("file not found");
+    MSpg = "file not found";
+  }
+  MANAGEMENT_sendmyheader();
+  MANAGEMENT_sendmycontent();
+  MSpg = "";
+}
+
+// show msupload - file upload page
+void MANAGEMENT_fileupload(void)
+{
+  MANAGEMENT_buildupload();
+  mserver.send(NORMALWEBPAGE, TEXTPAGETYPE, MSpg);
+  MSpg = "";
+}
+
+// builds msindex5 - admin page 5 - colorpicker
 void MANAGEMENT_buildadminpg5(void)
 {
 #ifdef TIMEMSBUILDPG5
@@ -441,7 +532,7 @@ void MANAGEMENT_buildadminpg5(void)
     File file = SPIFFS.open("/msindex5.html", "r");     // open file for read
     MSpg = file.readString();                           // read contents into string
     file.close();
-    
+
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     MSpg.replace("%BKC%", bcol);
@@ -476,6 +567,7 @@ void MANAGEMENT_buildadminpg5(void)
   delay(10);                                            // small pause so background tasks can run
 }
 
+// handler for msindex5 - color picker
 void MANAGEMENT_handleadminpg5(void)
 {
 #ifdef TIMEMSHANDLEPG5
@@ -493,6 +585,7 @@ void MANAGEMENT_handleadminpg5(void)
 #endif
 }
 
+// builds msindex4 - admin page 4 - web page colors
 void MANAGEMENT_buildadminpg4(void)
 {
 #ifdef TIMEMSBUILDPG4
@@ -549,6 +642,7 @@ void MANAGEMENT_buildadminpg4(void)
   delay(10);                                            // small pause so background tasks can run
 }
 
+// handler for msindex4 - admin page 4 - web page colors
 void MANAGEMENT_handleadminpg4(void)
 {
 #ifdef TIMEMSHANDLEPG4
@@ -677,6 +771,7 @@ void MANAGEMENT_handleadminpg4(void)
 #endif
 }
 
+// builder for msindex3 - admin page 3 - backlash + motor-speed-delay + push buttons
 void MANAGEMENT_buildadminpg3(void)
 {
 #ifdef TIMEMSBUILDPG3
@@ -748,7 +843,7 @@ void MANAGEMENT_buildadminpg3(void)
     // display heap memory for tracking memory loss?
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-    }
+  }
   else
   {
     // could not read file
@@ -763,6 +858,7 @@ void MANAGEMENT_buildadminpg3(void)
   delay(10);                                            // small pause so background tasks can run
 }
 
+// handler for msindex3 - admin page 3 - backlash + motor-speed-delay + push buttons
 void MANAGEMENT_handleadminpg3(void)
 {
 #ifdef TIMEMSHANDLEPG3
@@ -875,6 +971,7 @@ void MANAGEMENT_handleadminpg3(void)
 #endif
 }
 
+// builder for msindex32 - admin page 2 - servers + temp-probe + leds + hpsw
 void MANAGEMENT_buildadminpg2(void)
 {
 #ifdef TIMEMSBUILDPG2
@@ -1021,6 +1118,7 @@ void MANAGEMENT_buildadminpg2(void)
 #endif
 }
 
+// handler for msindex2 - admin page 2 - servers + temp-probe + leds + hpsw
 void MANAGEMENT_handleadminpg2(void)
 {
 #ifdef TIMEMSHANDLEPG2
@@ -1422,6 +1520,7 @@ void MANAGEMENT_handleadminpg2(void)
 #endif
 }
 
+// builder for msindex1 - admin page 1
 void MANAGEMENT_buildadminpg1(void)
 {
 #ifdef TIMEMSBUILDPG1
@@ -1520,7 +1619,7 @@ void MANAGEMENT_buildadminpg1(void)
     }
 
     // display %OLE%
-    DebugPrint(" MS: Display state: ");
+    DebugPrint("Display state: ");
     DebugPrintln(displaystate);
     if ( displaystate == true)
     {
@@ -1535,7 +1634,7 @@ void MANAGEMENT_buildadminpg1(void)
     }
     else
     {
-      MSpg.replace("%OLE%", " not defined in firmware");            // not checked
+      MSpg.replace("%OLE%", "<b>DISPLAY: </b>not defined in firmware"); // not checked
     }
 
     // if oled display page group option update
@@ -1606,6 +1705,7 @@ void MANAGEMENT_buildadminpg1(void)
   delay(10);                                            // small pause so background tasks can run
 }
 
+// handler for msindex1 - admin page 1
 void MANAGEMENT_handleadminpg1(void)
 {
 #ifdef TIMEMSHANDLEPG1
@@ -1822,6 +1922,7 @@ void MANAGEMENT_handleadminpg1(void)
 #endif
 }
 
+// sender for pg5 color
 void MANAGEMENT_sendadminpg5(void)
 {
 #ifdef TIMEMSSENDPG5
@@ -1840,6 +1941,7 @@ void MANAGEMENT_sendadminpg5(void)
   delay(10);
 }
 
+// sender for pg4
 void MANAGEMENT_sendadminpg4(void)
 {
 #ifdef TIMEMSSENDPG4
@@ -1858,6 +1960,7 @@ void MANAGEMENT_sendadminpg4(void)
   delay(10);
 }
 
+// sender for pg3
 void MANAGEMENT_sendadminpg3(void)
 {
 #ifdef TIMEMSSENDPG3
@@ -1876,6 +1979,7 @@ void MANAGEMENT_sendadminpg3(void)
   delay(10);
 }
 
+// sender for pg2
 void MANAGEMENT_sendadminpg2(void)
 {
 #ifdef TIMEMSSENDPG2
@@ -1894,6 +1998,7 @@ void MANAGEMENT_sendadminpg2(void)
   delay(10);
 }
 
+// sender for pg1
 void MANAGEMENT_sendadminpg1(void)
 {
 #ifdef TIMEMSSENDPG1
@@ -1912,11 +2017,13 @@ void MANAGEMENT_sendadminpg1(void)
   delay(10);
 }
 
+// send header for XHTML to client
 void MANAGEMENT_sendACAOheader(void)
 {
   mserver.sendHeader("Access-Control-Allow-Origin", "*");
 }
 
+// send json string to client
 void MANAGEMENT_sendjson(String str)
 {
   //if ( mySetupData->get_crossdomain() == 1 )
@@ -1926,11 +2033,11 @@ void MANAGEMENT_sendjson(String str)
   mserver.send(NORMALWEBPAGE, JSONPAGETYPE, str );
 }
 
-// generic get
+// generic get handler for client requests
 void MANAGEMENT_handleget(void)
 {
   // return json string of state, on or off or value
-  // ascom, leds, temp, webserver, position, ismoving, display, motorspeed, coilpower, reverse
+  // ascom, leds, temp, webserver, position, ismoving, display, motorspeed, coilpower, reverse, fixedstepmode
   String jsonstr;
 
   if ( mserver.argName(0) == "ascom" )
@@ -1994,6 +2101,11 @@ void MANAGEMENT_handleget(void)
     jsonstr = "{ \"hpsw\":" + String(mySetupData->get_hpswitchenable()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
+  else if ( mserver.argName(0) == "fixedstepmode" )
+  {
+    jsonstr = "{ \"fixedstepmode\":" + String(mySetupData->get_brdfixedstepmode()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
   else
   {
     jsonstr = "{ \"error\":\"unknown-command\" }";
@@ -2001,14 +2113,14 @@ void MANAGEMENT_handleget(void)
   }
 }
 
-// generic set
+// generic set handler for client commands
 void MANAGEMENT_handleset(void)
 {
   // get parameter after ?
   String value;
   bool rflag = false;
   String drvbrd = mySetupData->get_brdname();
-  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse
+  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode
 
   // ascom remote server
   value = mserver.arg("ascom");
@@ -2267,6 +2379,18 @@ void MANAGEMENT_handleset(void)
     }
   }
 
+  // fixedstepmode for esp8266 boards
+  value = mserver.arg("fixedstepmode");
+  if ( value != "" )
+  {
+    int temp = value.toInt();
+    DebugPrint("Fixedstepmode: ");
+    DebugPrintln(temp);
+
+    mySetupData->set_brdfixedstepmode(temp);
+    rflag = true;
+  }
+
   // send generic OK
   if ( rflag == true )
   {
@@ -2278,6 +2402,7 @@ void MANAGEMENT_handleset(void)
   }
 }
 
+// ascom alpaca server
 void MANAGEMENT_ascomoff(void)
 {
   // ascom server stop
@@ -2289,6 +2414,7 @@ void MANAGEMENT_ascomoff(void)
   mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "ASCOM Alpaca Server Off");
 }
 
+// ascom alpaca server
 void MANAGEMENT_ascomon(void)
 {
   // ascom server start
@@ -2300,6 +2426,7 @@ void MANAGEMENT_ascomon(void)
   mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "ASCOM Alpaca Server On");
 }
 
+// in out leds
 void MANAGEMENT_ledsoff(void)
 {
   // in out leds stop
@@ -2312,6 +2439,7 @@ void MANAGEMENT_ledsoff(void)
   mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "IN-OUT LED's Off");
 }
 
+// in out leds
 void MANAGEMENT_ledson(void)
 {
   String drvbrd = mySetupData->get_brdname();
@@ -2342,6 +2470,7 @@ void MANAGEMENT_ledson(void)
   }
 }
 
+// temperature probe
 void MANAGEMENT_tempoff(void)
 {
   // temp probe stop
@@ -2356,6 +2485,7 @@ void MANAGEMENT_tempoff(void)
   mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Temperature probe Off");
 }
 
+// temperature probe
 void MANAGEMENT_tempon(void)
 {
   if ( mySetupData->get_brdtemppin() == -1 )
@@ -2388,6 +2518,7 @@ void MANAGEMENT_tempon(void)
   }
 }
 
+// webserver
 void MANAGEMENT_webserveroff(void)
 {
   if ( mySetupData->get_webserverstate() == 1)
@@ -2398,7 +2529,20 @@ void MANAGEMENT_webserveroff(void)
   mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Web-Server Off");
 }
 
+// webserver
 void MANAGEMENT_webserveron(void)
+{
+  // set web server option
+  if ( mySetupData->get_webserverstate() == 0)
+  {
+    DebugPrintln("webserver on");
+    start_webserver();
+  }
+  mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Web-Server On");
+}
+
+// set fixed step mode value in board config
+void MANAGEMENT_fixedstepmode_set(void)
 {
   // set web server option
   if ( mySetupData->get_webserverstate() == 0)
@@ -2415,6 +2559,7 @@ void MANAGEMENT_halt(void)
   halt_alert = true;
 }
 
+// return network signal strength
 void MANAGEMENT_rssi(void)
 {
   long rssi = getrssi();
@@ -2427,26 +2572,386 @@ void MANAGEMENT_reboot(void)
   String WaitPage = "<html><meta http-equiv=refresh content=\"" + String(MSREBOOTPAGEDELAY) + "\"><head><title>Management Server></title></head><body><p>Please wait, controller rebooting.</p></body></html>";
   mserver.send(NORMALWEBPAGE, TEXTPAGETYPE, WaitPage );
   WaitPage = "";
-  delay(1000);                                        // wait for page to be sent
+  delay(1000);                                          // wait for page to be sent
   software_Reboot(REBOOTDELAY);
 }
 
-void MANAGEMENT_customconfig()
+// called from MANAGEMENT_custombrd()
+// display board as json string [for confirmation of new config and give option to write to file - overwrite custom
+void MANAGEMENT_genbrd()
 {
-  // beta - user enters/pastes json string
-  // user enters details on page then clicks generate board
-#if defined(ESP8266)
-  // show only E boards
-#else
-  // show only esp32 boards
-#endif
+  // POST event handler
+  // to handle reboot option
+  MANAGEMENT_checkreboot();                             // if reboot controller;
+
+  String value;
+  value = mserver.arg("wrbrd");
+  if ( value != "")
+  {
+    // save board config in custom config file /boards/99.jsn
+    // if custom file exists then remove it
+    if ( SPIFFS.exists("/boards/99.jsn"))
+    {
+      // delete existing custom file
+      DebugPrintln("File /boards/99.jsn exists");
+      SPIFFS.remove("/boards/99.jsn");
+    }
+    else
+    {
+      // does not exist so ignore and continue
+      DebugPrintln("File /boards/99.jsn does not exist");
+    }
+
+    // now write new 99.jsn file from  BoardConfigJson
+    delay(10);
+    // Open file for writing
+    File dfile = SPIFFS.open("/boards/99.jsn", "w");
+    if (dfile)
+    {
+      DebugPrintln("Write new custom file /boards/99.jsn");
+      dfile.print(BoardConfigJson);
+      dfile.close();
+      // file has been written so redirect
+      
+      MSpg = "<html><head><title>Management Server</title></head><body><p>Config Board file /boards/99.jsn written</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>";
+      MANAGEMENT_sendmyheader();
+      MANAGEMENT_sendmycontent();
+      MSpg = "";
+      return;
+    }
+    else
+    {
+      TRACE();
+      DebugPrintln(CREATEFILEFAILSTR);
+      MSpg = "<html><head><title>Management Server</title></head><body><p>Err: Config Board file not written</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>";
+      MANAGEMENT_sendmyheader();
+      MANAGEMENT_sendmycontent();
+      MSpg = "";
+      return;
+    }
+  } 
+  
+  // GET handler
+  if ( SPIFFS.exists("/genbrd.html"))
+  {
+    String jsonstr;
+    String value;
+
+    jsonstr.reserve(100);
+    File file = SPIFFS.open("/genbrd.html", "r");       // open file for read
+    MSpg = file.readString();                           // read contents into string
+    file.close();
+
+    // process for dynamic data
+    String bcol = mySetupData->get_wp_backcolor();
+    MSpg.replace("%BKC%", bcol);
+    String txtcol = mySetupData->get_wp_textcolor();
+    MSpg.replace("%TXC%", txtcol);
+    String ticol = mySetupData->get_wp_titlecolor();
+    MSpg.replace("%TIC%", ticol);
+    String hcol = mySetupData->get_wp_headercolor();
+    MSpg.replace("%HEC%", hcol);
+    MSpg.replace("%VER%", String(programVersion));
+    MSpg.replace("%NAM%", mySetupData->get_brdname());
+
+    value = mserver.arg("brd");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"board\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("max");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"maxstepmode\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("stm");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"stepmode\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("sda");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"sda\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("sck");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"sck\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("enp");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"enpin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("stp");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"steppin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("dip");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"dirpin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("tep");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"temppin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("hpp");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"hpswpin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("inp");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"inledpin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("oup");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"outledpin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("pb1");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"pb1pin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("pb2");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"pb2pin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("irp");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"irpin\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("str");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"stepsrev\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("fim");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"fixedsmode\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("brp");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"brdpins\":\"" + value + "\",";
+    }
+
+    value = mserver.arg("msd");
+    if ( value != "" )
+    {
+      jsonstr = jsonstr + "\"msdelay\":\"" + value + "\"}";
+    }
+
+    MSpg.replace("%BRD%", jsonstr );
+    MSpg.replace("%GEN%", "<form action=\"/genbrd\" method=\"POST\"><input type=\"hidden\" name=\"wrbrd\" value=\"true\"><input type=\"submit\" value=\"Write to file\"></form>");
+
+    BoardConfigJson = jsonstr;
+    // display heap memory for tracking memory loss, %HEA%
+    // only esp32?
+    MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
+
+    // add code to handle reboot controller %BT%
+    MSpg.replace("%BT%", String(CREBOOTSTR));
+  }
+  else
+  {
+    // could not find spiffs file
+    TRACE();
+    DebugPrintln("File not found");
+    MSpg = "File not found";
+
+  }
+  MANAGEMENT_sendmyheader();
+  MANAGEMENT_sendmycontent();
+  MSpg = "";
 }
 
-void MANAGEMENT_customconfig_handler()
+// called from MANAGEMENT_config
+// Displays form input values of board config and allow user to update values
+// when user clicks generate new custom board config goes to MANAGEMENT_genboard()
+void MANAGEMENT_custombrd()
 {
+  // to handle reboot option
+  MANAGEMENT_checkreboot();                             // if reboot controller;
 
+  String value;
+
+  if ( SPIFFS.exists("/custombrd.html"))
+  {
+    File file = SPIFFS.open("/custombrd.html", "r");    // open file for read
+    MSpg = file.readString();                           // read contents into string
+    file.close();
+
+    // process for dynamic data
+    String bcol = mySetupData->get_wp_backcolor();
+    MSpg.replace("%BKC%", bcol);
+    String txtcol = mySetupData->get_wp_textcolor();
+    MSpg.replace("%TXC%", txtcol);
+    String ticol = mySetupData->get_wp_titlecolor();
+    MSpg.replace("%TIC%", ticol);
+    String hcol = mySetupData->get_wp_headercolor();
+    MSpg.replace("%HEC%", hcol);
+    MSpg.replace("%VER%", String(programVersion));
+    MSpg.replace("%NAM%", mySetupData->get_brdname());
+
+    MSpg.replace("%STA%", "<form action=\"/genbrd\" method=\"post\"><table><tr>");
+    MSpg.replace("%BRD%", "<td>Board Name : </td><td><input type=\"text\" name=\"brd\" value=\"" + mySetupData->get_brdname() + "\"></td></tr><tr>");
+    MSpg.replace("%MAX%", "<td>MaxStepMode: </td><td><input type=\"text\" name=\"max\" value=\"" + String(mySetupData->get_brdmaxstepmode()) + "\"></td></tr><tr>");
+    MSpg.replace("%STM%", "<td>Step Mode : </td><td><input type=\"text\" name=\"stm\" value=\"" + String(mySetupData->get_brdstepmode()) + "\"></td></tr><tr>");
+    MSpg.replace("%SDA%", "<td>I2C SDA : </td><td><input type=\"text\" name=\"sda\" value=\"" + String(mySetupData->get_brdsda()) + "\"></td></tr><tr>");
+    MSpg.replace("%SCK%", "<td>I2C SCK : </td><td><input type=\"text\" name=\"sck\" value=\"" + String(mySetupData->get_brdsck()) + "\"></td></tr><tr>");
+    MSpg.replace("%ENP%", "<td>Enable pin : </td><td><input type=\"text\" name=\"enp\" value=\"" + String(mySetupData->get_brdenablepin()) + "\"></td></tr><tr>");
+    MSpg.replace("%STP%", "<td>Step pin : </td><td><input type=\"text\" name=\"stp\" value=\"" + String(mySetupData->get_brdsteppin()) + "\"></td></tr><tr>");
+    MSpg.replace("%DIP%", "<td>Dir pin : </td><td><input type=\"text\" name=\"dip\" value=\"" + String(mySetupData->get_brddirpin()) + "\"></td></tr><tr>");
+    MSpg.replace("%TEP%", "<td>Temp pin : </td><td><input type=\"text\" name=\"tep\" value=\"" + String(mySetupData->get_brdtemppin()) + "\"></td></tr><tr>");
+    MSpg.replace("%HPP%", "<td>HPSW pin : </td><td><input type=\"text\" name=\"hpp\" value=\"" + String(mySetupData->get_brdhpswpin()) + "\"></td></tr><tr>");
+    MSpg.replace("%INP%", "<td>In led pin : </td><td><input type=\"text\" name=\"inp\" value=\"" + String(mySetupData->get_brdinledpin()) + "\"></td></tr><tr>");
+    MSpg.replace("%OUP%", "<td>Out led pin : </td><td><input type=\"text\" name=\"oup\" value=\"" + String(mySetupData->get_brdoutledpin()) + "\"></td></tr><tr>");
+    MSpg.replace("%PB1%", "<td>PB1 pin : </td><td><input type=\"text\" name=\"pb1\" value=\"" + String(mySetupData->get_brdpb1pin()) + "\"></td></tr><tr>");
+    MSpg.replace("%PB2%", "<td>PB2 pin : </td><td><input type=\"text\" name=\"pb2\" value=\"" + String(mySetupData->get_brdpb2pin()) + "\"></td></tr><tr>");
+    MSpg.replace("%IRP%", "<td>IR pin : </td><td><input type=\"text\" name=\"irp\" value=\"" + String(mySetupData->get_brdirpin()) + "\"></td></tr><tr>");
+    MSpg.replace("%STR%", "<td>Steps per rev : </td><td><input type=\"text\" name=\"str\" value=\"" + String(mySetupData->get_brdstepsperrev()) + "\"></td></tr><tr>");
+    MSpg.replace("%FIM%", "<td>Fixed Step Mode: </td><td><input type=\"text\" name=\"fim\" value=\"" + String(mySetupData->get_brdfixedstepmode()) + "\"></td></tr><tr>");
+    String boardpins;
+    boardpins.reserve(20);
+    boardpins = "[";
+    for ( int i = 0; i < 4; i++ )
+    {
+      boardpins = boardpins + String( mySetupData->get_brdboardpins(i) );
+      if ( i < 3 )
+      {
+        boardpins = boardpins + ", ";
+      }
+    }
+    boardpins = boardpins + "]";
+    MSpg.replace("%BRP%", "<td>Board pins : </td><td><input type=\"text\" name=\"brp\" value=\"" + boardpins + "\"></td></tr><tr>");
+    MSpg.replace("%MSD%", "<td>MS Delay : </td><td><input type=\"text\" name=\"msd\" value=\"" + String(mySetupData->get_brdmsdelay()) + "\"></td></tr></table>");
+    MSpg.replace("%END%", "<input type=\"submit\" value=\"GENERATE NEW BOARD CONFIG\"></form>");
+
+    // display heap memory for tracking memory loss, %HEA%
+    // only esp32?
+    MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
+
+    // add code to handle reboot controller %BT%
+    MSpg.replace("%BT%", String(CREBOOTSTR));
+  }
+  else
+  {
+    // could not find spiffs file
+    TRACE();
+    DebugPrintln("File not found");
+    MSpg = "File not found";
+  }
+  MANAGEMENT_sendmyheader();
+  MANAGEMENT_sendmycontent();
+  MSpg = "";
 }
 
+// show current board config as json string
+void MANAGEMENT_showboardconfig()
+{
+  // to handle reboot option
+  MANAGEMENT_checkreboot();                             // if reboot controller;
+
+  // try to load showconfig.html
+  if ( SPIFFS.exists("/showconfig.html"))
+  {
+    File file = SPIFFS.open("/showconfig.html", "r");   // open file for read
+    MSpg = file.readString();                           // read contents into string
+    file.close();
+
+    // process for dynamic data
+    // approx size of page 3310
+    String bcol = mySetupData->get_wp_backcolor();
+    MSpg.replace("%BKC%", bcol);
+    String txtcol = mySetupData->get_wp_textcolor();
+    MSpg.replace("%TXC%", txtcol);
+    String ticol = mySetupData->get_wp_titlecolor();
+    MSpg.replace("%TIC%", ticol);
+    String hcol = mySetupData->get_wp_headercolor();
+    MSpg.replace("%HEC%", hcol);
+    MSpg.replace("%VER%", String(programVersion));
+    MSpg.replace("%NAM%", mySetupData->get_brdname());
+
+    MSpg.replace("%BDN%", mySetupData->get_brdname());
+    MSpg.replace("%MSM%", String(mySetupData->get_brdmaxstepmode()));
+    MSpg.replace("%SMO%", String(mySetupData->get_brdstepmode()));
+    MSpg.replace("%SDA%", String(mySetupData->get_brdsda()));
+    MSpg.replace("%SCK%", String(mySetupData->get_brdsck()));
+    MSpg.replace("%ENP%", String(mySetupData->get_brdenablepin()));
+    MSpg.replace("%STP%", String(mySetupData->get_brdsteppin()));
+    MSpg.replace("%DIP%", String(mySetupData->get_brddirpin()));
+    MSpg.replace("%TEP%", String(mySetupData->get_brdtemppin()));
+    MSpg.replace("%HPP%", String(mySetupData->get_brdhpswpin()));
+    MSpg.replace("%INP%", String(mySetupData->get_brdinledpin()));
+    MSpg.replace("%OUP%", String(mySetupData->get_brdoutledpin()));
+    MSpg.replace("%IRP%", String(mySetupData->get_brdirpin()));
+
+    String boardpins;
+    boardpins.reserve(20);
+    for ( int i = 0; i < 4; i++ )
+    {
+      boardpins = boardpins + String( mySetupData->get_brdboardpins(i) );
+      if ( i < 3 )
+      {
+        boardpins = boardpins + ",";
+      }
+    }
+    MSpg.replace("%BRP%", boardpins);
+
+    MSpg.replace("%SPR%", String(mySetupData->get_brdstepsperrev()));
+    MSpg.replace("%FSM%", String(mySetupData->get_brdfixedstepmode()));
+    MSpg.replace("%PB1%", String(mySetupData->get_brdpb1pin()));
+    MSpg.replace("%PB2%", String(mySetupData->get_brdpb2pin()));
+    MSpg.replace("%MSD%", String(mySetupData->get_brdmsdelay()));
+
+    // display heap memory for tracking memory loss, %HEA%
+    // only esp32?
+    MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
+
+    // add code to handle reboot controller %BT%
+    MSpg.replace("%BT%", String(CREBOOTSTR));
+  }
+  else
+  {
+    // could not find spiffs file
+    TRACE();
+    DebugPrintln("File not found");
+    MSpg = "File not found";
+
+  }
+  MANAGEMENT_sendmyheader();
+  MANAGEMENT_sendmycontent();
+  MSpg = "";
+}
+
+// handler for predefined board 
 void MANAGEMENT_predefinedboard1()
 {
   int brdnumber = -1;
@@ -2513,10 +3018,10 @@ void MANAGEMENT_predefinedboard1()
   MSpg = "";
 }
 
+// build page for predefinedboard
 void MANAGEMENT_buildpredefinedboard()
 {
   // MsPg size is around 3469 bytes.
-
   // spiffs was started earlier when server was started so assume it has started
   DebugPrintln("buildpredefinedconfig: Start");
   if ( SPIFFS.exists("/predefbrd.html"))
@@ -2570,6 +3075,7 @@ void MANAGEMENT_buildpredefinedboard()
   }
 }
 
+// send predefinedboard to client
 void MANAGEMENT_predefinedboard()
 {
   // to handle reboot option if this was HTTP_POST
@@ -2581,6 +3087,7 @@ void MANAGEMENT_predefinedboard()
   MSpg = "";
 }
 
+// build config page
 void MANAGEMENT_buildconfigpg()
 {
   // spiffs was started earlier when server was started so assume it has started
@@ -2619,6 +3126,7 @@ void MANAGEMENT_buildconfigpg()
   }
 }
 
+// handler for config page
 void MANAGEMENT_confighandler()
 {
   DebugPrintln("confighandler");
@@ -2632,10 +3140,11 @@ void MANAGEMENT_confighandler()
   MSpg = "";
 }
 
+// send config to client
 void MANAGEMENT_config()
 {
-  // This will be start of config - select pre-defined or custon
-  // After post this will goto either customconfig() or predefinedconfig()
+  // This will be start of config options
+  // After post this will goto either customconfig() or predefinedconfig() or showboardconfig()
   DebugPrintln("config");
   MANAGEMENT_buildconfigpg();
   MANAGEMENT_sendmyheader();
@@ -2643,6 +3152,7 @@ void MANAGEMENT_config()
   MSpg = "";
 }
 
+// start management server
 void start_management(void)
 {
   if ( !SPIFFS.begin() )
@@ -2654,6 +3164,8 @@ void start_management(void)
     return;
   }
   MSpg.reserve(MAXMANAGEMENTPAGESIZE);        // largest page is MANAGEMENT_buildpredefinedboard() = 3469
+  BoardConfigJson.reserve(MAXCUSTOMBRDJSONSIZE);
+
   mserver.on("/",         HTTP_GET,  MANAGEMENT_sendadminpg1);
   mserver.on("/",         HTTP_POST, MANAGEMENT_handleadminpg1);
   mserver.on("/msindex1", HTTP_GET,  MANAGEMENT_sendadminpg1);
@@ -2666,31 +3178,30 @@ void start_management(void)
   mserver.on("/msindex4", HTTP_POST, MANAGEMENT_handleadminpg4);
   mserver.on("/color",    HTTP_GET,  MANAGEMENT_sendadminpg5);
   mserver.on("/color",    HTTP_POST, MANAGEMENT_handleadminpg5);          // color picker
-  mserver.on("/delete",   HTTP_GET,  MANAGEMENT_displaydeletepage);
+  mserver.on("/delete",   HTTP_GET,  MANAGEMENT_deletepage);
   mserver.on("/delete",   HTTP_POST, MANAGEMENT_handledeletefile);
   mserver.on("/list",     HTTP_GET,  MANAGEMENT_listFSfiles);
-  mserver.on("/upload",   HTTP_GET,  MANAGEMENT_displayfileupload);
+  mserver.on("/upload",   HTTP_GET,  MANAGEMENT_fileupload);
+  mserver.on("/mssuccess",           MANAGEMENT_fileuploadsuccess);
+  mserver.on("/ascomoff",     HTTP_GET, MANAGEMENT_ascomoff);
+  mserver.on("/ascomon",      HTTP_GET, MANAGEMENT_ascomon);
+  mserver.on("/ledsoff",      HTTP_GET, MANAGEMENT_ledsoff);
+  mserver.on("/ledson",       HTTP_GET, MANAGEMENT_ledson);
+  mserver.on("/tempon",       HTTP_GET, MANAGEMENT_tempon);
+  mserver.on("/tempoff",      HTTP_GET, MANAGEMENT_tempoff);
+  mserver.on("/webserveroff", HTTP_GET, MANAGEMENT_webserveroff);
+  mserver.on("/webserveron",  HTTP_GET, MANAGEMENT_webserveron);
+  mserver.on("/rssi",         HTTP_GET, MANAGEMENT_rssi);
+  mserver.on("/set",                    MANAGEMENT_handleset);               // generic set function
+  mserver.on("/get",                    MANAGEMENT_handleget);               // generic get function
 
-  mserver.on("/ascomoff",     HTTP_GET,  MANAGEMENT_ascomoff);
-  mserver.on("/ascomon",      HTTP_GET,  MANAGEMENT_ascomon);
-  mserver.on("/ledsoff",      HTTP_GET,  MANAGEMENT_ledsoff);
-  mserver.on("/ledson",       HTTP_GET,  MANAGEMENT_ledson);
-  mserver.on("/tempon",       HTTP_GET,  MANAGEMENT_tempon);
-  mserver.on("/tempoff",      HTTP_GET,  MANAGEMENT_tempoff);
-  mserver.on("/webserveroff", HTTP_GET,  MANAGEMENT_webserveroff);
-  mserver.on("/webserveron",  HTTP_GET,  MANAGEMENT_webserveron);
-  mserver.on("/rssi",         HTTP_GET,  MANAGEMENT_rssi);
-  mserver.on("/set",                 MANAGEMENT_handleset);               // generic set function
-  mserver.on("/get",                 MANAGEMENT_handleget);               // generic get function
-
-  mserver.on("/config",  	    HTTP_GET,  MANAGEMENT_config);
+  mserver.on("/config",  	    HTTP_GET, MANAGEMENT_config);
   mserver.on("/config",  	    HTTP_POST, MANAGEMENT_confighandler);
-  mserver.on("/predefbrd",               MANAGEMENT_predefinedboard);
-
-  mserver.on("/predefbrd1",              MANAGEMENT_predefinedboard1);
-
-  mserver.on("/custombrd",    HTTP_GET,  MANAGEMENT_customconfig);
-  mserver.on("/custombrd",    HTTP_POST, MANAGEMENT_customconfig_handler);
+  mserver.on("/predefbrd",              MANAGEMENT_predefinedboard);
+  mserver.on("/predefbrd1",             MANAGEMENT_predefinedboard1);
+  mserver.on("/showconfig",             MANAGEMENT_showboardconfig);
+  mserver.on("/custombrd",              MANAGEMENT_custombrd);
+  mserver.on("/genbrd",                 MANAGEMENT_genbrd);
 
   mserver.on("/upload",   HTTP_POST, []() {
     mserver.send(NORMALWEBPAGE);
@@ -2708,6 +3219,7 @@ void start_management(void)
   delay(10);                                            // small pause so background tasks can run
 }
 
+// stop management server
 void stop_management(void)
 {
   if ( managementserverstate == RUNNING )
@@ -2715,11 +3227,11 @@ void stop_management(void)
     mserver.stop();
     managementserverstate = STOPPED;
     TRACE();
-      DebugPrintln("management server stopped");
+    DebugPrintln("management server stopped");
   }
   else
   {
-      DebugPrintln("management server not running");
+    DebugPrintln("management server not running");
   }
 }
 

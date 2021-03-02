@@ -1,3 +1,16 @@
+207
+Add FIXEDSTEPMODE to focuserconfig.h for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+Add code to use FIXEDSTEPMODE in focuserconfig.h so value can be loaded at compile time
+Add showconfig to Management Server - show current board config
+Add custombrd page to Management server
+Add fixedstepmode to generic get/set interface to allow user to set a fixed stepmode when using ESP8266
+Improve /delete in Management server [add feedback for file not exist, file deleted and file not deleted]
+Improve /upload in Management Server
+Remove #ifdef around DefaultBoardNumber in myFP2ESP.ino to allow access in other files and new show board config page
+Reformat [minor] Management server index page
+Fix for Display not shown on / management server when oled display not defined in focuserconfig.h
+Fix for Management server config page to show buttons of same width
+
 206
 Add pop-up dialog box whenever reboot controller is chosen from web page on Management Server
 Add preprocessor check for BLUETOOTHMODE - Halt if target is ESP8266
