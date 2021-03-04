@@ -5,6 +5,8 @@ Add code to use FIXEDSTEPMODE in focuserconfig.h so value can be loaded at compi
 Add showconfig to Management Server - show current board config
 Add custombrd page to Management server
 Add fixedstepmode to generic get/set interface to allow user to set a fixed stepmode when using ESP8266
+Create void heapmsg() to handle heap messages
+Create NOTDEFINEDSTR to handle all "not defined" messages
 Move INDI from focuserconfig.h to Management Server [pg3]
 Improve /delete in Management server [add feedback for file not exist, file deleted and file not deleted]
 Improve /upload in Management Server

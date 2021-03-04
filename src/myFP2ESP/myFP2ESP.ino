@@ -190,7 +190,7 @@ const char* duckdnstoken = "0a0379d5-3979-44ae-b1e2-6c371a4fe9bf";
 #ifdef BLUETOOTHMODE
 #include "BluetoothSerial.h"                  // needed for Bluetooth comms
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error "Bluetooth is not enabled"
+#error "Bluetooth Not enabled"
 #endif
 BluetoothSerial SerialBT;                     // define BT adapter to use
 String btline;                                // buffer for serial data
@@ -540,7 +540,7 @@ void init_joystick2(void)
 // ======================================================================
 bool init_pushbuttons(void)
 {
-  DebugPrint("Push buttons: ");
+  DebugPrint("initPB: ");
   if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -565,7 +565,7 @@ bool init_pushbuttons(void)
 
 void update_pushbuttons(void)
 {
-  DebugPrint("Push buttons: ");
+  DebugPrint("updatePB: ");
   if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -709,23 +709,23 @@ void start_otaservice()
     DebugPrintln(error);
     if (error == OTA_AUTH_ERROR)
     {
-      DebugPrintln("Auth Failed");
+      DebugPrintln("err Auth");
     }
     else if (error == OTA_BEGIN_ERROR)
     {
-      DebugPrintln("Begin Failed");
+      DebugPrintln("err Begin");
     }
     else if (error == OTA_CONNECT_ERROR)
     {
-      DebugPrintln("Connect Failed");
+      DebugPrintln("err Connect");
     }
     else if (error == OTA_RECEIVE_ERROR)
     {
-      DebugPrintln("Receive Failed");
+      DebugPrintln("err Receive");
     }
     else if (error == OTA_END_ERROR)
     {
-      DebugPrintln("End Failed");
+      DebugPrintln("err End");
     }
   });
   ArduinoOTA.begin();
@@ -742,7 +742,7 @@ void start_otaservice()
 
 void init_duckdns(void)
 {
-  DebugPrintln("Start DuckDNS:");
+  DebugPrintln("initDuckDNS:");
   myoled->oledtextmsg("Start DuckDNS", -1, false, true);
   EasyDDNS.service("duckdns");                  // Enter your DDNS Service Name - "duckdns" / "noip"
   delay(5);
@@ -800,7 +800,7 @@ void steppermotormove(byte ddir )               // direction moving_in, moving_o
 bool init_leds()
 {
   // Basic assumption rule: If associated pin is -1 then cannot set enable
-  DebugPrint("LED pins:");
+  DebugPrint("initleds");
   if ( mySetupData->get_inoutledstate() == 1)
   {
     pinMode(mySetupData->get_brdinledpin(), OUTPUT);
@@ -834,6 +834,12 @@ bool init_homepositionswitch()
   return false;
 }
 
+void heapmsg()
+{
+  HDebugPrint("Heap = ");
+  HDebugPrintf("%u\n", ESP.getFreeHeap());
+}
+
 #ifdef READWIFICONFIG
 bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
 {
@@ -847,19 +853,19 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln("err: read wificonfig.jsn");
+    DebugPrintln("err: read file");
     return mstatus;
   }
   File f = SPIFFS.open(filename, "r");                  // file open to read
   if (!f)
   {
     TRACE();
-    DebugPrintln("file not found");
+    DebugPrintln("err not found");
   }
   else
   {
     String data = f.readString();                       // read content of the text file
-    DebugPrint("Wifi Config data: ");
+    DebugPrint("Config data: ");
     DebugPrintln(data);                                 // ... and print on serial
     f.close();
 
@@ -935,7 +941,7 @@ void setup()
   Serial.begin(SERIALPORTSPEED);
 #if defined(DEBUG)
   //  Serial.begin(SERIALPORTSPEED);
-  DebugPrintln("Start serial");
+  DebugPrintln("Serialbegin");
   DebugPrintln("Debug on");
 #endif
   delay(100);                                   // go on after statement does appear
@@ -945,12 +951,10 @@ void setup()
   Serial.println(millis());
 #endif
 
-  HDebugPrint("Heap=");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
   HDebugPrintln("setup(): mySetupData()");
   mySetupData = new SetupData();                // instantiate object SetUpData with SPIFFS file
-  HDebugPrint("Heap=");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
 
 #ifdef LOCALSERIAL
   Serial.begin(SERIALPORTSPEED);
@@ -959,10 +963,10 @@ void setup()
 #endif // if defined(LOCALSERIAL)
 
 #ifdef BLUETOOTHMODE                            // open Bluetooth port, set bluetooth device name
+  DebugPrintln("Start Bluetooth");
   SerialBT.begin(BLUETOOTHNAME);                // Bluetooth device name
   btline = "";
   clearbtPort();
-  DebugPrintln("Start Bluetooth");
 #endif
 
   reboot = true;                                // booting up
@@ -1007,34 +1011,31 @@ void setup()
     DebugPrintln("disabled");
   }
 
-  HDebugPrint("Heap=");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
-  HDebugPrintln("setup(): oledtextdisplay()");
-  displayfound = false;
+  heapmsg();
 
+  displayfound = false;
 #ifdef OLED_MODE
   if (CheckOledConnected())
   {
+    DebugPrintln("init OLED_MODE");
     myoled = new OLED_MODE;                       // Start configured OLED display object
-    DebugPrintln("init OLED OLED_MODE");
     displaystate = true;
   }
   else
   {
+    DebugPrintln("init OLED_NON");
     myoled = new OLED_NON;
-    DebugPrintln("init OLED OLED_NON");
     displaystate = false;
   }
 #else
+  DebugPrintln("init OLED_NON");
   myoled = new OLED_NON;
   displaystate = false;
-  DebugPrintln("#if OLED_MODE else");
 #endif // #ifdef OLED_MODE
   DebugPrint("Display state:");
   DebugPrintln(displaystate);
 
-  HDebugPrint("Heap=");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
 
   DebugPrint("fposition=");                 // Print Loaded Values from SPIFF
   DebugPrintln(mySetupData->get_fposition());
@@ -1131,9 +1132,8 @@ void setup()
 #endif
 #endif
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
-  HDebugPrintln("start accesspoint");
+  heapmsg();
+
 #ifdef ACCESSPOINT
   myoled->oledtextmsg("Start AP", -1, true, true);
   DebugPrintln("Start AP");
@@ -1142,8 +1142,7 @@ void setup()
   WiFi.softAP(mySSID, myPASSWORD);
 #endif // end ACCESSPOINT
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
 
   // this is setup as a station connecting to an existing wifi network
 #ifdef STATIONMODE
@@ -1239,21 +1238,21 @@ void setup()
   otaupdatestate = STOPPED;
   duckdnsstate = STOPPED;
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
-  DebugPrintln("Start tcp/ip server");
+  heapmsg();
+
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
   rssi = getrssi();                             // get network strength
   // Starting TCP Server
   myoled->oledtextmsg("Start tcp/ip server", -1, false, true);
+  DebugPrintln("Start tcp/ip server");
   start_tcpipserver();
   DebugPrintln("Get IP");
   ESP32IPAddress = WiFi.localIP();
   delay(10);                                    // keep delays small else issue with ASCOM
   DebugPrintln("TCP/IP started");
   myoled->oledtextmsg("TCP/IP started", -1, false, true);
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  
+  heapmsg();
 
   // connection established
   DebugPrint("SSID:");
@@ -1275,8 +1274,8 @@ void setup()
   DebugPrintln(DRVBRD);
   myoled->oledtextmsg("Start drvbrd:", DRVBRD, true, true);
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
+
   // DebugPrintln("setup(): driverboard");
   // ensure targetposition will be same as focuser position
   // otherwise after loading driverboard focuser will start moving immediately
@@ -1286,8 +1285,7 @@ void setup()
   DebugPrintln("driver board: end");
 
   delay(5);
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
 
   // range check focuser variables
   mySetupData->set_brdstepmode((mySetupData->get_brdstepmode() < 1 ) ? 1 : mySetupData->get_brdstepmode());
@@ -1379,14 +1377,14 @@ void setup()
   start_otaservice();                       // Start the OTA service
 #endif // if defined(OTAUPDATES)
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
   HDebugPrintln("setup(): management server");
+  
 #ifdef MANAGEMENT
   start_management();
 #endif
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+
+  heapmsg();
 
   DebugPrintln("start web server");
   if ( mySetupData->get_webserverstate() == 1)
@@ -1861,8 +1859,7 @@ void loop()
     //_______________________________State_DelayAfterMove
 
     case State_DelayAfterMove:
-      HDebugPrint("Heap after move = ");
-      HDebugPrintf("%u\n", ESP.getFreeHeap());
+      heapmsg();
       // apply Delayaftermove, this MUST be done here in order to get accurate timing for DelayAfterMove
       if (TimeCheck(TimeStampDelayAfterMove , mySetupData->get_DelayAfterMove()))
       {

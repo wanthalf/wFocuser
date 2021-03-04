@@ -126,6 +126,7 @@ extern const char* FSFILENOTFOUNDSTR;
 #define JSONPAGETYPE              "application/json"
 #define FILENOTFOUNDSTR           "Not found"
 #define FILEFOUNDSTR              "Found"
+#define NOTDEFINEDSTR             "Not defined"
 
 #define MANAGEMENTISMOVINGSTR     "<html><head><title>Management Server</title></head><body><p>Focuser is Moving. Please try again once focuser has stopped</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define MANAGEMENTNOTFOUNDSTR     "<html><head><title>Management Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"

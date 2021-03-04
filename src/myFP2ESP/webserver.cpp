@@ -37,6 +37,7 @@ extern TempProbe    *myTempProbe;
 extern SetupData    *mySetupData;
 extern DriverBoard* driverboard;
 extern OLED_NON     *myoled;
+extern void         heapmsg(void);
 
 void WEBSERVER_sendpresets(void);
 void WEBSERVER_sendroot(void);
@@ -1188,7 +1189,7 @@ void setup_webserver(void)
   DebugPrintln("start web server");
   mySetupData->set_webserverstate(1);
   HDebugPrint("Heap after  start_webserver = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
   delay(10);                                        // small pause so background tasks can run
 }
 
@@ -1208,8 +1209,7 @@ void start_webserver(void)
   }
   DebugPrintln("start web server");
   HDebugPrint("Heap before start_webserver = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
   // on a reboot this test will be a 1
   if ( reboot == true )
   {

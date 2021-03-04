@@ -1044,7 +1044,7 @@ void MANAGEMENT_buildadminpg2(void)
 #endif // #if defined(ESP8266)
 #else
     MSpg.replace("%TPO%", "Port: " + String(mySetupData->get_tcpipport()));
-    MSpg.replace("%TBT%", "Not defined");
+    MSpg.replace("%TBT%", String(NOTDEFINEDSTR));
 #endif // #if defined(ACCESSPOINT) || defined(STATIONMODE)
 
     // Webserver status %WST%
@@ -1601,7 +1601,7 @@ void MANAGEMENT_buildadminpg1(void)
       MSpg.replace("%MBT%", String(MDNSSTARTSTR));
     }
 #else
-    MSpg.replace("%MST%", "Not defined");
+    MSpg.replace("%MST%", String(NOTDEFINEDSTR));
     MSpg.replace("%MPO%", "Port: " + String(mySetupData->get_mdnsport()));
     MSpg.replace("%MBT%", " ");
 #endif
@@ -1616,7 +1616,7 @@ void MANAGEMENT_buildadminpg1(void)
       MSpg.replace("%OST%", "STOPPED");
     }
 #else
-    MSpg.replace("%OST%", "Not defined");
+    MSpg.replace("%OST%", String(NOTDEFINEDSTR));
 #endif
 
 #ifdef USEDUCKDNS
@@ -1629,7 +1629,7 @@ void MANAGEMENT_buildadminpg1(void)
       MSpg.replace("%DST%", "STOPPED");
     }
 #else
-    MSpg.replace("%DST%", "Not defined");
+    MSpg.replace("%DST%", String(NOTDEFINEDSTR));
 #endif
 
     // staticip %IPS%
@@ -1658,7 +1658,7 @@ void MANAGEMENT_buildadminpg1(void)
     }
     else
     {
-      MSpg.replace("%OLE%", "<b>DISPLAY: </b>not defined in firmware"); // not checked
+      MSpg.replace("%OLE%", "<b>DISPLAY: </b>" + String(NOTDEFINEDSTR)); // not checked
     }
 
     // if oled display page group option update
@@ -1723,7 +1723,7 @@ void MANAGEMENT_buildadminpg1(void)
     MSpg = "File not found";
   }
 #ifdef TIMEMSBUILDPG1
-  Serial.print("ms_buildpg1: ");
+  Serial.print("msbuildpg1: ");
   Serial.println(millis());
 #endif
   delay(10);                                            // small pause so background tasks can run
@@ -1733,7 +1733,7 @@ void MANAGEMENT_buildadminpg1(void)
 void MANAGEMENT_handleadminpg1(void)
 {
 #ifdef TIMEMSHANDLEPG1
-  Serial.print("ms_handlepg1: ");
+  Serial.print("mshandlepg1: ");
   Serial.println(millis());
 #endif
   // code here to handle a put request
