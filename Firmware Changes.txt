@@ -1,15 +1,19 @@
 207
 Add FIXEDSTEPMODE to focuserconfig.h for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+Add STEPSPERREVOLUTION to focuserconfig.h for boards ULN2003, L298N, L293DMINI, L9110S, L293DNEMA, L293D28BYJ48
 Add code to use FIXEDSTEPMODE in focuserconfig.h so value can be loaded at compile time
 Add showconfig to Management Server - show current board config
 Add custombrd page to Management server
 Add fixedstepmode to generic get/set interface to allow user to set a fixed stepmode when using ESP8266
+Move INDI from focuserconfig.h to Management Server [pg3]
 Improve /delete in Management server [add feedback for file not exist, file deleted and file not deleted]
 Improve /upload in Management Server
 Remove #ifdef around DefaultBoardNumber in myFP2ESP.ino to allow access in other files and new show board config page
+Rewrite myboards.cpp stepper code based on DefaultBoardNumber rather than use strings to check for board types
 Reformat [minor] Management server index page
 Fix for Display not shown on / management server when oled display not defined in focuserconfig.h
 Fix for Management server config page to show buttons of same width
+Fix for fixedstepmode in board config not being correctly assigned
 
 206
 Add pop-up dialog box whenever reboot controller is chosen from web page on Management Server
@@ -79,15 +83,7 @@ Rewrite init_pushbuttons() to return bool state
 Rewrite init_inoutleds() to return bool state
 Rewrite init_homepositionswitch() to return bool state
 
-
-Remaining code to rewrite
--------------------------
-OLED_Graphic - needs to use mySetupData->get_brdsda() and mySetupData->get_brdsck() instead of using hardcoded pin data
-irremote - needs to use runtime mySetupData->get_brdirpin() instead of hardpin IRrecv irrecv(RECV_PIN);
-customconfig web pages
-
-
-
+// Path 1xx now deprecated. Path 2xx created
 148
 Add dummy pin defines to board configs to prevent compiler objections
 

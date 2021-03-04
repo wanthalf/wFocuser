@@ -59,40 +59,48 @@
 // OVERVIEW: TO PROGRAM THE FIRMWARE
 // ======================================================================
 // 1. Set your DRVBRD in focuserconfig.h so the correct driver board is used
-// 2. Set the correct hardware options/controller modes in focuserconfig.h
-//    to match your hardware
-// 3. Set your target CPU to match the correct CPU for your board
-// 4. Compile and upload to your controller
-
+// 2. For specific boards set the FIXEDSTEPMODE in focuserconfig.h
+// 3. For specific boards set the STEPSPERREVOLUTION in focuserconfig.h
+// 4. Enable Display type [if fitted[ in focuserconfig.h
+// 5. Set hardware options for JoyStick/IRRemote [esp32 only] in focuserconfig.h
+// 6. Set the controller mode in focuserconfig.h
+// 7. Set your target CPU to match the correct CPU for your board
+// 8. Compile and upload to your controller
+// 9. Upload the sketch data files
 
 // ======================================================================
 // 1: SPECIFY DRIVER BOARD in 1: focuserconfig.h
 // ======================================================================
-// Please specify your driver board in focuserconfig.h, only 1 can be defined,
-// see DRVBRD line
-
+// Please specify your driver board [DRVBRD] in focuserconfig.h
 
 // ======================================================================
-// 2: SPECIFY DISPLAY OPTIONS IN 2: focuserconfig.h
+// 2: SPECIFY FIXEDSTEPMODE in 2: focuserconfig.h
+// ======================================================================
+// For specific boards, specify the correct FIXEDSTEPMODE focuserconfig.h
+
+// ======================================================================
+// 3: SPECIFY STEPSPERREVOLUTION in 3: focuserconfig.h
+// ======================================================================
+// For specific boards, specify the correct STEPSPERREVOLUTION focuserconfig.h
+
+// ======================================================================
+// 4: SPECIFY DISPLAY OPTIONS IN 4: focuserconfig.h
 // ======================================================================
 // Specify your display options in focuserconfig.h, such as OLEDTEXT
 
-
 // ======================================================================
-// 3: SPECIFY HARDWARE OPTIONS IN 3: focuserconfig.h
+// 5: SPECIFY HARDWARE OPTIONS IN 5: focuserconfig.h
 // ======================================================================
 // Specify your controller options in focuserconfig.h, such as INFRAREDREMOTE
 
-
 // ======================================================================
-// 4: SPECIFY THE CONTROLLER MODE IN 4: focuserconfig.h
+// 6: SPECIFY THE CONTROLLER MODE IN 6: focuserconfig.h
 // ======================================================================
 // Please specify your controller mode in focuserconfig.h, such as ACCESSPOINT
 // and MANAGEMENT
 
-
 // ======================================================================
-// 5: WIFI NETWORK CREDENTIALS: SSID AND PASSWORD
+// 7: WIFI NETWORK CREDENTIALS: SSID AND PASSWORD
 // ======================================================================
 // 1. For access point mode this is the network you connect to
 // 2. For station mode, change mySSID and myPASSWORD to match your network details
@@ -106,7 +114,7 @@ char myPASSWORD_1[64] = "AllYeWhoEnter";      // alternate network id
 
 
 // ======================================================================
-// 6: STATIC IP ADDRESS CONFIGURATION
+// 8: STATIC IP ADDRESS CONFIGURATION
 // ======================================================================
 // must use static IP if using duckdns or as an Access Point
 #ifndef STATICIPON
@@ -138,7 +146,7 @@ IPAddress subnet(255, 255, 255, 0);
 
 
 // ======================================================================
-// 7: BLUETOOTH MODE NAME
+// 9: BLUETOOTH MODE NAME
 // ======================================================================
 #ifdef BLUETOOTHMODE
 String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth controller, this name you can change
@@ -146,7 +154,7 @@ String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth contro
 
 
 // ======================================================================
-// 8: mDNS NAME: Name must be alphabetic chars only, lowercase
+// 10: mDNS NAME: Name must be alphabetic chars only, lowercase
 // ======================================================================
 #ifdef MDNSSERVER
 char mDNSNAME[] = "myfp2eap";               // mDNS name will be myfp2eap.local
@@ -154,7 +162,7 @@ char mDNSNAME[] = "myfp2eap";               // mDNS name will be myfp2eap.local
 
 
 // ======================================================================
-// 9: OTAUPDATES (OVER THE AIR UPDATE) SSID AND PASSWORD CONFIGURATION
+// 11: OTAUPDATES (OVER THE AIR UPDATE) SSID AND PASSWORD CONFIGURATION
 // ======================================================================
 // You can change the values for OTANAME and OTAPassword if required
 #ifdef OTAUPDATES
@@ -165,7 +173,7 @@ const char *OTAPassword = "esp8266";
 
 
 // ======================================================================
-// 10: DUCKDNS DOMAIN AND TOKEN CONFIGURATION
+// 12: DUCKDNS DOMAIN AND TOKEN CONFIGURATION
 // ======================================================================
 // if using DuckDNS you need to set these next two parameters, duckdnsdomain
 // and duckdnstoken, BUT you cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE
@@ -224,9 +232,11 @@ OLED_NON *myoled;
 //moving_out  1||  1   |   0
 //moving_in   0||  0   |   1
 
-DriverBoard* driverboard;
 int DefaultBoardNumber  = DRVBRD;           // use this to create a default board configuration
 int brdfixedstepmode    = FIXEDSTEPMODE;    // only used by boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+int brdstepsperrev      = STEPSPERREVOLUTION;
+
+DriverBoard*  driverboard;
 unsigned long ftargetPosition;              // target position
 volatile bool halt_alert;
 

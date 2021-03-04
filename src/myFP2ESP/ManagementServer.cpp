@@ -27,13 +27,13 @@
 // ======================================================================
 // Extern Data
 // ======================================================================
-extern SetupData    *mySetupData;
-extern DriverBoard  *driverboard;
-extern int          DefaultBoardNumber;
-extern int          brdfixedstepmode;
-extern OLED_NON     *myoled;
+extern SetupData     *mySetupData;
+extern DriverBoard   *driverboard;
+extern int           DefaultBoardNumber;
+extern int           brdfixedstepmode;
+extern OLED_NON      *myoled;
 #include "temp.h"
-extern TempProbe    *myTempProbe;
+extern TempProbe     *myTempProbe;
 
 extern volatile bool halt_alert;
 extern unsigned long ftargetPosition;
@@ -832,7 +832,7 @@ void MANAGEMENT_buildadminpg3(void)
     if ( mySetupData->get_pbenable() == 1)
     {
       MSpg.replace("%PBN%", String(DISABLEPBSTR));      // button
-      MSpg.replace("%PBL%", "Enabled");        // state
+      MSpg.replace("%PBL%", "Enabled");                 // state
     }
     else
     {
@@ -840,6 +840,18 @@ void MANAGEMENT_buildadminpg3(void)
       MSpg.replace("%PBL%", "Disabled");
     }
 
+    // INDI
+    if ( mySetupData->get_indi() == 1)
+    {
+      MSpg.replace("%INDI%", String(DISABLEINDISTR));   // button
+      MSpg.replace("%INI%", "Enabled");                 // state
+    }
+    else
+    {
+      MSpg.replace("%INDI%", String(ENABLEINDISTR));
+      MSpg.replace("%INI%", "Disabled");
+    }
+    
     // display heap memory for tracking memory loss?
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
@@ -964,6 +976,18 @@ void MANAGEMENT_handleadminpg3(void)
     mySetupData->set_pbenable(0);
   }
 
+  // indi enable/disable
+  msg = mserver.arg("indion");
+  if ( msg != "" )
+  {
+    mySetupData->set_indi(1);
+  }
+  msg = mserver.arg("indioff");
+  if ( msg != "" )
+  {
+    mySetupData->set_indi(0);
+  }
+
   MANAGEMENT_sendadminpg3();
 #ifdef TIMEMSHANDLEPG3
   Serial.print("ms_handlepg3: ");
@@ -971,7 +995,7 @@ void MANAGEMENT_handleadminpg3(void)
 #endif
 }
 
-// builder for msindex32 - admin page 2 - servers + temp-probe + leds + hpsw
+// builder for msindex2 - admin page 2 - servers + temp-probe + leds + hpsw
 void MANAGEMENT_buildadminpg2(void)
 {
 #ifdef TIMEMSBUILDPG2
@@ -2037,7 +2061,7 @@ void MANAGEMENT_sendjson(String str)
 void MANAGEMENT_handleget(void)
 {
   // return json string of state, on or off or value
-  // ascom, leds, temp, webserver, position, ismoving, display, motorspeed, coilpower, reverse, fixedstepmode
+  // ascom, leds, temp, webserver, position, ismoving, display, motorspeed, coilpower, reverse, fixedstepmode, indi
   String jsonstr;
 
   if ( mserver.argName(0) == "ascom" )
@@ -2106,6 +2130,11 @@ void MANAGEMENT_handleget(void)
     jsonstr = "{ \"fixedstepmode\":" + String(mySetupData->get_brdfixedstepmode()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
+  else if ( mserver.argName(0) == "indi" )
+  {
+    jsonstr = "{ \"indi\":" + String(mySetupData->get_indi()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
   else
   {
     jsonstr = "{ \"error\":\"unknown-command\" }";
@@ -2120,7 +2149,7 @@ void MANAGEMENT_handleset(void)
   String value;
   bool rflag = false;
   String drvbrd = mySetupData->get_brdname();
-  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode
+  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode, indi
 
   // ascom remote server
   value = mserver.arg("ascom");
@@ -2391,6 +2420,24 @@ void MANAGEMENT_handleset(void)
     rflag = true;
   }
 
+  // INDI
+  value = mserver.arg("indi");
+  if ( value != "" )
+  {
+    DebugPrint("indi:");
+    DebugPrintln(value);
+    if ( value == "on" )
+    {
+      mySetupData->set_indi(1);
+      rflag = true;
+    }
+    else if ( value == "off" )
+    {
+      mySetupData->set_indi(0);
+      rflag = true;
+    }
+  }
+
   // send generic OK
   if ( rflag == true )
   {
@@ -2402,144 +2449,10 @@ void MANAGEMENT_handleset(void)
   }
 }
 
-// ascom alpaca server
-void MANAGEMENT_ascomoff(void)
-{
-  // ascom server stop
-  if ( mySetupData->get_ascomserverstate() == 1)
-  {
-    DebugPrintln("stop ascomserver");
-    stop_ascomremoteserver();
-  }
-  mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "ASCOM Alpaca Server Off");
-}
 
-// ascom alpaca server
-void MANAGEMENT_ascomon(void)
-{
-  // ascom server start
-  if ( mySetupData->get_ascomserverstate() == 0)
-  {
-    DebugPrintln("start ascomserver");
-    start_ascomremoteserver();
-  }
-  mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "ASCOM Alpaca Server On");
-}
 
-// in out leds
-void MANAGEMENT_ledsoff(void)
-{
-  // in out leds stop
-  // if disabled then enable
-  if ( mySetupData->get_inoutledstate() == 1)
-  {
-    DebugPrintln("leds off");
-    mySetupData->set_inoutledstate(0);
-  }
-  mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "IN-OUT LED's Off");
-}
 
-// in out leds
-void MANAGEMENT_ledson(void)
-{
-  String drvbrd = mySetupData->get_brdname();
-  // in out leds start
-  if ( (mySetupData->get_brdinledpin() == -1) || (mySetupData->get_brdoutledpin() == -1))
-  {
-    mySetupData->set_inoutledstate(0);
-    mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "IN-OUT LED's pins not set");
-  }
-  else
-  {
-    if ( mySetupData->get_inoutledstate() == 0)
-    {
-      DebugPrintln("leds on");
-      mySetupData->set_inoutledstate(1);
-      // reinitialise pins
-      if (drvbrd.equals("PRO2ESP32ULN2003") || drvbrd.equals("PRO2ESP32L298N") || drvbrd.equals("PRO2ESP32L293DMINI") || drvbrd.equals("PRO2ESP32L9110S") || drvbrd.equals("PRO2ESP32DRV8825") )
-      {
-        init_leds();
-        mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "IN-OUT LED's enabled");
-      }
-      else
-      {
-        DebugPrintln("Not supported on board type");
-        mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Not supported on board type");
-      }
-    }
-  }
-}
 
-// temperature probe
-void MANAGEMENT_tempoff(void)
-{
-  // temp probe stop
-  if (mySetupData->get_temperatureprobestate() == 1)              // if probe enabled
-  {
-    DebugPrintln("temp off");
-    // there is no destructor call
-    mySetupData->set_temperatureprobestate(0);                    // disable probe
-    myTempProbe->stop_temp_probe();                               // stop probe
-    tprobe1 = 0;                                                  // indicate no probe found
-  }
-  mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Temperature probe Off");
-}
-
-// temperature probe
-void MANAGEMENT_tempon(void)
-{
-  if ( mySetupData->get_brdtemppin() == -1 )
-  {
-    mySetupData->set_temperatureprobestate(0);
-    mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Temp probe pin not set");
-  }
-  else
-  {
-    // temp probe start
-    if ( mySetupData->get_temperatureprobestate() == 0)               // if probe is disabled
-    {
-      mySetupData->set_temperatureprobestate(1);                      // enable it
-      if ( tprobe1 == 0 )                                             // if there was no probe found
-      {
-        DebugPrintln("Create new tempprobe");
-        myTempProbe = new TempProbe;                                  // create new instance and look for probe
-        mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Temperature probe On");
-      }
-      else
-      {
-        DebugPrintln("myTempProbe already created");
-        mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Temperature probe already on");
-      }
-    }
-    else
-    {
-      mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Temperature probe already On");
-    }
-  }
-}
-
-// webserver
-void MANAGEMENT_webserveroff(void)
-{
-  if ( mySetupData->get_webserverstate() == 1)
-  {
-    DebugPrintln("webserver off");
-    stop_webserver();
-  }
-  mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Web-Server Off");
-}
-
-// webserver
-void MANAGEMENT_webserveron(void)
-{
-  // set web server option
-  if ( mySetupData->get_webserverstate() == 0)
-  {
-    DebugPrintln("webserver on");
-    start_webserver();
-  }
-  mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Web-Server On");
-}
 
 // set fixed step mode value in board config
 void MANAGEMENT_fixedstepmode_set(void)
@@ -2553,11 +2466,7 @@ void MANAGEMENT_fixedstepmode_set(void)
   mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Web-Server On");
 }
 
-// halt
-void MANAGEMENT_halt(void)
-{
-  halt_alert = true;
-}
+
 
 // return network signal strength
 void MANAGEMENT_rssi(void)
@@ -2612,7 +2521,7 @@ void MANAGEMENT_genbrd()
       dfile.print(BoardConfigJson);
       dfile.close();
       // file has been written so redirect
-      
+
       MSpg = "<html><head><title>Management Server</title></head><body><p>Config Board file /boards/99.jsn written</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>";
       MANAGEMENT_sendmyheader();
       MANAGEMENT_sendmycontent();
@@ -2629,8 +2538,8 @@ void MANAGEMENT_genbrd()
       MSpg = "";
       return;
     }
-  } 
-  
+  }
+
   // GET handler
   if ( SPIFFS.exists("/genbrd.html"))
   {
@@ -2951,141 +2860,7 @@ void MANAGEMENT_showboardconfig()
   MSpg = "";
 }
 
-// handler for predefined board 
-void MANAGEMENT_predefinedboard1()
-{
-  int brdnumber = -1;
-  String boardname;
-  String jsonstr;
-  // build the board based on type
-  // This will load all the board config from file and then save to board_config.jsn
-  // there is a post so get the datastring that specifies board name
-  // use datastring to load /boards/boardname.jsn
-  // read the file into jsonstr
-  // send it to createboardconfigfromjson
 
-  // to handle reboot option
-  MANAGEMENT_checkreboot();                              // if reboot controller;
-
-  // process post data to extract driver board
-  String msg = mserver.arg("brd");
-  if ( msg != "" )
-  {
-    brdnumber = msg.toInt();
-    DebugPrint("predefined board number: ");
-    DebugPrintln(brdnumber);
-  }
-
-  // load driver config from /boards based on driverbrd number
-  boardname = "/boards/" + String(brdnumber) + ".jsn";
-  DebugPrint("Board name of file = ");
-  DebugPrintln(boardname);
-
-  // try to load board definition from file
-
-  MSpg = "<html><head><title>Management Server</title></head><body>";
-  MSpg = MSpg + "Predefined board numer: " + String(brdnumber) + "\n";
-  if ( SPIFFS.exists(boardname))
-  {
-    File file = SPIFFS.open(boardname, "r");            // open file for read
-    jsonstr = file.readString();                        // read contents into string
-    file.close();
-  }
-  else
-  {
-    DebugPrintln("Err: Could not load board config file");
-    jsonstr = "";
-  }
-  MSpg = MSpg + jsonstr + "\n";
-
-  if ( jsonstr != "" )
-  {
-    if ( mySetupData->CreateBoardConfigfromjson(jsonstr) == true )
-    {
-      MSpg = MSpg + "Changed board type: Success\n";
-    }
-    else
-    {
-      MSpg = MSpg + "Changed board type: Fail\n";
-      MSpg = MSpg + "Err in createBoardConfigfromjson(). Board type not set.\n";
-    }
-    // add a home button
-    MSpg = MSpg + "<form action=\"/\" method=\"post\"><input type=\"submit\" value=\"Management Server HOME\"></form>";
-  }
-  MSpg = MSpg + "</body></html>\n\n";
-  MANAGEMENT_sendmyheader();
-  MANAGEMENT_sendmycontent();
-  MSpg = "";
-}
-
-// build page for predefinedboard
-void MANAGEMENT_buildpredefinedboard()
-{
-  // MsPg size is around 3469 bytes.
-  // spiffs was started earlier when server was started so assume it has started
-  DebugPrintln("buildpredefinedconfig: Start");
-  if ( SPIFFS.exists("/predefbrd.html"))
-  {
-    File file = SPIFFS.open("/predefbrd.html", "r");    // open file for read
-    MSpg = file.readString();                           // read contents into string
-    file.close();
-
-    // process for dynamic data
-    String bcol = mySetupData->get_wp_backcolor();
-    MSpg.replace("%BKC%", bcol);
-    String txtcol = mySetupData->get_wp_textcolor();
-    MSpg.replace("%TXC%", txtcol);
-    String ticol = mySetupData->get_wp_titlecolor();
-    MSpg.replace("%TIC%", ticol);
-    String hcol = mySetupData->get_wp_headercolor();
-    MSpg.replace("%HEC%", hcol);
-    MSpg.replace("%VER%", String(programVersion));
-    MSpg.replace("%NAM%", mySetupData->get_brdname());
-
-    // use #ifdef ESP8266 and elif to only display those boards for the target cpu type
-    String espbrds;
-    espbrds.reserve(2100);
-#if defined(ESP8266)
-    // List all the ESP8266 board types [1996]
-    espbrds = "<table><tr><td>WEMOSDRV8825H</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"50\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>WEMOSDRV8825</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"35\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2EDRV8825</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"36\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2EDRV8825BIG</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"37\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2EULN2003</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"38\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2EL293DNEMA</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"39\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2EL293D28BYJ48</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"40\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2EL298N</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"41\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2EL293DMINI</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"42\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2EL9110S</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"43\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>CUSTOMBRD</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"99\"><input type=\"submit\" value=\"Select\"></form></td></tr></table>";
-    MSpg.replace("%ESP8266%", espbrds);
-    // hide esp32 boards
-    MSpg.replace("%ESP32%", "None: Target is set for ESP8266" );
-#else
-    // List all the ESP32 board types [1298]
-    espbrds = "<table><tr><td>PRO2ESP32DRV8825</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"44\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2ESP32ULN2003</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"45\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2ESP32L298N</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"46\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2ESP32L293DMINI</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"47\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2ESP32L9110S</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"48\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>PRO2ESP32R3WEMOS</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"49\"><input type=\"submit\" value=\"Select\"></form></td></tr><tr><td>CUSTOMBRD</td><td><form action=\"/predefbrd1\" method=\"post\"><input type=\"hidden\" name=\"brd\" value=\"99\"><input type=\"submit\" value=\"Select\"></form></td></tr></table>";
-    MSpg.replace("%ESP32%", espbrds);
-
-    // hide esp8266 boards
-    MSpg.replace("%ESP8266%", "None: Target is set for ESP32");
-#endif
-    // display heap memory for tracking memory loss, %HEA%
-    // only esp32?
-    MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
-
-    // add code to handle reboot controller %BT%
-    MSpg.replace("%BT%", String(CREBOOTSTR));
-  }
-  else
-  {
-    // could not read file
-    TRACE();
-    DebugPrintln("File not found");
-    MSpg = "File not found";
-  }
-}
-
-// send predefinedboard to client
-void MANAGEMENT_predefinedboard()
-{
-  // to handle reboot option if this was HTTP_POST
-  MANAGEMENT_checkreboot();                              // if reboot controller;
-
-  MANAGEMENT_buildpredefinedboard();
-  MANAGEMENT_sendmyheader();
-  MANAGEMENT_sendmycontent();
-  MSpg = "";
-}
 
 // build config page
 void MANAGEMENT_buildconfigpg()
@@ -3183,25 +2958,15 @@ void start_management(void)
   mserver.on("/list",     HTTP_GET,  MANAGEMENT_listFSfiles);
   mserver.on("/upload",   HTTP_GET,  MANAGEMENT_fileupload);
   mserver.on("/mssuccess",           MANAGEMENT_fileuploadsuccess);
-  mserver.on("/ascomoff",     HTTP_GET, MANAGEMENT_ascomoff);
-  mserver.on("/ascomon",      HTTP_GET, MANAGEMENT_ascomon);
-  mserver.on("/ledsoff",      HTTP_GET, MANAGEMENT_ledsoff);
-  mserver.on("/ledson",       HTTP_GET, MANAGEMENT_ledson);
-  mserver.on("/tempon",       HTTP_GET, MANAGEMENT_tempon);
-  mserver.on("/tempoff",      HTTP_GET, MANAGEMENT_tempoff);
-  mserver.on("/webserveroff", HTTP_GET, MANAGEMENT_webserveroff);
-  mserver.on("/webserveron",  HTTP_GET, MANAGEMENT_webserveron);
-  mserver.on("/rssi",         HTTP_GET, MANAGEMENT_rssi);
-  mserver.on("/set",                    MANAGEMENT_handleset);               // generic set function
-  mserver.on("/get",                    MANAGEMENT_handleget);               // generic get function
+  mserver.on("/rssi",     HTTP_GET,  MANAGEMENT_rssi);
+  mserver.on("/set",                 MANAGEMENT_handleset);               // generic set function
+  mserver.on("/get",                 MANAGEMENT_handleget);               // generic get function
 
-  mserver.on("/config",  	    HTTP_GET, MANAGEMENT_config);
-  mserver.on("/config",  	    HTTP_POST, MANAGEMENT_confighandler);
-  mserver.on("/predefbrd",              MANAGEMENT_predefinedboard);
-  mserver.on("/predefbrd1",             MANAGEMENT_predefinedboard1);
-  mserver.on("/showconfig",             MANAGEMENT_showboardconfig);
-  mserver.on("/custombrd",              MANAGEMENT_custombrd);
-  mserver.on("/genbrd",                 MANAGEMENT_genbrd);
+  mserver.on("/config",  	HTTP_GET,  MANAGEMENT_config);
+  mserver.on("/config",  	HTTP_POST, MANAGEMENT_confighandler);
+  mserver.on("/showconfig",          MANAGEMENT_showboardconfig);
+  mserver.on("/custombrd",           MANAGEMENT_custombrd);
+  mserver.on("/genbrd",              MANAGEMENT_genbrd);
 
   mserver.on("/upload",   HTTP_POST, []() {
     mserver.send(NORMALWEBPAGE);

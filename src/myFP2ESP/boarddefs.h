@@ -71,7 +71,7 @@
 // ======================================================================
 
 #ifndef SLOW
-#define SLOW                  0             // motorspeeds
+#define SLOW                  0           // motorspeeds
 #endif
 #ifndef MED
 #define MED                   1
@@ -85,7 +85,7 @@
 // ======================================================================
 
 #ifndef STEP1
-#define STEP1                 1             // stepmodes
+#define STEP1                 1           // stepmodes
 #endif
 #ifndef STEP2
 #define STEP2                 2

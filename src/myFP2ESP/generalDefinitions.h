@@ -144,6 +144,9 @@ extern const char* FSFILENOTFOUNDSTR;
 #define BLINSTEPSTR               "<form action=\"/msindex3\" method =\"post\"><b>BL-In &nbsp;Steps:</b> <input type=\"text\" name=\"bis\" size=\"6\" value=\"%bins%\"> <input type=\"submit\" name=\"setbis\" value=\"Set\"></form>"
 #define BLOUTSTEPSTR              "<form action=\"/msindex3\" method =\"post\"><b>BL-Out Steps:</b> <input type=\"text\" name=\"bos\" size=\"6\" value=\"%bous%\"> <input type=\"submit\" name=\"setbos\" value=\"Set\"></form>"
 
+#define ENABLEINDISTR             "<form action=\"/msindex3\" method=\"post\"><b>State</b> [%INI%]: <input type=\"hidden\" name=\"indion\" value=\"true\"><input type=\"submit\" value=\"ENABLE\"></form>"
+#define DISABLEINDISTR            "<form action=\"/msindex3\" method=\"post\"><b>State</b> [%INI%]: <input type=\"hidden\" name=\"indioff\" value=\"true\"><input type=\"submit\" value=\"DISABLE\"></form>"
+
 #define ENABLEPBSTR               "<form action=\"/msindex3\" method=\"post\"><b>State</b> [%PBL%]: <input type=\"hidden\" name=\"pbon\" value=\"true\"><input type=\"submit\" value=\"ENABLE\"></form>"
 #define DISABLEPBSTR              "<form action=\"/msindex3\" method=\"post\"><b>State</b> [%PBL%]: <input type=\"hidden\" name=\"pboff\" value=\"true\"><input type=\"submit\" value=\"DISABLE\"></form>"
 
