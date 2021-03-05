@@ -72,6 +72,7 @@ class SetupData
     String  get_oledpageoption();
     byte get_hpswitchenable();
     byte get_pbenable();
+    byte get_indi();
 
     //__setter data_per
     void set_fposition(unsigned long);
@@ -116,7 +117,8 @@ class SetupData
     void set_hpswitchenable(byte);
     void set_pbenable(byte);
     void set_irremoteenable(byte);
-
+    void set_indi(byte);
+    
     //__getter boardconfig
     String get_brdname(void);
     int get_brdmaxstepmode(void);
@@ -222,21 +224,22 @@ class SetupData
     int webpagerefreshrate;
     unsigned long mdnsport;
     unsigned long tcpipport;
-    byte startscreen;               // if 1, display shows startscreen messages on bootup
+    byte    startscreen;               // if 1, display shows startscreen messages on bootup
     String  backcolor;
     String  textcolor;
     String  headercolor;
     String  titlecolor;
-    byte ascomserverstate;          // if 1, then ascomserver is enabled
-    byte webserverstate;            // if 1, then webserver is enabled
-    byte temperatureprobestate;     // if 1, then temperature probe is enabled
-    byte inoutledstate;             // if 1, in out leds are enabled [only if board supports them]
-    byte showhpswmessages;          // if 1, home position switch msg's show on display if enabled
-    byte forcedownload;             // if 1, in the MANAGEMENT SERVER, a file is downloaded instead of being displayed is web browser window
-    String oledpageoption;
-    byte hpswitchenable;
-    byte pbenable;
-    byte inoutledenable;
+    byte    ascomserverstate;          // if 1, then ascomserver is enabled
+    byte    webserverstate;            // if 1, then webserver is enabled
+    byte    temperatureprobestate;     // if 1, then temperature probe is enabled
+    byte    inoutledstate;             // if 1, in out leds are enabled [only if board supports them]
+    byte    showhpswmessages;          // if 1, home position switch msg's show on display if enabled
+    byte    forcedownload;             // if 1, in the MANAGEMENT SERVER, a file is downloaded instead of being displayed is web browser window
+    String  oledpageoption;
+    byte    hpswitchenable;
+    byte    pbenable;
+    byte    inoutledenable;
+    byte    indi;
 
     // dataset board configuration
     String board;

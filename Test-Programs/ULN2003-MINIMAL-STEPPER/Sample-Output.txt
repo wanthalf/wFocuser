@@ -1,0 +1,12 @@
+init_board()
+release_motor()
+-------------------------------------
+Starting Test1a: 2048 steps : FULL
+Starting Test1b: 2048 steps REVERSE: FULL
+Starting Test3: 1step : FULL : Timed
+Time taken for one step: 0 milliseconds
+Going back 1 step
+Starting Test4a: 2048 steps : FULL : step(2048)
+Starting Test4a: 2048 steps REVERSE: FULL : step(-2048)
+-------------------------------------
+Starting Test1a: 2048 steps : FULL

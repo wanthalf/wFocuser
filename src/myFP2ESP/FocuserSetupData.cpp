@@ -13,11 +13,13 @@
 #endif
 
 #include "FocuserSetupData.h"
-//#include "generalDefinitions.h"         // should not be needed as FocuserSetupData.h includes this file
+//#include "generalDefinitions.h"       // should not be needed as FocuserSetupData.h includes this file
 
 // delay(10) required in ESP8266 code around file handling
 
-extern int DefaultBoardNumber;           // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+extern int brdfixedstepmode;            // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+extern int brdstepsperrev;
 
 SetupData::SetupData(void)
 {
@@ -120,6 +122,7 @@ byte SetupData::LoadConfiguration()
       this->motorspeed            = doc_per["mspeed"];                  // motorspeed slow, med, fast
       this->hpswitchenable        = doc_per["hpswen"];
       this->pbenable              = doc_per["pbenable"];
+      this->indi                  = doc_per["indi"];
     }
     DebugPrintln("Config file persistant data loaded");
   }
@@ -284,7 +287,7 @@ boolean SetupData::SaveBoardConfiguration()
 // Saves the configuration to a file
 boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTravel)
 {
-  //Serial.println("SaveConfiguration:");
+  //DebugPrintln("SaveConfiguration:");
   if (this->fposition != currentPosition || this->focuserdirection != DirOfTravel)  // last focuser position
   {
     this->fposition = currentPosition;
@@ -443,7 +446,8 @@ void SetupData::LoadDefaultPersistantData()
   this->oledpageoption        = OLEDPGOPTIONALL;
   this->hpswitchenable        = DEFAULTOFF;
   this->pbenable              = DEFAULTOFF;
-
+  this->indi                  = DEFAULTOFF;
+  
   this->SavePersitantConfiguration();                 // write default values to SPIFFS
 }
 
@@ -512,6 +516,7 @@ byte SetupData::SavePersitantConfiguration()
   doc["mspeed"]             = this->motorspeed;
   doc["hpswen"]             = this->hpswitchenable;
   doc["pbenable"]           = this->pbenable;
+  doc["indi"]               = this->indi;
 
   // Serialize JSON to file
   DebugPrintln("Writing to file");
@@ -739,6 +744,11 @@ byte SetupData::get_pbenable()
   return this->pbenable;
 }
 
+byte SetupData::get_indi()
+{
+  return this->indi;
+}
+
 //__Setter
 
 void SetupData::set_fposition(unsigned long fposition)
@@ -946,6 +956,11 @@ void SetupData::set_pbenable(byte newval)
   this->StartDelayedUpdate(this->pbenable, newval);
 }
 
+void SetupData::set_indi(byte newval)
+{
+  this->StartDelayedUpdate(this->indi, newval);
+}
+
 void SetupData::StartDelayedUpdate(int & org_data, int new_data)
 {
   if (org_data != new_data)
@@ -1010,7 +1025,7 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
   delay(10);
   File bfile = SPIFFS.open(brdfile, "r");               // Open file for writing
   DebugPrint("LoadBrdConfigStart: ");
-  DebugPrintln(brdfile);  
+  DebugPrintln(brdfile);
   if (!bfile)
   {
     TRACE();
@@ -1022,7 +1037,7 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
     // read file and deserialize
     String fdata = bfile.readString();                  // read content of the text file
     DebugPrint("LoadBrdConfigStart: Data= ");
-    DebugPrintln(fdata);                              // ... and print on serial
+    DebugPrintln(fdata);                                // ... and print on serial
     bfile.close();
 
     // Allocate a temporary JsonDocument
@@ -1054,13 +1069,41 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
       this->pb1pin        = doc_brd["pb1pin"];
       this->pb2pin        = doc_brd["pb2pin"];
       this->irpin         = doc_brd["irpin"];
-      this->stepsperrev   = doc_brd["stepsrev"];
-      this->fixedstepmode = doc_brd["fixedsmode"];
+      switch ( DefaultBoardNumber )
+      {
+        case PRO2EULN2003:
+        case PRO2ESP32ULN2003:
+        case PRO2EL298N:
+        case PRO2ESP32L298N:
+        case PRO2EL293DMINI:
+        case PRO2ESP32L293DMINI:
+        case PRO2EL9110S:
+        case PRO2ESP32L9110S:
+        case PRO2EL293DNEMA:
+        case PRO2EL293D28BYJ48:
+          this->stepsperrev = brdstepsperrev;         // override STEPSPERREVOLUTION from focuserconfig.h FIXEDSTEPMODE
+          break;
+        default:
+          this->stepsperrev = doc_brd["stepsperrev"];
+          break;
+      }
+      switch ( DefaultBoardNumber )
+      {
+        case WEMOSDRV8825H:
+        case WEMOSDRV8825:
+        case PRO2EDRV8825BIG:
+        case PRO2EDRV8825:
+          this->fixedstepmode = brdfixedstepmode;     // override fixedstepmode from focuserconfig.h FIXEDSTEPMODE
+          break;
+        default:
+          this->fixedstepmode = doc_brd["fixedsmode"];
+          break;
+      }
       for (int i = 0; i < 4; i++)
       {
         this->boardpins[i] = doc_brd["brdpins"][i];
       }
-      this->msdelay        = doc_brd["msdelay"];                    // motor speed delay - do not confuse with motorspeed
+      this->msdelay        = doc_brd["msdelay"];      // motor speed delay - do not confuse with motorspeed
       WriteBoardConfiguration();
       return true;
     }
@@ -1101,8 +1144,36 @@ void SetupData::LoadDefaultBoardData()
     this->pb1pin        = -1;
     this->pb1pin        = -1;
     this->irpin         = -1;
-    this->stepsperrev   = -1;
-    this->fixedstepmode = -1;
+    switch ( DefaultBoardNumber )
+    {
+      case PRO2EULN2003:
+      case PRO2ESP32ULN2003:
+      case PRO2EL298N:
+      case PRO2ESP32L298N:
+      case PRO2EL293DMINI:
+      case PRO2ESP32L293DMINI:
+      case PRO2EL9110S:
+      case PRO2ESP32L9110S:
+      case PRO2EL293DNEMA:
+      case PRO2EL293D28BYJ48:
+        this->stepsperrev = brdstepsperrev;         // override STEPSPERREVOLUTION from focuserconfig.h
+        break;
+      default:
+        this->stepsperrev = -1;
+        break;
+    }
+    switch ( DefaultBoardNumber )
+    {
+      case WEMOSDRV8825H:
+      case WEMOSDRV8825:
+      case PRO2EDRV8825BIG:
+      case PRO2EDRV8825:
+        this->fixedstepmode = brdfixedstepmode;     // override fixedstepmode from focuserconfig.h
+        break;
+      default:
+        this->fixedstepmode = -1;
+        break;
+    }
     for (int i = 0; i < 4; i++)
     {
       this->boardpins[i] = -1;
@@ -1484,7 +1555,7 @@ void SetupData::ListDir(const char * dirname, uint8_t levels)
   File root = SPIFFS.open(dirname);
   delay(10);
   DebugPrint("Listing directory: {");
-  
+
   if (!root)
   {
     DebugPrintln(" - failed to open directory");

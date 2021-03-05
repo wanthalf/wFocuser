@@ -27,6 +27,8 @@ extern bool   ascomserverstate;
 extern bool   ascomdiscoverystate;
 extern float  lasttemp;
 
+extern void   heapmsg(void);
+
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #undef DEBUG_ESP_HTTP_SERVER                // prevent messages from WiFiServer 
 #include <ESP8266WiFi.h>
@@ -1242,7 +1244,7 @@ void start_ascomremoteserver(void)
   }
   ASpg.reserve(MAXASCOMPAGESIZE);
   HDebugPrint("Heap before start_ascomremoteserver = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
   DebugPrintln("start ascom server");
 
 #if defined(ESP8266)
@@ -1290,7 +1292,7 @@ void start_ascomremoteserver(void)
   ascomserverstate = RUNNING;
   DebugPrintln("ascom server: RUNNING");
   HDebugPrint("Heap after  start_ascomremoteserver = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
   delay(10);                                            // small pause so background tasks can run
 }
 

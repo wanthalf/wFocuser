@@ -16,7 +16,7 @@
 // ======================================================================
 extern SetupData   *mySetupData;
 extern DriverBoard *driverboard;
-
+extern int  DefaultBoardNumber;
 extern bool HPS_alert(void);
 
 // ======================================================================
@@ -152,14 +152,14 @@ DriverBoard::DriverBoard(unsigned long startposition)
 #else
     // esp32
     clock_frequency = ESP.getCpuFreqMHz();    // returns the CPU frequency in MHz as an unsigned 8-bit integer
-    //Serial.print("Clock Freq: ");
-    //Serial.println(clock_frequency);
+    //DebugPrint("Clock Freq: ");
+    //DebugPrintln(clock_frequency);
 #endif
-    String drvbrd = mySetupData->get_brdname();
+    boardnum = DefaultBoardNumber;
 
     // THESE NEED TO BE CREATED AT RUNTIME
 
-    if ( drvbrd.equals("WEMOSDRV8825") || drvbrd.equals("PRO2EDRV8825") || drvbrd.equals("PRO2ESP32R3WEMOS") || drvbrd.equals("WEMOSDRV8825H") )
+    if ( boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H )
     {
       pinMode(mySetupData->get_brdenablepin(), OUTPUT);
       pinMode(mySetupData->get_brddirpin(), OUTPUT);
@@ -167,7 +167,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       digitalWrite(mySetupData->get_brdenablepin(), 1);
       digitalWrite(mySetupData->get_brdsteppin(), 0);
     }
-    else if ( drvbrd.equals("PRO2ESP32DRV8825") )
+    else if ( boardnum == PRO2ESP32DRV8825 )
     {
       pinMode(mySetupData->get_brdenablepin(), OUTPUT);
       pinMode(mySetupData->get_brddirpin(), OUTPUT);
@@ -178,7 +178,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       pinMode(mySetupData->get_brdboardpins(1), OUTPUT);
       pinMode(mySetupData->get_brdboardpins(2), OUTPUT);
     }
-    else if ( drvbrd.equals("PRO2EULN2003") || drvbrd.equals("PRO2ESP32ULN2003"))
+    else if ( boardnum == PRO2EULN2003 || boardnum == PRO2ESP32ULN2003)
     {
       // IN1, IN2, IN3, IN4
       this->inputPins[0] = mySetupData->get_brdboardpins(0);
@@ -191,7 +191,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       }
       myhstepper = new HalfStepper(mySetupData->get_brdstepsperrev(), this->inputPins[0], this->inputPins[1], this->inputPins[2], this->inputPins[3]);  // ok
     }
-    else if ( drvbrd.equals("PRO2EL298N") || drvbrd.equals("PRO2ESP32L298N"))
+    else if ( boardnum == PRO2EL298N || boardnum == PRO2ESP32L298N)
     {
       // IN1, IN2, IN3, IN4
       this->inputPins[0] = mySetupData->get_brdboardpins(0);
@@ -204,7 +204,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       }
       myhstepper = new HalfStepper(mySetupData->get_brdstepsperrev(), this->inputPins[0], this->inputPins[1], this->inputPins[2], this->inputPins[3]);  // ok
     }
-    else if ( drvbrd.equals("PRO2EL293DMINI") || drvbrd.equals("PRO2ESP32L293DMINI"))
+    else if ( boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI)
     {
       // IN1, IN2, IN3, IN4
       this->inputPins[0] = mySetupData->get_brdboardpins(0);
@@ -217,7 +217,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       }
       myhstepper = new HalfStepper(mySetupData->get_brdstepsperrev(), this->inputPins[0], this->inputPins[1], this->inputPins[2], this->inputPins[3]);  // ok
     }
-    else if (drvbrd.equals("PRO2EL9110S") || drvbrd.equals("PRO2ESP32L9110S"))
+    else if (boardnum == PRO2EL9110S || boardnum == PRO2ESP32L9110S)
     {
       // IN1, IN2, IN3, IN4
       this->inputPins[0] = mySetupData->get_brdboardpins(0);
@@ -230,7 +230,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       }
       myhstepper = new HalfStepper(mySetupData->get_brdstepsperrev(), this->inputPins[0], this->inputPins[1], this->inputPins[2], this->inputPins[3]);  // ok
     }
-    else if (drvbrd.equals("PRO2EL293DNEMA") )
+    else if (boardnum == PRO2EL293DNEMA )
     {
       // IN2, IN3, IN1, IN4
       this->inputPins[0] = mySetupData->get_brdboardpins(1);
@@ -244,7 +244,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       mystepper = new Stepper(mySetupData->get_brdstepsperrev(), this->inputPins[0], this->inputPins[1], this->inputPins[2], this->inputPins[3]);  // DONE
       mySetupData->set_brdstepmode(STEP1);
     }
-    else if ( drvbrd.equals("PRO2EL293D28BYJ48") )
+    else if ( boardnum == PRO2EL293D28BYJ48 )
     {
       // IN2, IN3, IN1, IN4 mystepper.h
       this->inputPins[0] = mySetupData->get_brdboardpins(0);
@@ -267,14 +267,14 @@ DriverBoard::DriverBoard(unsigned long startposition)
 DriverBoard::~DriverBoard()
 {
   String drvbrd = mySetupData->get_brdname();
-  if ( drvbrd.equals("PRO2EULN2003")        || drvbrd.equals("PRO2ESP32ULN2003")  \
-       || drvbrd.equals("PRO2EL298N")     || drvbrd.equals("PRO2ESP32L298N")    \
-       || drvbrd.equals("PRO2EL293DMINI") || drvbrd.equals("PRO2ESP32L293DMINI") \
-       || drvbrd.equals("PRO2EL9110S")    || drvbrd.equals("PRO2ESP32L9110S"))
+  if ( boardnum == PRO2EULN2003        || boardnum == PRO2ESP32ULN2003  \
+       || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N    \
+       || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI \
+       || boardnum == PRO2EL9110S    || boardnum == PRO2ESP32L9110S)
   {
     delete myhstepper;
   }
-  else if (drvbrd.equals("PRO2EL293DNEMA") || drvbrd.equals("PRO2EL293D28BYJ48") )
+  else if (boardnum == PRO2EL293DNEMA || boardnum == PRO2EL293D28BYJ48 )
   {
     delete mystepper;
   }
@@ -284,12 +284,12 @@ void DriverBoard::setstepmode(int smode)
 {
   String drvbrd = mySetupData->get_brdname();
   do {
-    if (drvbrd.equals("WEMOSDRV8825") || drvbrd.equals("PRO2EDRV8825") || drvbrd.equals("PRO2ESP32R3WEMOS") || drvbrd.equals("WEMOSDRV8825H"))
+    if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
     {
       // for PRO2EDRV8825 stepmode is set in hardware jumpers, cannot set by software
       mySetupData->set_brdstepmode(mySetupData->get_brdfixedstepmode());
     }
-    else if (drvbrd.equals("PRO2ESP32DRV8825") )
+    else if (boardnum == PRO2ESP32DRV8825 )
     {
       switch (smode)
       {
@@ -332,10 +332,10 @@ void DriverBoard::setstepmode(int smode)
           break;
       }
     }
-    else if (drvbrd.equals("PRO2EULN2003")      || drvbrd.equals("PRO2ESP32ULN2003") \
-             || drvbrd.equals("PRO2EL298N")     || drvbrd.equals("PRO2ESP32L298N")   \
-             || drvbrd.equals("PRO2EL9110S")    || drvbrd.equals("PRO2ESP32L9110S")  \
-             || drvbrd.equals("PRO2EL293DMINI") || drvbrd.equals("PRO2ESP32L293DMINI") )
+    else if (boardnum == PRO2EULN2003      || boardnum == PRO2ESP32ULN2003 \
+             || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N  \
+             || boardnum == PRO2EL9110S    || boardnum == PRO2ESP32L9110S  \
+             || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI )
     {
       switch ( smode )
       {
@@ -351,7 +351,7 @@ void DriverBoard::setstepmode(int smode)
           break;
       }
     }
-    else if (drvbrd.equals("PRO2EL293DNEMA") || drvbrd.equals("PRO2EL293D28BYJ48") )
+    else if (boardnum == PRO2EL293DNEMA || boardnum == PRO2EL293D28BYJ48 )
     {
       mySetupData->set_brdstepmode(STEP1);
     }
@@ -361,7 +361,7 @@ void DriverBoard::setstepmode(int smode)
 void DriverBoard::enablemotor(void)
 {
   String drvbrd = mySetupData->get_brdname();
-  if (drvbrd.equals("WEMOSDRV8825") || drvbrd.equals("PRO2EDRV8825") || drvbrd.equals("PRO2ESP32DRV8825") || drvbrd.equals("PRO2ESP32R3WEMOS") || drvbrd.equals("WEMOSDRV8825H"))
+  if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
   {
     digitalWrite(mySetupData->get_brdenablepin(), 0);
     delay(1);                     // boards require 1ms before stepping can occur
@@ -371,15 +371,15 @@ void DriverBoard::enablemotor(void)
 void DriverBoard::releasemotor(void)
 {
   String drvbrd = mySetupData->get_brdname();
-  if (drvbrd.equals("WEMOSDRV8825") || drvbrd.equals("PRO2EDRV8825") || drvbrd.equals("PRO2ESP32DRV8825") || drvbrd.equals("PRO2ESP32R3WEMOS") || drvbrd.equals("WEMOSDRV8825H"))
+  if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
   {
     digitalWrite(mySetupData->get_brdenablepin(), 1);
   }
-  else if (drvbrd.equals("PRO2EULN2003")      || drvbrd.equals("PRO2ESP32ULN2003") \
-           || drvbrd.equals("PRO2EL298N")     || drvbrd.equals("PRO2ESP32L298N") \
-           || drvbrd.equals("PRO2EL293DMINI") || drvbrd.equals("PRO2ESP32L293DMINI") \
-           || drvbrd.equals("PRO2EL9110S")    || drvbrd.equals("PRO2ESP32L9110S") \
-           || drvbrd.equals("PRO2EL293DNEMA") || drvbrd.equals("PRO2EL293D28BYJ48"))
+  else if (boardnum == PRO2EULN2003      || boardnum == PRO2ESP32ULN2003 \
+           || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N \
+           || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI \
+           || boardnum == PRO2EL9110S    || boardnum == PRO2ESP32L9110S \
+           || boardnum == PRO2EL293DNEMA || boardnum == PRO2EL293D28BYJ48)
   {
     digitalWrite(this->inputPins[0], 0 );
     digitalWrite(this->inputPins[1], 0 );
@@ -391,10 +391,10 @@ void DriverBoard::releasemotor(void)
 void DriverBoard::movemotor(byte dir, bool updatefpos)
 {
   String drvbrd = mySetupData->get_brdname();
-  //Serial.print("movemotor() : ");
-  //Serial.println(dir);
-  // only some boards have in out leds ESP32 only
-  if (drvbrd.equals("PRO2ESP32ULN2003") || drvbrd.equals("PRO2ESP32L298N") || drvbrd.equals("PRO2ESP32L293DMINI") || drvbrd.equals("PRO2ESP32L9110S") || drvbrd.equals("PRO2ESP32DRV8825") )
+  //DebugPrint("movemotor() : ");
+  //DebugPrintln(dir);
+  // only ESP32 boards have in out leds
+  if (boardnum == PRO2ESP32ULN2003 || boardnum == PRO2ESP32L298N || boardnum == PRO2ESP32L293DMINI || boardnum == PRO2ESP32L9110S || boardnum == PRO2ESP32DRV8825 )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
     if ( mySetupData->get_inoutledstate() == 1)
@@ -403,7 +403,7 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
     }
   }
 
-  if (drvbrd.equals("WEMOSDRV8825") || drvbrd.equals("PRO2EDRV8825") || drvbrd.equals("PRO2ESP32DRV8825") || drvbrd.equals("PRO2ESP32R3WEMOS") || drvbrd.equals("WEMOSDRV8825H"))
+  if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
   {
     if ( mySetupData->get_reversedirection() == 1 )
     {
@@ -442,10 +442,10 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
     digitalWrite(mySetupData->get_brdsteppin(), 0);               // Step pin off
   }
 
-  if (drvbrd.equals("PRO2EULN2003")      || drvbrd.equals("PRO2ESP32ULN2003")  \
-      || drvbrd.equals("PRO2EL298N")     || drvbrd.equals("PRO2ESP32L298N") \
-      || drvbrd.equals("PRO2EL293DMINI") || drvbrd.equals("PRO2ESP32L293DMINI") \
-      || drvbrd.equals("PRO2EL9110S")    || drvbrd.equals("PRO2ESP32L9110S"))
+  if (boardnum == PRO2EULN2003      || boardnum == PRO2ESP32ULN2003  \
+      || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N \
+      || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI \
+      || boardnum == PRO2EL9110S    || boardnum == PRO2ESP32L9110S)
   {
     if ( dir == moving_in )
     {
@@ -472,7 +472,7 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
     asm1uS();
     asm1uS();
   }
-  else if ( drvbrd.equals("PRO2EL293DNEMA") || drvbrd.equals("PRO2EL293D28BYJ48") )
+  else if ( boardnum == PRO2EL293DNEMA || boardnum == PRO2EL293D28BYJ48 )
   {
     if ( dir == moving_in )
     {
@@ -501,7 +501,7 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
   }
 
   // turn off leds
-  if (drvbrd.equals("PRO2ESP32ULN2003") || drvbrd.equals("PRO2ESP32L298N") || drvbrd.equals("PRO2ESP32L293DMINI") || drvbrd.equals("PRO2ESP32L9110S") || drvbrd.equals("PRO2ESP32DRV8825") )
+  if (boardnum == PRO2ESP32ULN2003 || boardnum == PRO2ESP32L298N || boardnum == PRO2ESP32L293DMINI ||boardnum == PRO2ESP32L9110S || boardnum == PRO2ESP32DRV8825 )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
     if ( mySetupData->get_inoutledstate() == 1)
@@ -542,14 +542,14 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   DebugPrint(steps);
   DebugPrint(" ");
 
-  //Serial.print("initmove: ");
-  //Serial.print(dir);
-  //Serial.print(" : ");
-  //Serial.print(steps);
-  //Serial.print(" : ");
-  //Serial.print(motorspeed);
-  //Serial.print(" : ");
-  //Serial.println(leds);
+  //DebugPrint("initmove: ");
+  //DebugPrint(dir);
+  //DebugPrint(" : ");
+  //DebugPrint(steps);
+  //DebugPrint(" : ");
+  //DebugPrint(motorspeed);
+  //DebugPrint(" : ");
+  //DebugPrintln(leds);
 #if defined(ESP8266)
   unsigned long curspd = mySetupData->get_brdmsdelay();
   switch ( mySetupData->get_motorspeed() )

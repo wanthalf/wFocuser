@@ -159,11 +159,14 @@ void ESP_Communication()
       SendPaket('E', "OK");
       break;
     case 3: // get firmware version
-#ifdef INDI
-      SendPaket('F', "291");
-#else
-      SendPaket('F', programVersion);
-#endif
+      if ( mySetupData->get_indi() == 1)
+      {
+        SendPaket('F', "291");
+      }
+      else
+      {
+        SendPaket('F', programVersion);
+      }
       break;
     case 4: // get firmware name
       {

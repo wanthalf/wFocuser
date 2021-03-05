@@ -66,6 +66,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define MAXWEBPAGESIZE        4100          // largest = / = 3943
 #define MAXASCOMPAGESIZE      2200          // largest = /setuppage = 2042
 #define MAXMANAGEMENTPAGESIZE 3700          // largest = /msindex2 = 3568
+#define MAXCUSTOMBRDJSONSIZE   300
 
 // ======================================================================
 // 2: DO NOT CHANGE
@@ -125,7 +126,9 @@ extern const char* FSFILENOTFOUNDSTR;
 #define JSONPAGETYPE              "application/json"
 #define FILENOTFOUNDSTR           "Not found"
 #define FILEFOUNDSTR              "Found"
+#define NOTDEFINEDSTR             "Not defined"
 
+#define MANAGEMENTISMOVINGSTR     "<html><head><title>Management Server</title></head><body><p>Focuser is Moving. Please try again once focuser has stopped</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define MANAGEMENTNOTFOUNDSTR     "<html><head><title>Management Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define WEBSERVERNOTFOUNDSTR      "<html><head><title>Web Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define ASCOMSERVERNOTFOUNDSTR    "<html><head><title>ASCOM REMOTE Server</title></head><body><p>FS not started</p><p><p><a href=\"/setup/v1/focuser/0/setup\">Setup page</a></p></body></html>";
@@ -141,6 +144,9 @@ extern const char* FSFILENOTFOUNDSTR;
 #define DISABLEBKOUTSTR           "<form action=\"/msindex3\" method=\"post\"><b>BL-OUT State</b> [%STO%]: <input type=\"hidden\" name=\"diou\" value=\"true\"><input type=\"submit\" value=\"DISABLE\"></form>"
 #define BLINSTEPSTR               "<form action=\"/msindex3\" method =\"post\"><b>BL-In &nbsp;Steps:</b> <input type=\"text\" name=\"bis\" size=\"6\" value=\"%bins%\"> <input type=\"submit\" name=\"setbis\" value=\"Set\"></form>"
 #define BLOUTSTEPSTR              "<form action=\"/msindex3\" method =\"post\"><b>BL-Out Steps:</b> <input type=\"text\" name=\"bos\" size=\"6\" value=\"%bous%\"> <input type=\"submit\" name=\"setbos\" value=\"Set\"></form>"
+
+#define ENABLEINDISTR             "<form action=\"/msindex3\" method=\"post\"><b>State</b> [%INI%]: <input type=\"hidden\" name=\"indion\" value=\"true\"><input type=\"submit\" value=\"ENABLE\"></form>"
+#define DISABLEINDISTR            "<form action=\"/msindex3\" method=\"post\"><b>State</b> [%INI%]: <input type=\"hidden\" name=\"indioff\" value=\"true\"><input type=\"submit\" value=\"DISABLE\"></form>"
 
 #define ENABLEPBSTR               "<form action=\"/msindex3\" method=\"post\"><b>State</b> [%PBL%]: <input type=\"hidden\" name=\"pbon\" value=\"true\"><input type=\"submit\" value=\"ENABLE\"></form>"
 #define DISABLEPBSTR              "<form action=\"/msindex3\" method=\"post\"><b>State</b> [%PBL%]: <input type=\"hidden\" name=\"pboff\" value=\"true\"><input type=\"submit\" value=\"DISABLE\"></form>"

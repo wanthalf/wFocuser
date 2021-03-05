@@ -4,8 +4,6 @@ LittleFS for ESP8266
 - Some Libraries like AsyncWebServer etc still use SPIFFS
 
 
-
-
 ESP8266LittleFS is the equivalent tool for LittleFS.
 
 Download the 2.6.0 or later version of the upload tool: https://github.com/earlephilhower/arduino-esp8266littlefs-plugin/releases
@@ -16,6 +14,12 @@ Unpack the tool into tools directory (the path will look like <home_dir>/Arduino
 
 To upload a LittleFS filesystem use Tools > ESP8266 LittleFS Data Upload
 
+#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
+#include <LITTLEFS.h>
+#define SPIFFS LITTLEFS
+#else                                       // otherwise assume ESP32
+#include "SPIFFS.h"
+#endif
 
 SPIFFS.begin()
 or LittleFS.begin()

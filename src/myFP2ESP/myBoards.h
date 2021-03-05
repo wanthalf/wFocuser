@@ -43,6 +43,7 @@ class DriverBoard
     unsigned long focuserposition;                  // current focuser position
     int           inputPins[4];                     // input pins for driving stepper boards
     unsigned int  clock_frequency;                  // clock frequency used to generate 2us delay for ESP32 160Mhz/240Mhz
+    int           boardnum;
 };
 
 #endif

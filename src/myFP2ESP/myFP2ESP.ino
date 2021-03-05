@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 206
+// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 207
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -59,40 +59,48 @@
 // OVERVIEW: TO PROGRAM THE FIRMWARE
 // ======================================================================
 // 1. Set your DRVBRD in focuserconfig.h so the correct driver board is used
-// 2. Set the correct hardware options/controller modes in focuserconfig.h
-//    to match your hardware
-// 3. Set your target CPU to match the correct CPU for your board
-// 4. Compile and upload to your controller
-
+// 2. For specific boards set the FIXEDSTEPMODE in focuserconfig.h
+// 3. For specific boards set the STEPSPERREVOLUTION in focuserconfig.h
+// 4. Enable Display type [if fitted[ in focuserconfig.h
+// 5. Set hardware options for JoyStick/IRRemote [esp32 only] in focuserconfig.h
+// 6. Set the controller mode in focuserconfig.h
+// 7. Set your target CPU to match the correct CPU for your board
+// 8. Compile and upload to your controller
+// 9. Upload the sketch data files
 
 // ======================================================================
 // 1: SPECIFY DRIVER BOARD in 1: focuserconfig.h
 // ======================================================================
-// Please specify your driver board in focuserconfig.h, only 1 can be defined,
-// see DRVBRD line
-
+// Please specify your driver board [DRVBRD] in focuserconfig.h
 
 // ======================================================================
-// 2: SPECIFY DISPLAY OPTIONS IN 2: focuserconfig.h
+// 2: SPECIFY FIXEDSTEPMODE in 2: focuserconfig.h
+// ======================================================================
+// For specific boards, specify the correct FIXEDSTEPMODE focuserconfig.h
+
+// ======================================================================
+// 3: SPECIFY STEPSPERREVOLUTION in 3: focuserconfig.h
+// ======================================================================
+// For specific boards, specify the correct STEPSPERREVOLUTION focuserconfig.h
+
+// ======================================================================
+// 4: SPECIFY DISPLAY OPTIONS IN 4: focuserconfig.h
 // ======================================================================
 // Specify your display options in focuserconfig.h, such as OLEDTEXT
 
-
 // ======================================================================
-// 3: SPECIFY HARDWARE OPTIONS IN 3: focuserconfig.h
+// 5: SPECIFY HARDWARE OPTIONS IN 5: focuserconfig.h
 // ======================================================================
 // Specify your controller options in focuserconfig.h, such as INFRAREDREMOTE
 
-
 // ======================================================================
-// 4: SPECIFY THE CONTROLLER MODE IN 4: focuserconfig.h
+// 6: SPECIFY THE CONTROLLER MODE IN 6: focuserconfig.h
 // ======================================================================
 // Please specify your controller mode in focuserconfig.h, such as ACCESSPOINT
 // and MANAGEMENT
 
-
 // ======================================================================
-// 5: WIFI NETWORK CREDENTIALS: SSID AND PASSWORD
+// 7: WIFI NETWORK CREDENTIALS: SSID AND PASSWORD
 // ======================================================================
 // 1. For access point mode this is the network you connect to
 // 2. For station mode, change mySSID and myPASSWORD to match your network details
@@ -106,7 +114,7 @@ char myPASSWORD_1[64] = "AllYeWhoEnter";      // alternate network id
 
 
 // ======================================================================
-// 6: STATIC IP ADDRESS CONFIGURATION
+// 8: STATIC IP ADDRESS CONFIGURATION
 // ======================================================================
 // must use static IP if using duckdns or as an Access Point
 #ifndef STATICIPON
@@ -138,7 +146,7 @@ IPAddress subnet(255, 255, 255, 0);
 
 
 // ======================================================================
-// 7: BLUETOOTH MODE NAME
+// 9: BLUETOOTH MODE NAME
 // ======================================================================
 #ifdef BLUETOOTHMODE
 String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth controller, this name you can change
@@ -146,7 +154,7 @@ String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth contro
 
 
 // ======================================================================
-// 8: mDNS NAME: Name must be alphabetic chars only, lowercase
+// 10: mDNS NAME: Name must be alphabetic chars only, lowercase
 // ======================================================================
 #ifdef MDNSSERVER
 char mDNSNAME[] = "myfp2eap";               // mDNS name will be myfp2eap.local
@@ -154,7 +162,7 @@ char mDNSNAME[] = "myfp2eap";               // mDNS name will be myfp2eap.local
 
 
 // ======================================================================
-// 9: OTAUPDATES (OVER THE AIR UPDATE) SSID AND PASSWORD CONFIGURATION
+// 11: OTAUPDATES (OVER THE AIR UPDATE) SSID AND PASSWORD CONFIGURATION
 // ======================================================================
 // You can change the values for OTANAME and OTAPassword if required
 #ifdef OTAUPDATES
@@ -165,7 +173,7 @@ const char *OTAPassword = "esp8266";
 
 
 // ======================================================================
-// 10: DUCKDNS DOMAIN AND TOKEN CONFIGURATION
+// 12: DUCKDNS DOMAIN AND TOKEN CONFIGURATION
 // ======================================================================
 // if using DuckDNS you need to set these next two parameters, duckdnsdomain
 // and duckdnstoken, BUT you cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE
@@ -182,7 +190,7 @@ const char* duckdnstoken = "0a0379d5-3979-44ae-b1e2-6c371a4fe9bf";
 #ifdef BLUETOOTHMODE
 #include "BluetoothSerial.h"                  // needed for Bluetooth comms
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error "Bluetooth is not enabled"
+#error "Bluetooth Not enabled"
 #endif
 BluetoothSerial SerialBT;                     // define BT adapter to use
 String btline;                                // buffer for serial data
@@ -224,11 +232,11 @@ OLED_NON *myoled;
 //moving_out  1||  1   |   0
 //moving_in   0||  0   |   1
 
-DriverBoard* driverboard;
-#ifdef DRVBRD
-int DefaultBoardNumber = DRVBRD;            // use this to create a default board configuration
-#endif
+int DefaultBoardNumber  = DRVBRD;           // use this to create a default board configuration
+int brdfixedstepmode    = FIXEDSTEPMODE;    // only used by boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+int brdstepsperrev      = STEPSPERREVOLUTION;
 
+DriverBoard*  driverboard;
 unsigned long ftargetPosition;              // target position
 volatile bool halt_alert;
 
@@ -532,7 +540,7 @@ void init_joystick2(void)
 // ======================================================================
 bool init_pushbuttons(void)
 {
-  DebugPrint("Push buttons: ");
+  DebugPrint("initPB: ");
   if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -557,7 +565,7 @@ bool init_pushbuttons(void)
 
 void update_pushbuttons(void)
 {
-  DebugPrint("Push buttons: ");
+  DebugPrint("updatePB: ");
   if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -701,23 +709,23 @@ void start_otaservice()
     DebugPrintln(error);
     if (error == OTA_AUTH_ERROR)
     {
-      DebugPrintln("Auth Failed");
+      DebugPrintln("err Auth");
     }
     else if (error == OTA_BEGIN_ERROR)
     {
-      DebugPrintln("Begin Failed");
+      DebugPrintln("err Begin");
     }
     else if (error == OTA_CONNECT_ERROR)
     {
-      DebugPrintln("Connect Failed");
+      DebugPrintln("err Connect");
     }
     else if (error == OTA_RECEIVE_ERROR)
     {
-      DebugPrintln("Receive Failed");
+      DebugPrintln("err Receive");
     }
     else if (error == OTA_END_ERROR)
     {
-      DebugPrintln("End Failed");
+      DebugPrintln("err End");
     }
   });
   ArduinoOTA.begin();
@@ -734,7 +742,7 @@ void start_otaservice()
 
 void init_duckdns(void)
 {
-  DebugPrintln("Start DuckDNS:");
+  DebugPrintln("initDuckDNS:");
   myoled->oledtextmsg("Start DuckDNS", -1, false, true);
   EasyDDNS.service("duckdns");                  // Enter your DDNS Service Name - "duckdns" / "noip"
   delay(5);
@@ -792,7 +800,7 @@ void steppermotormove(byte ddir )               // direction moving_in, moving_o
 bool init_leds()
 {
   // Basic assumption rule: If associated pin is -1 then cannot set enable
-  DebugPrint("LED pins:");
+  DebugPrint("initleds");
   if ( mySetupData->get_inoutledstate() == 1)
   {
     pinMode(mySetupData->get_brdinledpin(), OUTPUT);
@@ -826,6 +834,12 @@ bool init_homepositionswitch()
   return false;
 }
 
+void heapmsg()
+{
+  HDebugPrint("Heap = ");
+  HDebugPrintf("%u\n", ESP.getFreeHeap());
+}
+
 #ifdef READWIFICONFIG
 bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
 {
@@ -839,19 +853,19 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln("err: read wificonfig.jsn");
+    DebugPrintln("err: read file");
     return mstatus;
   }
   File f = SPIFFS.open(filename, "r");                  // file open to read
   if (!f)
   {
     TRACE();
-    DebugPrintln("file not found");
+    DebugPrintln("err not found");
   }
   else
   {
     String data = f.readString();                       // read content of the text file
-    DebugPrint("Wifi Config data: ");
+    DebugPrint("Config data: ");
     DebugPrintln(data);                                 // ... and print on serial
     f.close();
 
@@ -927,7 +941,7 @@ void setup()
   Serial.begin(SERIALPORTSPEED);
 #if defined(DEBUG)
   //  Serial.begin(SERIALPORTSPEED);
-  DebugPrintln("Start serial");
+  DebugPrintln("Serialbegin");
   DebugPrintln("Debug on");
 #endif
   delay(100);                                   // go on after statement does appear
@@ -937,12 +951,10 @@ void setup()
   Serial.println(millis());
 #endif
 
-  HDebugPrint("Heap=");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
   HDebugPrintln("setup(): mySetupData()");
   mySetupData = new SetupData();                // instantiate object SetUpData with SPIFFS file
-  HDebugPrint("Heap=");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
 
 #ifdef LOCALSERIAL
   Serial.begin(SERIALPORTSPEED);
@@ -951,10 +963,10 @@ void setup()
 #endif // if defined(LOCALSERIAL)
 
 #ifdef BLUETOOTHMODE                            // open Bluetooth port, set bluetooth device name
+  DebugPrintln("Start Bluetooth");
   SerialBT.begin(BLUETOOTHNAME);                // Bluetooth device name
   btline = "";
   clearbtPort();
-  DebugPrintln("Start Bluetooth");
 #endif
 
   reboot = true;                                // booting up
@@ -999,34 +1011,31 @@ void setup()
     DebugPrintln("disabled");
   }
 
-  HDebugPrint("Heap=");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
-  HDebugPrintln("setup(): oledtextdisplay()");
-  displayfound = false;
+  heapmsg();
 
+  displayfound = false;
 #ifdef OLED_MODE
   if (CheckOledConnected())
   {
+    DebugPrintln("init OLED_MODE");
     myoled = new OLED_MODE;                       // Start configured OLED display object
-    DebugPrintln("init OLED OLED_MODE");
     displaystate = true;
   }
   else
   {
+    DebugPrintln("init OLED_NON");
     myoled = new OLED_NON;
-    DebugPrintln("init OLED OLED_NON");
     displaystate = false;
   }
 #else
+  DebugPrintln("init OLED_NON");
   myoled = new OLED_NON;
   displaystate = false;
-  DebugPrintln("#if OLED_MODE else");
 #endif // #ifdef OLED_MODE
   DebugPrint("Display state:");
   DebugPrintln(displaystate);
 
-  HDebugPrint("Heap=");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
 
   DebugPrint("fposition=");                 // Print Loaded Values from SPIFF
   DebugPrintln(mySetupData->get_fposition());
@@ -1123,9 +1132,8 @@ void setup()
 #endif
 #endif
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
-  HDebugPrintln("start accesspoint");
+  heapmsg();
+
 #ifdef ACCESSPOINT
   myoled->oledtextmsg("Start AP", -1, true, true);
   DebugPrintln("Start AP");
@@ -1134,8 +1142,7 @@ void setup()
   WiFi.softAP(mySSID, myPASSWORD);
 #endif // end ACCESSPOINT
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
 
   // this is setup as a station connecting to an existing wifi network
 #ifdef STATIONMODE
@@ -1231,21 +1238,21 @@ void setup()
   otaupdatestate = STOPPED;
   duckdnsstate = STOPPED;
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
-  DebugPrintln("Start tcp/ip server");
+  heapmsg();
+
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
   rssi = getrssi();                             // get network strength
   // Starting TCP Server
   myoled->oledtextmsg("Start tcp/ip server", -1, false, true);
+  DebugPrintln("Start tcp/ip server");
   start_tcpipserver();
   DebugPrintln("Get IP");
   ESP32IPAddress = WiFi.localIP();
   delay(10);                                    // keep delays small else issue with ASCOM
   DebugPrintln("TCP/IP started");
   myoled->oledtextmsg("TCP/IP started", -1, false, true);
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  
+  heapmsg();
 
   // connection established
   DebugPrint("SSID:");
@@ -1267,9 +1274,9 @@ void setup()
   DebugPrintln(DRVBRD);
   myoled->oledtextmsg("Start drvbrd:", DRVBRD, true, true);
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
-  // Serial.println("setup(): driverboard");
+  heapmsg();
+
+  // DebugPrintln("setup(): driverboard");
   // ensure targetposition will be same as focuser position
   // otherwise after loading driverboard focuser will start moving immediately
   DebugPrintln("driver board: start");
@@ -1278,8 +1285,7 @@ void setup()
   DebugPrintln("driver board: end");
 
   delay(5);
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
 
   // range check focuser variables
   mySetupData->set_brdstepmode((mySetupData->get_brdstepmode() < 1 ) ? 1 : mySetupData->get_brdstepmode());
@@ -1371,14 +1377,14 @@ void setup()
   start_otaservice();                       // Start the OTA service
 #endif // if defined(OTAUPDATES)
 
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+  heapmsg();
   HDebugPrintln("setup(): management server");
+  
 #ifdef MANAGEMENT
   start_management();
 #endif
-  HDebugPrint("Heap = ");
-  HDebugPrintf("%u\n", ESP.getFreeHeap());
+
+  heapmsg();
 
   DebugPrintln("start web server");
   if ( mySetupData->get_webserverstate() == 1)
@@ -1657,7 +1663,7 @@ void loop()
                 } // if (DirOfTravel != moving_main && backlash_count)
                 else
                 {
-                   Serial.println("false");
+                   DebugPrintln("false");
                 }
         */
       } // if (mySetupData->get_focuserdirection() != DirOfTravel)
@@ -1721,7 +1727,7 @@ void loop()
     //_______________________________State_Moving
 
     case State_Moving:
-      //Serial.println("S_M");
+      //DebugPrintln("S_M");
       if ( timerSemaphore == true )
       {
         // move has completed, the driverboard keeps track of focuser position
@@ -1853,8 +1859,7 @@ void loop()
     //_______________________________State_DelayAfterMove
 
     case State_DelayAfterMove:
-      HDebugPrint("Heap after move = ");
-      HDebugPrintf("%u\n", ESP.getFreeHeap());
+      heapmsg();
       // apply Delayaftermove, this MUST be done here in order to get accurate timing for DelayAfterMove
       if (TimeCheck(TimeStampDelayAfterMove , mySetupData->get_DelayAfterMove()))
       {

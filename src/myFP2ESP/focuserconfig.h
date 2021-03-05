@@ -43,9 +43,41 @@
 // is created based on your board selection above.
 // In the MANAGEMENT server you can edit the board pin numbers and save the config.
 
+// ======================================================================
+// 2: SPECIFY FIXEDSTEPMODE
+// ======================================================================
+// For ESP8266 boards, set the fixedmode value to match the stepmode jumper
+// settings on the board [only one line can be enabled]
+// Applies to boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+#define FIXEDSTEPMODE 1
+//#define FIXEDSTEPMODE 2
+//#define FIXEDSTEPMODE 4
+//#define FIXEDSTEPMODE 8
+//#define FIXEDSTEPMODE 16
+//#define FIXEDSTEPMODE 32
+//#define FIXEDSTEPMODE 64            // for future release
+//#define FIXEDSTEPMODE 128           // for future release
+//#define FIXEDSTEPMODE 256           // for future release
 
 // ======================================================================
-// 2A: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
+// 3: SPECIFY STEPS PER REVOLUTION
+// ======================================================================
+// stepper motor steps per full revolution using full steps, applies to boards
+// PRO2EULN2003, PRO2ESP32ULN2003, PRO2EL298N, PRO2ESP32L298N
+// PRO2EL293DMINI, PRO2ESP32L293MINI, PRO2EL9110S, PRO2ESPL9110S
+// PRO2EL293DNEMA, PRO2EL293D28BYJ48
+
+#define STEPSPERREVOLUTION 2048           // 28BYJ-48 stepper motor unipolar with ULN2003 board
+//#define STEPSPERREVOLUTION  200        // NEMA17 FULL STEPPED
+//#define STEPSPERREVOLUTION  400        // NEMA14HM11-0404S 0.9 motor FULL STEPPED
+//#define STEPSPERREVOLUTION 1028        // 17HS13-0404S-PG5
+//#define STEPSPERREVOLUTION 5370        // NEMA17HS13-0404S-PG27
+//#define STEPSPERREVOLUTION 1036        // NEMA14HS13-0804S-PG5
+//#define STEPSPERREVOLUTION 1036        // NEMA16HS13-0604S-PG5
+
+
+// ======================================================================
+// 4: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
 // ======================================================================
 // If you need no support for OLED skip this section. To enable the 
 // OLED TEXT or GRAPHIC DISPLAY uncomment the related line. 
@@ -53,9 +85,7 @@
 //#define OLED_MODE OLED_TEXT       // OLED text only mode
 //#define OLED_MODE OLED_GRAPHIC  // OLED graphic mode
 
-// ======================================================================
-// 2B: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
-// ======================================================================
+// and
 // only uncomment one of the following USE_SSxxxx lines depending upon your lcd type
 // For the OLED 128x64 0.96" display using the SSD1306 driver, uncomment the following line
 #define USE_SSD1306   1
@@ -65,7 +95,7 @@
 
 
 // ======================================================================
-// 3: SPECIFY HARDWARE OPTIONS
+// 5: SPECIFY HARDWARE OPTIONS
 // ======================================================================
 
 // To enable the 2-Axis Joystick [ESP32 only], uncomment the next line
@@ -78,8 +108,9 @@
 // To enable the Infrared remote controller [ESP32 only], uncomment the next line
 //#define INFRAREDREMOTE
 
+
 // ======================================================================
-// 4: SPECIFY CONTROLLER OPTIONS
+// 6: SPECIFY CONTROLLER OPTIONS
 // ======================================================================
 
 // to enable Bluetooth mode, uncomment the next line [ESP32 only]
@@ -103,10 +134,6 @@
 
 // Management Server Control Interface [Port 6060] - DO NOT CHANGE
 #define MANAGEMENT 9
-
-// To make the firmware return the correct firmware value when talking to a
-// myFocuserpro2 INDI driver [use only for INDI support], uncomment the following line
-//#define INDI 10
 
 // Cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
 // To enable DUCKDNS [STATIONMODE only]
@@ -154,6 +181,10 @@
 
 // To download the file [MANAGEMENTFORCEDOWNLOAD] instead of displaying file 
 // content in web browser, uncomment the next line
+// This has moved to MANAGEMENT SERVER
+
+// To make the firmware return the correct firmware value when talking to a
+// myFocuserpro2 INDI driver [use only for INDI support], uncomment the following line
 // This has moved to MANAGEMENT SERVER
 
 // ======================================================================
