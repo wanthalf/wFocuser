@@ -5,15 +5,15 @@
 // ======================================================================
 
 #include <Arduino.h>
-#include "focuserconfig.h"
-//#include "boarddefs.h"                    // included as part of focuserconfig.h"
+#include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 #include "images.h"
 #include "generalDefinitions.h"
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
-#include <FS.h>                             // include the SPIFFS library  
+#include <LittleFS.h>                       // include LittleFS
+#define SPIFFS LittleFS                     // change all SPIFFS esp8266 code to LITTLEFS
 #else                                       // otherwise assume ESP32
 #include "SPIFFS.h"
 #endif
@@ -217,7 +217,7 @@ void MANAGEMENT_handledeletefile()
   String df = mserver.arg("fname");                     // check server arguments, df has filename
   if ( df != "" )                                       // check for file in spiffs
   {
-    // spiffs was started earlier when server was started so assume it has started
+    // Filesystem was started earlier when server was started so assume it has started
     // df = "/" + df;
     if ( df[0] != '/')
     {
@@ -283,7 +283,7 @@ void MANAGEMENT_handledeletefile()
 // builds msdelete page
 void MANAGEMENT_deletepage()
 {
-  // spiffs was started earlier when server was started so assume it has started
+  // Filesystem was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/msdelete.html") )                // check for the webpage
   {
     File file = SPIFFS.open("/msdelete.html", "r");     // open it
@@ -313,18 +313,29 @@ void MANAGEMENT_deletepage()
 // lists all files in file system
 void MANAGEMENT_listFSfiles(void)
 {
-  // spiffs was started earlier when server was started so assume it has started
-  // example code taken from FSBrowser
   String path = "/";
   DebugPrintln("MANAGEMENT_listFSfiles: " + path);
 #if defined(ESP8266)
   String output = "{[";
-  Dir dir = SPIFFS.openDir("/");
-  while (dir.next())
+  Dir mdir = LittleFS.openDir("/");
+  // Cycle all the content
+  while (mdir.next())
   {
-    output += "{" + dir.fileName() + "}, ";
+    if (mdir.isDirectory() )
+    {
+      Dir sdir = LittleFS.openDir("/" + mdir.fileName());
+      while ( sdir.next() )
+      {
+        output += "{ /" + mdir.fileName() + "/" + sdir.fileName() + ":file }\n";
+      }
+      output += "{ /" + mdir.fileName() + ":dir }\n";   // directory name
+    }
+    else
+    {
+      output += "{ /" + mdir.fileName() + ":file }\n";    // filename
+    }
   }
-  output += "]}";
+  output += " ]}";
   mserver.send(NORMALWEBPAGE, String(JSONTEXTPAGETYPE), output);
 #else // ESP32
   File root = SPIFFS.open(path);
@@ -350,13 +361,13 @@ void MANAGEMENT_listFSfiles(void)
   }
   output += "]}";
   mserver.send(NORMALWEBPAGE, String(JSONTEXTPAGETYPE), output);
-#endif
+#endif // esp32
 }
 
 // builds /msnotfound page
 void MANAGEMENT_buildnotfound(void)
 {
-  // spiffs was started earlier when server was started so assume it has started
+  // Filesystem was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/msnotfound.html"))               // load page from fs - wsnotfound.html
   {
     // open file for read
@@ -402,7 +413,7 @@ void MANAGEMENT_handlenotfound(void)
 // builds msupload page
 void MANAGEMENT_buildupload(void)
 {
-  // spiffs was started earlier when server was started so assume it has started
+  // Filesystem was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/msupload.html"))                 // load page from fs - wsupload.html
   {
     File file = SPIFFS.open("/msupload.html", "r");     // open file for read
@@ -778,7 +789,7 @@ void MANAGEMENT_buildadminpg3(void)
   Serial.print("ms_buildpg3: ");
   Serial.println(millis());
 #endif
-  // spiffs was started earlier when server was started so assume it has started
+  // Filesystem was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/msindex3.html"))                 // constructs admin page 3 of management server
   {
     File file = SPIFFS.open("/msindex3.html", "r");     // open file for read
@@ -851,7 +862,7 @@ void MANAGEMENT_buildadminpg3(void)
       MSpg.replace("%INDI%", String(ENABLEINDISTR));
       MSpg.replace("%INI%", "Disabled");
     }
-    
+
     // display heap memory for tracking memory loss?
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
@@ -1002,7 +1013,7 @@ void MANAGEMENT_buildadminpg2(void)
   Serial.print("ms_buildpg2: ");
   Serial.println(millis());
 #endif
-  // spiffs was started earlier when server was started so assume it has started
+  // Filesystem was started earlier when server was started so assume it has started
   DebugPrintln("management: FS mounted");               // constructs admin page 2 of management server
   if ( SPIFFS.exists("/msindex2.html"))
   {
@@ -1551,7 +1562,7 @@ void MANAGEMENT_buildadminpg1(void)
   Serial.print("ms_buildpg1: ");
   Serial.println(millis());
 #endif
-  // spiffs was started earlier when server was started so assume it has started
+  // Filesystem was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/msindex1.html"))                 // constructs home page of management server
   {
     File file = SPIFFS.open("/msindex1.html", "r");     // open file for read
@@ -2860,12 +2871,10 @@ void MANAGEMENT_showboardconfig()
   MSpg = "";
 }
 
-
-
 // build config page
 void MANAGEMENT_buildconfigpg()
 {
-  // spiffs was started earlier when server was started so assume it has started
+  // Filesystem was started earlier when server was started so assume it has started
   DebugPrintln("buildconfigpg: Start");
   if ( SPIFFS.exists("/config.html"))
   {

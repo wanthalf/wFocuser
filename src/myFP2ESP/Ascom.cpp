@@ -4,82 +4,87 @@
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // ======================================================================
 
-#include "generalDefinitions.h"
-#include "FocuserSetupData.h"             // needed for mySetupData class
-#include "myBoards.h"                     // needed for driverboard class
-#include "temp.h"                         // needed for temperature class
+// ======================================================================
+// INCLUDES:
+// ======================================================================
 
-// ======================================================================
-// ASCOM ALPACA REMOTE SERVER - CHANGE AT YOUR OWN PERIL
-// ======================================================================
+#include "generalDefinitions.h"
+#include "FocuserSetupData.h"               // needed for mySetupData class
+#include "myBoards.h"                       // needed for driverboard class
+#include "temp.h"                           // needed for temperature class
 
 #include <WiFiServer.h>
 #include <WiFiClient.h>
 
-extern SetupData     *mySetupData;
-extern DriverBoard*  driverboard;
-extern unsigned long ftargetPosition;       // target position
-extern volatile bool halt_alert;
-
-extern char   ipStr[]; 
-extern byte   isMoving;                     // is the motor currently moving
-extern bool   ascomserverstate;
-extern bool   ascomdiscoverystate;
-extern float  lasttemp;
-
-extern void   heapmsg(void);
+#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
+#include <LittleFS.h>                       // include LittleFS
+#define SPIFFS LittleFS                     // change all SPIFFS esp8266 code to LITTLEFS
+#else                                       // otherwise assume ESP32
+#include "SPIFFS.h"
+#endif
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #undef DEBUG_ESP_HTTP_SERVER                // prevent messages from WiFiServer 
 #include <ESP8266WiFi.h>
-#include <FS.h>                             // include the SPIFFS library  
+#include <ESP8266WebServer.h>
 #else                                       // otherwise assume ESP32
 #include <WiFi.h>
-#include "SPIFFS.h"
-#endif
-#include <SPI.h>
-
-#if defined(ESP8266)
-#include <ESP8266WebServer.h>
-#else
 #include <WebServer.h>
-#endif // if defined(esp8266)
-
-#if defined(ESP8266)
-#undef DEBUG_ESP_HTTP_SERVER
-extern ESP8266WebServer mserver;
-#else
-extern WebServer mserver;
-#endif // if defined(esp8266)
-
-#if defined(ESP8266)
-#include <ESP8266WebServer.h>
-#else
 #include "webserver.h"
-#endif // if defined(esp8266)
+#endif
 
+#include <SPI.h>
 #include "ascomserver.h"
-// Implement ASCOM ALPACA DISCOVERY PROTOCOL
-#include <WiFiUdp.h>
-WiFiUDP ASCOMDISCOVERYUdp;
-char packetBuffer[255];                                 // buffer to hold incoming UDP packet
+#include <WiFiUdp.h>                        // For Implementation ASCOM ALPACA DISCOVERY PROTOCOL
 
-String       ASpg;                                      // url:/setup/v1/focuser/0/setup
-unsigned int ASCOMClientID;
-unsigned int ASCOMClientTransactionID;
-unsigned int ASCOMServerTransactionID = 0;
-int          ASCOMErrorNumber = 0;
-String       ASCOMErrorMessage = "";
-long         ASCOMpos = 0L;
-byte         ASCOMTempCompState = 0;
-byte         ASCOMConnectedState = 0;
-WiFiClient   ascomclient;
+// ======================================================================
+// EXTERNS: ASCOM ALPACA REMOTE SERVER
+// ======================================================================
+#if defined(ESP8266)                                // this "define(ESP8266)" comes from Arduino IDE
+extern ESP8266WebServer mserver;
+#else                                               // otherwise assume ESP32
+extern WebServer mserver;
+#endif
 
-#if defined(ESP8266)
+extern SetupData      *mySetupData;
+extern DriverBoard*   driverboard;
+extern unsigned long  ftargetPosition;              // target position
+extern volatile bool  halt_alert;
+extern char           ipStr[]; 
+extern byte           isMoving;                     // is the motor currently moving
+extern bool           ascomserverstate;
+extern bool           ascomdiscoverystate;
+extern float          lasttemp;
+
+extern void           heapmsg(void);
+
+// ======================================================================
+// LOCAL DATA: ASCOM ALPACA REMOTE SERVER
+// ======================================================================
+
+#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 ESP8266WebServer *ascomserver;
-#else
-WebServer *ascomserver;
-#endif // if defined(esp8266)
+#else                                       // otherwise assume ESP32
+WebServer     *ascomserver;
+#endif
+
+WiFiUDP       ASCOMDISCOVERYUdp;
+char          packetBuffer[255];            // buffer to hold incoming discovery UDP packet
+
+String        ASpg;                         
+unsigned int  ASCOMClientID;
+unsigned int  ASCOMClientTransactionID;
+unsigned int  ASCOMServerTransactionID = 0;
+int           ASCOMErrorNumber = 0;
+String        ASCOMErrorMessage = "";
+long          ASCOMpos = 0L;
+byte          ASCOMTempCompState = 0;
+byte          ASCOMConnectedState = 0;
+WiFiClient    ascomclient;
+
+// ======================================================================
+// CODE: ASCOM ALPACA REMOTE SERVER
+// ======================================================================
 void ASCOM_sendmyheader(void)
 {
   ascomserver->client().println("HTTP/1.1 200 OK");
@@ -151,9 +156,7 @@ void checkASCOMALPACADiscovery(void)
   }
 }
 
-// Construct pages for /setup
-
-// constructs ASCOM setup server page /setup/v1/focuser/0/setup
+// constructs ASCOM setup server page url:/setup/v1/focuser/0/setup
 void ASCOM_Create_Setup_Focuser_HomePage()
 {
 #ifdef TIMEASCOMBUILDSETUP

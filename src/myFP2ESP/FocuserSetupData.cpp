@@ -6,14 +6,16 @@
 
 #include <ArduinoJson.h>
 
-#if defined(ESP8266)
-#include "FS.h"
-#else
+#include "boarddefs.h"
+#include "generalDefinitions.h"
+#include "FocuserSetupData.h"
+
+#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
+#include <LittleFS.h>
+#define SPIFFS LittleFS
+#else                                       // otherwise assume ESP32
 #include "SPIFFS.h"
 #endif
-
-#include "FocuserSetupData.h"
-//#include "generalDefinitions.h"       // should not be needed as FocuserSetupData.h includes this file
 
 // delay(10) required in ESP8266 code around file handling
 
@@ -1546,11 +1548,29 @@ void SetupData::StartBoardDelayedUpdate(String & org_data, String new_data)
 
 void SetupData::ListDir(const char * dirname, uint8_t levels)
 {
-  // TODO
-  // THIS DOES NOT WORK ON ESP8266!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+  String path = "/";
 #if defined(ESP8266)
-  DebugPrintln("SetupData::ListDir() does not work on ESP8266");
+  String output = "{[";
+  Dir mdir = LittleFS.openDir("/");
+  // Cycle all the content
+  while (mdir.next())
+  {
+    if (mdir.isDirectory() )
+    {
+      Dir sdir = LittleFS.openDir("/" + mdir.fileName());
+      while ( sdir.next() )
+      {
+        output += "{ /" + mdir.fileName() + "/" + sdir.fileName() + ":file }\n";
+      }
+      output += "{ /" + mdir.fileName() + ":dir }\n";   // directory name
+    }
+    else
+    {
+      output += "{ /" + mdir.fileName() + ":file }\n";    // filename
+    }
+  }
+  output += " ]}";
+  mserver.send(NORMALWEBPAGE, String(JSONTEXTPAGETYPE), output);
 #else
   File root = SPIFFS.open(dirname);
   delay(10);

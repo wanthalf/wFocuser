@@ -1,3 +1,8 @@
+208
+Move to LittleFS on ESP8266
+Rewrite /list for Management Server to work with LittleFS on ESP8266
+Copy list code to FocuserSetupData.cpp 
+
 207
 Add FIXEDSTEPMODE to focuserconfig.h for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
 Add STEPSPERREVOLUTION to focuserconfig.h for boards ULN2003, L298N, L293DMINI, L9110S, L293DNEMA, L293D28BYJ48
