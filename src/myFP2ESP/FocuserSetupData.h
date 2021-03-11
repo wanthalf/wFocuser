@@ -6,8 +6,8 @@
 
 #include <Arduino.h>
 
-#include "generalDefinitions.h"
-#include "boarddefs.h"
+//#include "generalDefinitions.h"
+//#include "boarddefs.h"
 
 #define DEFAULTOFF              0
 #define DEFAULTON               1

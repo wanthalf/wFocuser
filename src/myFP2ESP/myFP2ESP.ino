@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 207
+// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 208
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -263,29 +263,19 @@ float   lasttemp;                           // last valid temp reading
 SetupData *mySetupData;                     // focuser data
 
 #if defined(ESP8266)
-#include <ESP8266WebServer.h>
-#else
-#include <WebServer.h>
-#endif // if defined(esp8266)
-
-#if defined(ESP8266)
 #undef DEBUG_ESP_HTTP_SERVER
+#include <ESP8266WebServer.h>
 extern ESP8266WebServer mserver;
-#else
-extern WebServer mserver;
-#endif // if defined(esp8266)
-
-extern String MSpg;
-extern void   start_management(void);
-extern void   start_ascomremoteserver(void);
-extern void   checkASCOMALPACADiscovery(void);
-
-#if defined(ESP8266)
 extern ESP8266WebServer *ascomserver;
 #else
+#include <WebServer.h>
+extern WebServer mserver;
 extern WebServer *ascomserver;
 #endif // if defined(esp8266)
 
+extern void start_management(void);
+extern void start_ascomremoteserver(void);
+extern void checkASCOMALPACADiscovery(void);
 extern void start_webserver(void);
 
 // ======================================================================

@@ -18,6 +18,13 @@ enum connection_status { disconnected, connected };
 //  StateMachine definition
 enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Moving, State_DelayAfterMove, State_FinishedMove, State_SetHomePosition };
 
+#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
+#include <LittleFS.h>
+#define SPIFFS LittleFS
+#else                                       // otherwise assume ESP32
+#include "SPIFFS.h"
+#endif
+
 #define DEFAULTPOSITION       5000L
 #define DEFAULTMAXSTEPS       80000L
 
