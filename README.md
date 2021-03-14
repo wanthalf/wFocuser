@@ -81,8 +81,8 @@ https://github.com/ayushsharma82/EasyDDNS
 ESP32 Sketch Data uploader
 https://github.com/me-no-dev/arduino-esp32fs-plugin/releases/  
 
-ESP8266 Sketch Data uploader
-https://github.com/esp8266/arduino-esp8266fs-plugin  
+ESP8266 LittleFS Data uploader
+https://github.com/earlephilhower/arduino-esp8266littlefs-plugin
 
 After downloading the zip files, you then need to install these into the Arduino IDE environment. To do that, start the Arduino IDE, select Sketch, Include Library, Add .Zip library, then navigate to where the ZIP files are stored and select them (you can only load 1 zip file at a time so please repeat this for all ZIP files).
 
