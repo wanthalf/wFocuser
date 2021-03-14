@@ -1,3 +1,7 @@
+209
+Fix for coil power not being released
+Fix for mserver undefined in FocuserSetupData.cpp
+
 208
 Move to LittleFS on ESP8266
 Rewrite /list for Management Server to work with LittleFS on ESP8266

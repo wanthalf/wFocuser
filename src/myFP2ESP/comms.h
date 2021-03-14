@@ -218,8 +218,8 @@ void ESP_Communication()
       break;
     case 12: // set coil power
       paramval = (byte) (receiveString[3] - '0');
-      ( paramval == 1 ) ? driverboard->enablemotor() : driverboard->releasemotor();
-      mySetupData->set_coilpower(paramval);
+      ( paramval == 1 ) ? driverboard->enablemotor()    : driverboard->releasemotor();
+      ( paramval == 1 ) ? mySetupData->set_coilpower(1) : mySetupData->set_coilpower(0);
       break;
     case 13: // get reverse direction setting, 00 off, 01 on
       SendPaket('R', mySetupData->get_reversedirection());

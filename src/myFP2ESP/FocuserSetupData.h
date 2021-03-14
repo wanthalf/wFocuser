@@ -183,7 +183,11 @@ class SetupData
     void StartBoardDelayedUpdate(int &, int);
     void StartBoardDelayedUpdate(String &, String);
 
+#if defined(ESP8266)
+    void ListDir(void);
+#else
     void ListDir(const char*, uint8_t);
+#endif
 
     boolean ReqSaveData_var;        // Flag for request save variable data
     boolean ReqSaveData_per;        // Flag for request save persitant data
