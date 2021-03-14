@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 208
+// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 209
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -1432,7 +1432,7 @@ void loop()
   static bool     DirOfTravel = (bool) mySetupData->get_focuserdirection();
   static uint32_t TimeStampDelayAfterMove = 0;
   static uint32_t TimeStampPark = millis();
-  static bool     Parked = mySetupData->get_coilpower();
+  static bool     Parked = true;                  // focuser cannot be moving as it was just started
   static uint8_t  updatecount = 0;
   static uint32_t steps = 0;
 
@@ -1589,9 +1589,10 @@ void loop()
           }
         }
 
+        // Parked is set false after State_DelayAfterMove is ended
         if (Parked == false)
         {
-          if (TimeCheck(TimeStampPark, MotorReleaseDelay))   //Power off after MotorReleaseDelay
+          if (TimeCheck(TimeStampPark, MotorReleaseDelay))   // Power off after MotorReleaseDelay
           {
             // need to obey rule - can only release motor if coil power is disabled
             if ( mySetupData->get_coilpower() == 0 )

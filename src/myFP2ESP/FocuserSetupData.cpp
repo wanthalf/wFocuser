@@ -43,7 +43,11 @@ SetupData::SetupData(void)
   else
   {
     DebugPrintln("FS mounted");
+#if defined(ESP8266)
+    this->ListDir();
+#else
     this->ListDir("/", 0);
+#endif
   }
   this->LoadConfiguration();
 };
@@ -449,7 +453,7 @@ void SetupData::LoadDefaultPersistantData()
   this->hpswitchenable        = DEFAULTOFF;
   this->pbenable              = DEFAULTOFF;
   this->indi                  = DEFAULTOFF;
-  
+
   this->SavePersitantConfiguration();                 // write default values to SPIFFS
 }
 
@@ -1545,8 +1549,11 @@ void SetupData::StartBoardDelayedUpdate(String & org_data, String new_data)
 // ======================================================================
 // Misc
 // ======================================================================
-
+#if defined(ESP8266)
+void SetupData::ListDir()
+#else
 void SetupData::ListDir(const char * dirname, uint8_t levels)
+#endif
 {
   String path = "/";
 #if defined(ESP8266)
@@ -1570,7 +1577,7 @@ void SetupData::ListDir(const char * dirname, uint8_t levels)
     }
   }
   output += " ]}";
-  mserver.send(NORMALWEBPAGE, String(JSONTEXTPAGETYPE), output);
+  DebugPrintln(output);
 #else
   File root = SPIFFS.open(dirname);
   delay(10);
