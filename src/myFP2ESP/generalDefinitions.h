@@ -117,6 +117,14 @@ extern const char* BACKLASHOUTSTEPSSTR;
 extern const char* BLUETOOTHSTR;
 extern const char* LOCALSERIALSTR;
 extern const char* FSFILENOTFOUNDSTR;
+extern const char* SETPGOPTIONSTR;
+extern const char* SENDPAGESTR;
+extern const char* SETPGTIMESTR;
+
+extern const char* CREATEFILEFAILSTR;
+extern const char* WRITEFILEFAILSTR;
+extern const char* WRITEFILESUCCESSSTR;
+
 
 // defines for ASCOMSERVER, MDNSSERVER, WEBSERVER
 #define ASCOMREMOTESTR            "ASCOM Remote: "
@@ -220,7 +228,7 @@ DebugPrintln(__PRETTY_FUNCTION__);
 // ======================================================================
 // 4. HEAP DEBUGGING - DO NOT CHANGE / DO NOT ENABLE
 // ======================================================================
-//#define HEAPDEBUG     1
+#define HEAPDEBUG     1
 
 #ifdef  HEAPDEBUG   
 #define HDebugPrint(...) Serial.print(__VA_ARGS__)      // HDebugPrint is a macro, serial print

@@ -1,3 +1,6 @@
+210
+Fix for DEBUG errors
+
 209
 Fix for coil power not being released
 Fix for mserver undefined in FocuserSetupData.cpp

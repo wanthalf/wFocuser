@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 209
+// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 210
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -1043,10 +1043,8 @@ void setup()
   DebugPrintln(mySetupData->get_backlashsteps_out());
   DebugPrint("tempcoefficient=");
   DebugPrintln(mySetupData->get_tempcoefficient());
-  DebugPrint("tempprecision=");
-  DebugPrintln(mySetupData->get_tempprecision());
-  DebugPrint("stepmode =");
-  DebugPrintln(mySetupData->get_stepmode());
+  DebugPrint("get_tempresolution=");
+  DebugPrintln(mySetupData->get_tempresolution());
   DebugPrint("coilpower=");
   DebugPrintln(mySetupData->get_coilpower());
   DebugPrint("reversedirection=");
@@ -1063,8 +1061,8 @@ void setup()
   DebugPrintln(mySetupData->get_tempcompenabled());
   DebugPrint("tcdirection=");
   DebugPrintln(mySetupData->get_tcdirection());
-  DebugPrint("motorSpeed=");
-  DebugPrintln(mySetupData->get_motorSpeed());
+  DebugPrint("motorspeed=");
+  DebugPrintln(mySetupData->get_motorspeed());
   DebugPrint("displayenabled=");
   DebugPrintln(mySetupData->get_displayenabled());
   DebugPrint("webserverport=");
