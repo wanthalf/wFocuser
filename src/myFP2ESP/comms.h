@@ -64,8 +64,8 @@ char *ftoa(char *a, double f, int precision)
 
 void SendMessage(const char *str)
 {
-  DebugPrint("Send:");
-  DebugPrintln(str);
+  Comms_DebugPrint("Send:");
+  Comms_DebugPrintln(str);
 
 #if defined(ACCESSPOINT) || defined(STATIONMODE)  // for Accesspoint or Station mode
   myclient.print(str);
@@ -144,8 +144,8 @@ void ESP_Communication()
   receiveString += EOFSTR;                                // put back terminator
   String cmdstr = receiveString.substring(1, 3);
   cmdval = cmdstr.toInt();                                // convert command to an integer
-  DebugPrint("recstr=" + receiveString + "  ");
-  DebugPrintln("cmdstr=" + cmdstr);
+  Comms_DebugPrint("recstr=" + receiveString + "  ");
+  Comms_DebugPrintln("cmdstr=" + cmdstr);
   switch (cmdval)
   {
     // all the get values first followed by set values
@@ -269,12 +269,12 @@ void ESP_Communication()
         }
         else
         {
-          DebugPrintln("Probe not found");
+          Comms_DebugPrintln("Probe not found");
         }
       }
       else
       {
-        DebugPrintln("Probe not enabled");
+        Comms_DebugPrintln("Probe not enabled");
       }
       break;
     case 21: // get temp probe resolution
@@ -662,12 +662,12 @@ void ESP_Communication()
             }
             else
             {
-              DebugPrintln("Leds not supported on this board type");
+              Comms_DebugPrintln("Leds not supported on this board type");
             }
           }
           else
           {
-            DebugPrintln("Leds already enabled");
+            Comms_DebugPrintln("Leds already enabled");
           }
         }
         else
@@ -684,7 +684,7 @@ void ESP_Communication()
           // temp probe start
           if ( mySetupData->get_brdtemppin() == -1)
           {
-            DebugPrintln("Temp pin not set");
+            Comms_DebugPrintln("Temp pin not set");
             mySetupData->set_temperatureprobestate(0);
           }
           else
@@ -695,16 +695,16 @@ void ESP_Communication()
               if ( tprobe1 == 0 )                                       // if probe not started
               {
                 myTempProbe = new TempProbe();                          // start a new probe
-                DebugPrintln("Probe started");
+                Comms_DebugPrintln("Probe started");
               }
               else
               {
-                DebugPrintln("Probe already statrted");
+                Comms_DebugPrintln("Probe already statrted");
               }
             }
             else
             {
-              DebugPrintln("Probe already enabled");
+              Comms_DebugPrintln("Probe already enabled");
             }
           }
         }
@@ -776,7 +776,7 @@ void ESP_Communication()
         enablestate = WorkString.toInt();
         if ( mySetupData->get_brdhpswpin() == -1)
         {
-          DebugPrintln("hpsw pin not set");
+          Comms_DebugPrintln("hpsw pin not set");
         }
         else
         {
@@ -784,11 +784,11 @@ void ESP_Communication()
           if ( enablestate == 1 )
           {
             init_homepositionswitch();
-            DebugPrintln("hpsw enabled");
+            Comms_DebugPrintln("hpsw enabled");
           }
           else
           {
-            DebugPrintln("hpsw disabled");
+            Comms_DebugPrintln("hpsw disabled");
           }
         }
       }

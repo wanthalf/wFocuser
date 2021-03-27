@@ -20,9 +20,9 @@
 // Uncomment only your board - ONLY ONE BOARD SHOULD BE UNCOMMENTED
 
 // ESP8266 Boards
-#define DRVBRD WEMOSDRV8825H                    // driver definition for Holger
+//#define DRVBRD WEMOSDRV8825H                    // driver definition for Holger
 //#define DRVBRD WEMOSDRV8825
-//#define DRVBRD PRO2EULN2003
+#define DRVBRD PRO2EULN2003
 //#define DRVBRD PRO2EDRV8825
 //#define DRVBRD PRO2EL293DNEMA
 //#define DRVBRD PRO2EL293D28BYJ48

@@ -45,41 +45,41 @@ TempProbe::TempProbe()  :  DallasTemperature (&oneWirech1)
 
 void TempProbe::start_temp_probe()
 {
-  DebugPrintln("start_temp_probe()");
+  Temp_DebugPrintln("start_temp_probe()");
   tprobe1 = false;
   // check if valid pin is defined for board
   if ( mySetupData->get_brdtemppin() == -1 )
   {
-    DebugPrintln("temp pin not defined.");
+    Temp_DebugPrintln("temp pin not defined.");
   }
   else
   { 
     oneWirech1.begin( mySetupData->get_brdtemppin() );    // start onewire;
-    DebugPrintln("begin");
+    Temp_DebugPrintln("begin");
     begin();                                              // start dallas temp probe sensor1
-    DebugPrintln("get device count");
+    Temp_DebugPrintln("get device count");
     tprobe1 = getDeviceCount();                           // should return 1 if probe connected
-    DebugPrint("Probes:");
-    DebugPrintln(tprobe1);
+    Temp_DebugPrint("Probes:");
+    Temp_DebugPrintln(tprobe1);
     if ( tprobe1 != 0 )
     {
       if (getAddress(tpAddress, 0) == true)               // get the address so we can set the probe resolution
       {
         tprobe1 = 1;                                      // address was found so there was a probe
         setResolution(tpAddress, mySetupData->get_tempresolution());   // set probe resolution
-        DebugPrint("set resolution:");
+        Temp_DebugPrint("set resolution:");
         switch (mySetupData->get_tempresolution())
         {
-          case 9: DebugPrintln("0.5");
+          case 9: Temp_DebugPrintln("0.5");
             break;
-          case 10: DebugPrint("0.25");
+          case 10: Temp_DebugPrint("0.25");
             break;
-          case 11: DebugPrintln("0.125");
+          case 11: Temp_DebugPrintln("0.125");
             break;
-          case 12: DebugPrintln("0.0625");
+          case 12: Temp_DebugPrintln("0.0625");
             break;
           default:
-            DebugPrintln("Unknown");
+            Temp_DebugPrintln("Unknown");
             break;
         }
         requestTemperatures();                            // request the sensor to begin a temperature reading
@@ -87,7 +87,7 @@ void TempProbe::start_temp_probe()
     }
     else
     {
-      DebugPrintln("Probe not found");
+      Temp_DebugPrintln("Probe not found");
     }
   }
 }
@@ -105,7 +105,7 @@ void TempProbe::temp_setresolution(byte rval)
   }
   else
   {
-    DebugPrintln("err: No probe found.");
+    Temp_DebugPrintln("err: No probe found.");
   }
 }
 
@@ -117,8 +117,8 @@ float TempProbe::read_temp(byte new_measurement)
   }
 
   float result = sensor1.getTempCByIndex(0);              // get temperature, always in celsius
-  DebugPrint("temp:");
-  DebugPrintln(result);
+  Temp_DebugPrint("temp:");
+  Temp_DebugPrintln(result);
   if (result > -40.0 && result < 80.0)                    // avoid erronous readings
   {
     lasttemp = result;
@@ -212,11 +212,11 @@ void TempProbe::update_temp(void)
     } // end of if tprobe
     else
     {
-      DebugPrintln("err: No probe found.");
+      Temp_DebugPrintln("err: No probe found.");
     }
   }
   else
   {
-    DebugPrintln("err: Probe disabled.");
+    Temp_DebugPrintln("err: Probe disabled.");
   }
 }

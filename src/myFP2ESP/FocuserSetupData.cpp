@@ -6,26 +6,26 @@
 
 #include <ArduinoJson.h>
 
+#if defined(ESP8266)
+#include "FS.h"
+#else
+#include "SPIFFS.h"
+#endif
+
 #include "boarddefs.h"
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"
-
-#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
-#include <LittleFS.h>
-#define SPIFFS LittleFS
-#else                                       // otherwise assume ESP32
-#include "SPIFFS.h"
-#endif
 
 // delay(10) required in ESP8266 code around file handling
 
 extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
 extern int brdfixedstepmode;            // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
 extern int brdstepsperrev;
+#define DEFAULTSAVETIME       30000 
 
 SetupData::SetupData(void)
 {
-  DebugPrintln("Constructor Setupdata");
+  SetupData_DebugPrintln("Constructor Setupdata");
 
   this->SnapShotMillis      = millis();
   this->BoardSnapShotMillis = millis();
@@ -35,19 +35,15 @@ SetupData::SetupData(void)
 
   if (!SPIFFS.begin())
   {
-    DebugPrintln("FS not mounted");
-    DebugPrintln("Formatting, please wait...");
+    SetupData_DebugPrintln("FS not mounted");
+    SetupData_DebugPrintln("Formatting, please wait...");
     SPIFFS.format();
-    DebugPrintln("Format FS done");
+    SetupData_DebugPrintln("Format FS done");
   }
   else
   {
-    DebugPrintln("FS mounted");
-#if defined(ESP8266)
-    this->ListDir();
-#else
+    SetupData_DebugPrintln("FS mounted");
     this->ListDir("/", 0);
-#endif
   }
   this->LoadConfiguration();
 };
@@ -62,7 +58,7 @@ byte SetupData::LoadConfiguration()
   delay(10);
   if (!dfile)
   {
-    DebugPrintln("Err: no Persistant data file. create defaults.");
+    SetupData_DebugPrintln("Err: no Persistant data file. create defaults.");
     LoadDefaultPersistantData();
     delay(10);
   }
@@ -70,8 +66,8 @@ byte SetupData::LoadConfiguration()
   {
     delay(10);
     String fdata = dfile.readString();                 // read content of the text file
-    DebugPrint("LoadConfiguration: Persistant SetupData= ");
-    DebugPrintln(fdata);                               // ... and print on serial
+    SetupData_DebugPrint("LoadConfiguration: Persistant SetupData= ");
+    SetupData_DebugPrintln(fdata);                               // ... and print on serial
     dfile.close();
 
     // Allocate a temporary JsonDocument
@@ -81,7 +77,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_per, fdata);
     if (error)
     {
-      DebugPrintln("Err: no persistant data file. create defaults.");
+      SetupData_DebugPrintln("Err: no persistant data file. create defaults.");
       LoadDefaultPersistantData();
     }
     else
@@ -130,58 +126,18 @@ byte SetupData::LoadConfiguration()
       this->pbenable              = doc_per["pbenable"];
       this->indi                  = doc_per["indi"];
     }
-    DebugPrintln("Config file persistant data loaded");
+    SetupData_DebugPrintln("Config file persistant data loaded");
   }
-
-  // process data_var settings
-  delay(10);
-  dfile = SPIFFS.open(filename_variable, "r");
-  if (!dfile)
-  {
-    DebugPrintln("Err: no Variable data found. create defaults.");
-    LoadDefaultVariableData();
-    retval = 1;
-  }
-  else
-  {
-    String fdata = dfile.readString();               // read content of the text file
-    DebugPrint("LoadConfiguration: Variable SetupData= ");
-    DebugPrintln(fdata);                             // ... and print on serial
-    dfile.close();
-
-    // Allocate a temporary JsonDocument
-    DynamicJsonDocument doc_var(DEFAULTVARDOCSIZE);
-
-    // Deserialize the JSON document
-    DeserializationError error = deserializeJson(doc_var, fdata);
-    if (error)
-    {
-      DebugPrintln("Err: no variable data file. create defaults.");
-      LoadDefaultVariableData();
-      retval = 2;
-    }
-    else
-    {
-      this->fposition = doc_var["fpos"];            // last focuser position
-      this->focuserdirection = doc_var["fdir"];     // keeps track of last focuser move direction
-
-      // round position to fullstep motor position
-      this->fposition = (this->fposition + this->stepmode / 2) / this->stepmode * this->stepmode;
-      retval = 3;
-    }
-  }
-  dfile.close();
-  DebugPrintln("variable data loaded");
 
   // Process board configuration
   delay(10);
   // Open board_config.jsn file for reading
-  DebugPrint("Default board config file:");
-  DebugPrintln(filename_boardconfig);
+  SetupData_DebugPrint("Default board config file:");
+  SetupData_DebugPrintln(filename_boardconfig);
   File bfile = SPIFFS.open(filename_boardconfig, "r");
   if (!bfile)
   {
-    DebugPrintln("err: no board config file. create defaults.");
+    SetupData_DebugPrint("err: no board config file. create defaults.");
     LoadDefaultBoardData();
     delay(10);
     retval = 4;
@@ -191,8 +147,8 @@ byte SetupData::LoadConfiguration()
     delay(10);
     // Reading board_config.jsn
     String board_data = bfile.readString();               // read content of the text file
-    DebugPrint("LoadConfiguration(): Board_data= ");
-    DebugPrintln(board_data);                             // ... and print on serial
+    SetupData_DebugPrint("LoadConfiguration(): Board_data= ");
+    SetupData_DebugPrintln(board_data);                             // ... and print on serial
     bfile.close();
 
     // Allocate a temporary JsonDocument
@@ -202,7 +158,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_brd, board_data);
     if (error)
     {
-      DebugPrintln("Err: deserialize board config file, create defaults.");
+      SetupData_DebugPrintln("Err: deserialize board config file, create defaults.");
       LoadDefaultBoardData();
     }
     else
@@ -235,10 +191,51 @@ byte SetupData::LoadConfiguration()
       }
       this->msdelay        = doc_brd["msdelay"];                    // motor speed delay - do not confuse with motorspeed
 
-      DebugPrintln("Board configuration file loaded");
+      SetupData_DebugPrintln("Board configuration file loaded");
     }
     retval = 5;
   }
+
+  // process data_var settings
+  // this uses stepmode which is in boardconfig file so this must come after loading the board config
+  delay(10);
+  dfile = SPIFFS.open(filename_variable, "r");
+  if (!dfile)
+  {
+    SetupData_DebugPrintln("Err: no Variable data found. create defaults.");
+    LoadDefaultVariableData();
+    retval = 1;
+  }
+  else
+  {
+    String fdata = dfile.readString();               // read content of the text file
+    SetupData_DebugPrint("LoadConfiguration: Variable SetupData= ");
+    SetupData_DebugPrintln(fdata);                             // ... and print on serial
+    dfile.close();
+
+    // Allocate a temporary JsonDocument
+    DynamicJsonDocument doc_var(DEFAULTVARDOCSIZE);
+
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc_var, fdata);
+    if (error)
+    {
+      SetupData_DebugPrintln("Err: no variable data file. create defaults.");
+      LoadDefaultVariableData();
+      retval = 2;
+    }
+    else
+    {
+      this->fposition = doc_var["fpos"];            // last focuser position
+      this->focuserdirection = doc_var["fdir"];     // keeps track of last focuser move direction
+
+      // round position to fullstep motor position
+      this->fposition = (this->fposition + this->stepmode / 2) / this->stepmode * this->stepmode;
+      retval = 3;
+    }
+  }
+  dfile.close();
+  SetupData_DebugPrintln("variable data loaded");
   return retval;
 }
 
@@ -246,22 +243,22 @@ byte SetupData::LoadConfiguration()
 void SetupData::SetFocuserDefaults(void)
 {
   LoadDefaultPersistantData();
-  LoadDefaultVariableData();
   LoadDefaultBoardData();
+  LoadDefaultVariableData();
   delay(10);
   if ( SPIFFS.exists(filename_persistant))
   {
     SPIFFS.remove(filename_persistant);
   }
   delay(10);
-  if ( SPIFFS.exists(filename_variable))
-  {
-    SPIFFS.remove(filename_variable);
-  }
-  delay(10);
   if ( SPIFFS.exists(filename_boardconfig))
   {
     SPIFFS.remove(filename_boardconfig);
+  }
+  delay(10);
+  if ( SPIFFS.exists(filename_variable))
+  {
+    SPIFFS.remove(filename_variable);
   }
 }
 
@@ -276,12 +273,12 @@ boolean SetupData::SaveBoardConfiguration()
     {
       if (this->WriteBoardConfiguration() == false)
       {
-        DebugPrintln("Error save driver board configuration");
+        SetupData_DebugPrintln("Error save driver board configuration");
       }
       else
       {
         delay(10);
-        DebugPrintln("++ driver board data saved");
+        SetupData_DebugPrintln("++ driver board data saved");
       }
       cstatus = true;
       this->ReqSaveBoard_var = false;
@@ -293,14 +290,14 @@ boolean SetupData::SaveBoardConfiguration()
 // Saves the configuration to a file
 boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTravel)
 {
-  //DebugPrintln("SaveConfiguration:");
+  DebugPrintln("SaveConfiguration:");
   if (this->fposition != currentPosition || this->focuserdirection != DirOfTravel)  // last focuser position
   {
     this->fposition = currentPosition;
     this->focuserdirection = DirOfTravel;
     this->ReqSaveData_var = true;
     this->SnapShotMillis = millis();
-    DebugPrintln("++ request for saving variable data");
+    SetupData_DebugPrintln("++ request for saving variable data");
     delay(10);
   }
 
@@ -313,12 +310,12 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
     {
       if (SavePersitantConfiguration() == false)
       {
-        DebugPrintln("Error save persistant configuration");
+        SetupData_DebugPrintln("Error save persistant configuration");
       }
       else
       {
         delay(10);
-        DebugPrintln("++ persistant data saved");
+        SetupData_DebugPrintln("++ persistant data saved");
       }
       cstatus = true;
       this->ReqSaveData_per = false;
@@ -328,12 +325,12 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
     {
       if (SaveVariableConfiguration() == false)
       {
-        DebugPrintln("Error save variable configuration");
+        SetupData_DebugPrintln("Error save variable configuration");
       }
       else
       {
         delay(10);
-        DebugPrintln("++ variable data saved");
+        SetupData_DebugPrintln("++ variable data saved");
       }
       cstatus = true;
       this->ReqSaveData_var = false;
@@ -370,14 +367,13 @@ byte SetupData::SaveVariableConfiguration()
   }
   delay(10);
   SPIFFS.remove(filename_variable);
-
   delay(10);
   // Open file for writing
   File file = SPIFFS.open(this->filename_variable, "w");
   if (!file)
   {
     TRACE();
-    DebugPrintln(CREATEFILEFAILSTR);
+    SetupData_DebugPrintln(CREATEFILEFAILSTR);
     return false;
   }
 
@@ -393,13 +389,13 @@ byte SetupData::SaveVariableConfiguration()
   if (serializeJson(doc, file) == 0)                // Serialize JSON to file
   {
     TRACE();
-    DebugPrintln(WRITEFILEFAILSTR);
+    SetupData_DebugPrintln(WRITEFILEFAILSTR);
     file.close();                                   // Close the file
     return false;
   }
   else
   {
-    DebugPrintln(WRITEFILESUCCESSSTR);
+    SetupData_DebugPrintln(WRITEFILESUCCESSSTR);
     file.close();     // Close the file
     return true;
   }
@@ -410,6 +406,7 @@ byte SetupData::SaveVariableConfiguration()
 // ======================================================================
 void SetupData::LoadDefaultPersistantData()
 {
+  SetupData_DebugPrintln("Load default persistance values");
   this->maxstep               = DEFAULTMAXSTEPS;
   this->coilpower             = DEFAULTOFF;
   this->reversedirection      = DEFAULTOFF;
@@ -459,26 +456,37 @@ void SetupData::LoadDefaultPersistantData()
 
 byte SetupData::SavePersitantConfiguration()
 {
-  delay(10);
+  SetupData_DebugPrintln("SavePersitantConfiguration");
   if ( SPIFFS.exists(filename_persistant))
   {
+    SetupData_DebugPrintln("file exists so remove it");
+    delay(10);
     SPIFFS.remove(filename_persistant);
   }
+  else
+  {
+    SetupData_DebugPrintln("file does not exist");
+  }
   delay(10);
+  SetupData_DebugPrint("Attempt to create file now: ");
+  SetupData_DebugPrintln(filename_persistant);
   File file = SPIFFS.open(filename_persistant, "w");         // Open file for writing
   if (!file)
   {
     TRACE();
-    DebugPrintln(CREATEFILEFAILSTR);
+    SetupData_DebugPrintln("Failed to create file");
     return false;
   }
-
+  SetupData_DebugPrint("Create file: ");
+  SetupData_DebugPrintln(filename_persistant);
+  delay(10);
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
   StaticJsonDocument<DEFAULTDOCSIZE> doc;
 
   // Set the values in the document
+  SetupData_DebugPrintln("Set values in json doc");
   doc["maxstep"]            = this->maxstep;                    // max steps
   doc["stepsize"]           = this->stepsize;                   // the step size in microns, ie 7.2 - value * 10, so real stepsize = stepsize / 10 (maxval = 25.6)
   doc["delayaftermove"]     = this->DelayAfterMove;             // delay after movement is finished (maxval=256)
@@ -525,17 +533,17 @@ byte SetupData::SavePersitantConfiguration()
   doc["indi"]               = this->indi;
 
   // Serialize JSON to file
-  DebugPrintln("Writing to file");
+  SetupData_DebugPrintln("Writing to file");
   if (serializeJson(doc, file) == 0)
   {
     TRACE();
-    DebugPrintln(WRITEFILEFAILSTR);
+    SetupData_DebugPrintln("err: write file");
     file.close();                                     // Close the file
     return false;
   }
   else
   {
-    DebugPrintln(WRITEFILESUCCESSSTR);
+    SetupData_DebugPrintln("write file: ok");
     file.close();                                     // Close the file
     return true;
   }
@@ -985,7 +993,7 @@ void SetupData::StartDelayedUpdate(unsigned long & org_data, unsigned long new_d
     this->ReqSaveData_per = true;
     this->SnapShotMillis = millis();
     org_data = new_data;
-    DebugPrintln("++ request for saving persitant data");
+    SetupData_DebugPrintln("++ request for saving persitant data");
   }
 }
 
@@ -996,7 +1004,7 @@ void SetupData::StartDelayedUpdate(float & org_data, float new_data)
     this->ReqSaveData_per = true;
     this->SnapShotMillis = millis();
     org_data = new_data;
-    DebugPrintln("++ request for saving persitant data");
+    SetupData_DebugPrintln("++ request for saving persitant data");
   }
 }
 
@@ -1007,7 +1015,7 @@ void SetupData::StartDelayedUpdate(byte & org_data, byte new_data)
     this->ReqSaveData_per = true;
     this->SnapShotMillis = millis();
     org_data = new_data;
-    DebugPrintln("++ request for saving persitant data");
+    SetupData_DebugPrintln("++ request for saving persitant data");
   }
 }
 
@@ -1018,7 +1026,7 @@ void SetupData::StartDelayedUpdate(String & org_data, String new_data)
     this->ReqSaveData_per = true;
     this->SnapShotMillis = millis();
     org_data = new_data;
-    DebugPrintln("Save request for data_per.jsn");
+    SetupData_DebugPrintln("Save request for data_per.jsn");
   }
 }
 
@@ -1030,20 +1038,20 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
 {
   delay(10);
   File bfile = SPIFFS.open(brdfile, "r");               // Open file for writing
-  DebugPrint("LoadBrdConfigStart: ");
-  DebugPrintln(brdfile);
+  SetupData_DebugPrint("LoadBrdConfigStart: ");
+  SetupData_DebugPrintln(brdfile);
   if (!bfile)
   {
     TRACE();
-    DebugPrintln("File not found");
+    SetupData_DebugPrintln("File not found");
     return false;
   }
   else
   {
     // read file and deserialize
     String fdata = bfile.readString();                  // read content of the text file
-    DebugPrint("LoadBrdConfigStart: Data= ");
-    DebugPrintln(fdata);                                // ... and print on serial
+    SetupData_DebugPrint("LoadBrdConfigStart: Data= ");
+    SetupData_DebugPrintln(fdata);                                // ... and print on serial
     bfile.close();
 
     // Allocate a temporary JsonDocument
@@ -1053,7 +1061,7 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
     DeserializationError error = deserializeJson(doc_brd, fdata);
     if (error)
     {
-      DebugPrintln("Failed to read board config file");
+      SetupData_DebugPrintln("Failed to read board config file");
       return false;
     }
     else
@@ -1124,17 +1132,17 @@ void SetupData::LoadDefaultBoardData()
   // Focuser driver board data - Open specific board config .jsn file for reading
 
   String brdfile = "/boards/" + String(DefaultBoardNumber) + ".jsn";
-  DebugPrint("brdfile: " );
-  DebugPrintln(brdfile);
+  SetupData_DebugPrint("brdfile: " );
+  SetupData_DebugPrintln(brdfile);
 
   if ( LoadBrdConfigStart(brdfile) == true )
   {
-    DebugPrintln("LoadDefaultBoardData(): Loaded default DRV board: OK");
+    SetupData_DebugPrintln("LoadDefaultBoardData(): Loaded default DRV board: OK");
   }
   else
   {
-    DebugPrintln("LoadDefaultBoardData(): Loaded default DRV board: Fail");
-    DebugPrintln("LoadDefaultBoardData(): Create Unknown Board Config File");
+    SetupData_DebugPrintln("LoadDefaultBoardData(): Loaded default DRV board: Fail");
+    SetupData_DebugPrintln("LoadDefaultBoardData(): Create Unknown Board Config File");
     this->board         = "Unknown";
     this->maxstepmode   = -1;
     this->stepmode      =  1;              // full step
@@ -1201,7 +1209,7 @@ boolean SetupData::WriteBoardConfiguration()
   if (!bfile)
   {
     TRACE();
-    DebugPrintln(CREATEFILEFAILSTR);
+    SetupData_DebugPrintln(CREATEFILEFAILSTR);
     return false;
   }
   else
@@ -1236,17 +1244,17 @@ boolean SetupData::WriteBoardConfiguration()
     doc_brd["msdelay"]      = this->msdelay;
 
     // Serialize JSON to file
-    DebugPrintln("Writing to board file");
+    SetupData_DebugPrintln("Writing to board file");
     if (serializeJson(doc_brd, bfile) == 0)
     {
       TRACE();
-      DebugPrintln(WRITEFILEFAILSTR);
+      SetupData_DebugPrintln(WRITEFILEFAILSTR);
       bfile.close();                                     // Close the file
       return false;
     }
     else
     {
-      DebugPrintln(WRITEFILESUCCESSSTR);
+      SetupData_DebugPrintln(WRITEFILESUCCESSSTR);
       bfile.close();                                     // Close the file
     }
   }
@@ -1258,8 +1266,8 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
   // generate board configuration from json string
   delay(10);
 
-  DebugPrint("CreateBoardConfigfromjson. Board_data= ");
-  DebugPrintln(jsonstr);                             // ... and print on serial
+  SetupData_DebugPrint("CreateBoardConfigfromjson. Board_data= ");
+  SetupData_DebugPrintln(jsonstr);                             // ... and print on serial
   // Allocate a temporary Json Document
   DynamicJsonDocument doc_brd(DEFAULTBOARDSIZE + 100);
 
@@ -1267,7 +1275,7 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
   DeserializationError error = deserializeJson(doc_brd, jsonstr);
   if (error)
   {
-    DebugPrintln("Deserializae board : Fail");
+    SetupData_DebugPrintln("Deserializae board : Fail");
     LoadDefaultBoardData();
     return false;
   }
@@ -1302,10 +1310,10 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
     }
     this->msdelay        = doc_brd["msdelay"];                    // motor speed delay - do not confuse with motorspeed
 
-    DebugPrintln("Board configuration file loaded");
+    SetupData_DebugPrintln("Board configuration file loaded");
 
     SaveBoardConfigNow();
-    DebugPrintln("board_config.jsn created");
+    SetupData_DebugPrintln("board_config.jsn created");
     return true;
   }
 }
@@ -1509,7 +1517,7 @@ void SetupData::StartBoardDelayedUpdate(int & org_data, int new_data)
     this->ReqSaveBoard_var = true;
     this->BoardSnapShotMillis = millis();
     org_data = new_data;
-    DebugPrintln("++ request for saving board data");
+    SetupData_DebugPrintln("++ request for saving board data");
   }
 }
 
@@ -1520,7 +1528,7 @@ void SetupData::StartBoardDelayedUpdate(unsigned long & org_data, unsigned long 
     this->ReqSaveBoard_var = true;
     this->BoardSnapShotMillis = millis();
     org_data = new_data;
-    DebugPrintln("++ request for saving board data");
+    SetupData_DebugPrintln("++ request for saving board data");
   }
 }
 
@@ -1531,7 +1539,7 @@ void SetupData::StartBoardDelayedUpdate(byte & org_data, byte new_data)
     this->ReqSaveBoard_var = true;
     this->BoardSnapShotMillis = millis();
     org_data = new_data;
-    DebugPrintln("++ request for saving board data");
+    SetupData_DebugPrintln("++ request for saving board data");
   }
 }
 
@@ -1542,47 +1550,25 @@ void SetupData::StartBoardDelayedUpdate(String & org_data, String new_data)
     this->ReqSaveBoard_var = true;
     this->BoardSnapShotMillis = millis();
     org_data = new_data;
-    DebugPrintln("++ request for saving board data");
+    SetupData_DebugPrintln("++ request for saving board data");
   }
 }
 
 // ======================================================================
 // Misc
 // ======================================================================
-#if defined(ESP8266)
-void SetupData::ListDir()
-#else
 void SetupData::ListDir(const char * dirname, uint8_t levels)
-#endif
 {
-  String path = "/";
+  // TODO
+  // THIS DOES NOT WORK ON ESP8266!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 #if defined(ESP8266)
-  String output = "{[";
-  Dir mdir = LittleFS.openDir("/");
-  // Cycle all the content
-  while (mdir.next())
-  {
-    if (mdir.isDirectory() )
-    {
-      Dir sdir = LittleFS.openDir("/" + mdir.fileName());
-      while ( sdir.next() )
-      {
-        output += "{ /" + mdir.fileName() + "/" + sdir.fileName() + ":file }\n";
-      }
-      output += "{ /" + mdir.fileName() + ":dir }\n";   // directory name
-    }
-    else
-    {
-      output += "{ /" + mdir.fileName() + ":file }\n";    // filename
-    }
-  }
-  output += " ]}";
-  DebugPrintln(output);
+  DebugPrintln("SetupData::ListDir() does not work on ESP8266");
 #else
   File root = SPIFFS.open(dirname);
   delay(10);
   DebugPrint("Listing directory: {");
-
+  
   if (!root)
   {
     DebugPrintln(" - failed to open directory");

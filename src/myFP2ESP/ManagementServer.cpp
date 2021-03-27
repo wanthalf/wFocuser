@@ -12,8 +12,7 @@
 #include "generalDefinitions.h"
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
-#include <LittleFS.h>                       // include LittleFS
-#define SPIFFS LittleFS                     // change all SPIFFS esp8266 code to LITTLEFS
+#include <FS.h>                             // include the SPIFFS library  
 #else                                       // otherwise assume ESP32
 #include "SPIFFS.h"
 #endif
@@ -167,7 +166,7 @@ void MANAGEMENT_sendmycontent()
 // send the requested file to the client (if it exists)
 bool MANAGEMENT_handlefileread(String path)
 {
-  DebugPrintln("handleFileRead: " + path);
+  MSrvr_DebugPrintln("handleFileRead: " + path);
   if (path.endsWith("/"))
   {
     path += "index.html";                               // if a folder is requested, send the index file
@@ -192,7 +191,7 @@ bool MANAGEMENT_handlefileread(String path)
   else
   {
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     return false;                                       // if the file doesn't exist, return false
   }
 }
@@ -304,7 +303,7 @@ void MANAGEMENT_deletepage()
   {
     // msdelete.html not found
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     MSpg = "file not found";
   }
   mserver.send(NORMALWEBPAGE, F(TEXTPAGETYPE), MSpg);
@@ -313,29 +312,18 @@ void MANAGEMENT_deletepage()
 // lists all files in file system
 void MANAGEMENT_listFSfiles(void)
 {
+  // spiffs was started earlier when server was started so assume it has started
+  // example code taken from FSBrowser
   String path = "/";
   DebugPrintln("MANAGEMENT_listFSfiles: " + path);
 #if defined(ESP8266)
   String output = "{[";
-  Dir mdir = LittleFS.openDir("/");
-  // Cycle all the content
-  while (mdir.next())
+  Dir dir = SPIFFS.openDir("/");
+  while (dir.next())
   {
-    if (mdir.isDirectory() )
-    {
-      Dir sdir = LittleFS.openDir("/" + mdir.fileName());
-      while ( sdir.next() )
-      {
-        output += "{ /" + mdir.fileName() + "/" + sdir.fileName() + ":file }\n";
-      }
-      output += "{ /" + mdir.fileName() + ":dir }\n";   // directory name
-    }
-    else
-    {
-      output += "{ /" + mdir.fileName() + ":file }\n";    // filename
-    }
+    output += "{" + dir.fileName() + "}, ";
   }
-  output += " ]}";
+  output += "]}";
   mserver.send(NORMALWEBPAGE, String(JSONTEXTPAGETYPE), output);
 #else // ESP32
   File root = SPIFFS.open(path);
@@ -395,7 +383,7 @@ void MANAGEMENT_buildnotfound(void)
   else
   {
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     MSpg = "file not found";
   }
   delay(10);                                            // small pause so background tasks can run
@@ -436,7 +424,7 @@ void MANAGEMENT_buildupload(void)
   else
   {
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     MSpg = "file not found";
   }
   delay(10);                                            // small pause so background tasks can run
@@ -453,8 +441,8 @@ void MANAGEMENT_handlefileupload(void)
     {
       filename = "/" + filename;
     }
-    DebugPrint("handleFileUpload Name: ");
-    DebugPrintln(filename);
+    MSrvr_DebugPrint("handleFileUpload Name: ");
+    MSrvr_DebugPrintln(filename);
     fsUploadFile = SPIFFS.open(filename, "w");
     filename = String();
   }
@@ -471,8 +459,8 @@ void MANAGEMENT_handlefileupload(void)
     {
       // If the file was successfully created
       fsUploadFile.close();
-      DebugPrint("handleFileUpload Size: ");
-      DebugPrintln(upload.totalSize);
+      MSrvr_DebugPrint("handleFileUpload Size: ");
+      MSrvr_DebugPrintln(upload.totalSize);
       mserver.sendHeader("Location", "/mssuccess");
       mserver.send(301);
     }
@@ -515,7 +503,7 @@ void MANAGEMENT_fileuploadsuccess(void)
   {
     // could not read file
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     MSpg = "file not found";
   }
   MANAGEMENT_sendmyheader();
@@ -568,7 +556,7 @@ void MANAGEMENT_buildadminpg5(void)
   {
     // could not read file
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     MSpg = "file not found";
   }
 #ifdef TIMEMSBUILDPG5
@@ -643,7 +631,7 @@ void MANAGEMENT_buildadminpg4(void)
   {
     // could not read index file from SPIFFS
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     MSpg = "file not found";
   }
 #ifdef TIMEMSBUILDPG4
@@ -687,7 +675,7 @@ void MANAGEMENT_handleadminpg4(void)
     }
     if ( flag == false )
     {
-      DebugPrintln(BACKCOLORINVALIDSTR);
+      MSrvr_DebugPrintln(BACKCOLORINVALIDSTR);
     }
     else
     {
@@ -712,12 +700,12 @@ void MANAGEMENT_handleadminpg4(void)
     }
     if ( flag == false )
     {
-      DebugPrintln(TEXTCOLORINVALIDSTR);
+      MSrvr_DebugPrintln(TEXTCOLORINVALIDSTR);
     }
     else
     {
-      DebugPrint(NEWTEXTCOLORSTR);
-      DebugPrintln(str);
+      MSrvr_DebugPrint(NEWTEXTCOLORSTR);
+      MSrvr_DebugPrintln(str);
       mySetupData->set_wp_textcolor(str);               // set the new text color
     }
   }
@@ -739,12 +727,12 @@ void MANAGEMENT_handleadminpg4(void)
     }
     if ( flag == false )
     {
-      DebugPrintln(HEADERCOLORINVALIDSTR);
+      MSrvr_DebugPrintln(HEADERCOLORINVALIDSTR);
     }
     else
     {
-      DebugPrint(NEWHEADERCOLORSTR);
-      DebugPrintln(str);
+      MSrvr_DebugPrint(NEWHEADERCOLORSTR);
+      MSrvr_DebugPrintln(str);
       mySetupData->set_wp_headercolor(str);             // set the new header color
     }
   }
@@ -766,12 +754,12 @@ void MANAGEMENT_handleadminpg4(void)
     }
     if ( flag == false )
     {
-      DebugPrintln(TITLECOLORINVALIDSTR);
+      MSrvr_DebugPrintln(TITLECOLORINVALIDSTR);
     }
     else
     {
-      DebugPrint(NEWTITLECOLORSTR);
-      DebugPrintln(str);
+      MSrvr_DebugPrint(NEWTITLECOLORSTR);
+      MSrvr_DebugPrintln(str);
       mySetupData->set_wp_titlecolor(str);              // set the new header color
     }
   }
@@ -871,7 +859,7 @@ void MANAGEMENT_buildadminpg3(void)
   {
     // could not read file
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     MSpg = "file not found";
   }
 #ifdef TIMEMSBUILDPG3
@@ -898,13 +886,13 @@ void MANAGEMENT_handleadminpg3(void)
   msg = mserver.arg("enin");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg3: enin: ");
+    MSrvr_DebugPrintln("adminpg3: enin: ");
     mySetupData->set_backlash_in_enabled(1);
   }
   msg = mserver.arg("diin");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg3: diin: ");
+    MSrvr_DebugPrintln("adminpg3: diin: ");
     mySetupData->set_backlash_in_enabled(0);
   }
 
@@ -912,13 +900,13 @@ void MANAGEMENT_handleadminpg3(void)
   msg = mserver.arg("enou");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg3: enou: ");
+    MSrvr_DebugPrintln("adminpg3: enou: ");
     mySetupData->set_backlash_out_enabled(1);
   }
   msg = mserver.arg("diou");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg3: diou: ");
+    MSrvr_DebugPrintln("adminpg3: diou: ");
     mySetupData->set_backlash_out_enabled(0);
   }
 
@@ -926,10 +914,10 @@ void MANAGEMENT_handleadminpg3(void)
   msg = mserver.arg("setbis");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg3: setbis: ");
+    MSrvr_DebugPrintln("adminpg3: setbis: ");
     String st = mserver.arg("bis");
-    DebugPrint("adminpg3: bis: ");
-    DebugPrintln(st);
+    MSrvr_DebugPrint("adminpg3: bis: ");
+    MSrvr_DebugPrintln(st);
     byte steps = st.toInt();                            // no need to test for <0 and > 255 as it is a byte value
     mySetupData->set_backlashsteps_in(steps);
   }
@@ -938,10 +926,10 @@ void MANAGEMENT_handleadminpg3(void)
   msg = mserver.arg("setbos");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg3: setbos: ");
+    MSrvr_DebugPrintln("adminpg3: setbos: ");
     String st = mserver.arg("bos");
-    DebugPrint("adminpg3: bos: ");
-    DebugPrintln(st);
+    MSrvr_DebugPrint("adminpg3: bos: ");
+    MSrvr_DebugPrintln(st);
     byte steps = st.toInt();
     mySetupData->set_backlashsteps_out(steps);
   }
@@ -950,8 +938,8 @@ void MANAGEMENT_handleadminpg3(void)
   msg = mserver.arg("setmsd");
   if ( msg != "" )
   {
-    DebugPrint("set motor speed delay: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("set motor speed delay: ");
+    MSrvr_DebugPrintln(msg);
     String ms = mserver.arg("msd");                      // process new motor speed delay
     if ( ms != "" )
     {
@@ -968,7 +956,7 @@ void MANAGEMENT_handleadminpg3(void)
   {
     if ( (mySetupData->get_brdpb1pin() == -1) && (mySetupData->get_brdpb1pin() == -1) )
     {
-      DebugPrintln("push button pins are -1. Cannot enable pins");
+      MSrvr_DebugPrintln("push button pins are -1. Cannot enable pins");
       mySetupData->set_pbenable(0);
     }
     else
@@ -1014,7 +1002,7 @@ void MANAGEMENT_buildadminpg2(void)
   Serial.println(millis());
 #endif
   // Filesystem was started earlier when server was started so assume it has started
-  DebugPrintln("management: FS mounted");               // constructs admin page 2 of management server
+  MSrvr_DebugPrintln("management: FS mounted");               // constructs admin page 2 of management server
   if ( SPIFFS.exists("/msindex2.html"))
   {
     File file = SPIFFS.open("/msindex2.html", "r");     // open file for read
@@ -1144,7 +1132,7 @@ void MANAGEMENT_buildadminpg2(void)
   {
     // could not read file
     TRACE();
-    DebugPrintln("file not found");
+    MSrvr_DebugPrintln("file not found");
     MSpg = "file not found";
   }
 #ifdef TIMEMSBUILDPG2
@@ -1169,7 +1157,7 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startts");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg2: startts: ");
+    MSrvr_DebugPrintln("adminpg2: startts: ");
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
     start_tcpipserver();
 #endif
@@ -1177,7 +1165,7 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("stopts");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg2: stopts: ");
+    MSrvr_DebugPrintln("adminpg2: stopts: ");
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
     stop_tcpipserver();
 #endif
@@ -1186,14 +1174,14 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("settsport");
   if ( msg != "" )
   {
-    DebugPrint("set tcpip server port: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("set tcpip server port: ");
+    MSrvr_DebugPrintln(msg);
     String tp = mserver.arg("tp");                      // process new webserver port number
     if ( tp != "" )
     {
       unsigned long newport = 0;
-      DebugPrint("tp:");
-      DebugPrintln(tp);
+      MSrvr_DebugPrint("tp:");
+      MSrvr_DebugPrintln(tp);
       newport = tp.toInt();
       if ( tcpipserverstate == STOPPED )
       {
@@ -1201,36 +1189,36 @@ void MANAGEMENT_handleadminpg2(void)
         if ( newport == currentport)
         {
           // port is the same so do not bother to change it
-          DebugPrintln("tp err: new Port = current port");
+          MSrvr_DebugPrintln("tp err: new Port = current port");
         }
         else
         {
           if ( newport == MSSERVERPORT )                              // if same as management server
           {
-            DebugPrintln("wp err: new Port = MSSERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = MSSERVERPORT");
           }
           else if ( newport == mySetupData->get_ascomalpacaport() )   // if same as ASCOM REMOTE server
           {
-            DebugPrintln("wp err: new Port = ALPACAPORT");
+            MSrvr_DebugPrintln("wp err: new Port = ALPACAPORT");
           }
           else if ( newport == mySetupData->get_mdnsport() )          // if same as mDNS server
           {
-            DebugPrintln("wp err: new Port = MDNSSERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = MDNSSERVERPORT");
           }
           else if ( newport == mySetupData->get_webserverport() )     // if same as mDNS server
           {
-            DebugPrintln("wp err: new Port = WEBSERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = WEBSERVERPORT");
           }
           else
           {
-            DebugPrintln("New tcpipserver port = " + String(newport));
+            MSrvr_DebugPrintln("New tcpipserver port = " + String(newport));
             mySetupData->set_tcpipport(newport);                      // assign new port and save it
           }
         }
       }
       else
       {
-        DebugPrintln("Attempt to change tcpipserver port when tcpipserver running");
+        MSrvr_DebugPrintln("Attempt to change tcpipserver port when tcpipserver running");
       }
     }
   }
@@ -1239,7 +1227,7 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startws");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg2: startws: ");
+    MSrvr_DebugPrintln("adminpg2: startws: ");
     if ( webserverstate == STOPPED)
     {
       start_webserver();
@@ -1249,7 +1237,7 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("stopws");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg2: stopws: ");
+    MSrvr_DebugPrintln("adminpg2: stopws: ");
     if ( webserverstate == RUNNING )
     {
       stop_webserver();
@@ -1260,50 +1248,50 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("setwsport");
   if ( msg != "" )
   {
-    DebugPrint("set web server port: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("set web server port: ");
+    MSrvr_DebugPrintln(msg);
     String wp = mserver.arg("wp");                                    // process new webserver port number
     if ( wp != "" )
     {
       unsigned long newport = 0;
-      DebugPrint("wp:");
-      DebugPrintln(wp);
+      MSrvr_DebugPrint("wp:");
+      MSrvr_DebugPrintln(wp);
       newport = wp.toInt();
       if ( webserverstate == STOPPED )
       {
         unsigned long currentport = mySetupData->get_webserverport();
         if ( newport == currentport)
         {
-          DebugPrintln("wp err: new Port = current port");            // port is the same so do not bother to change it
+          MSrvr_DebugPrintln("wp err: new Port = current port");            // port is the same so do not bother to change it
         }
         else
         {
           if ( newport == MSSERVERPORT )                              // if same as management server
           {
-            DebugPrintln("wp err: new Port = MSSERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = MSSERVERPORT");
           }
           else if ( newport == mySetupData->get_ascomalpacaport() )   // if same as ASCOM REMOTE server
           {
-            DebugPrintln("wp err: new Port = ALPACAPORT");
+            MSrvr_DebugPrintln("wp err: new Port = ALPACAPORT");
           }
           else if ( newport == mySetupData->get_mdnsport() )          // if same as mDNS server
           {
-            DebugPrintln("wp err: new Port = MDNSSERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = MDNSSERVERPORT");
           }
           else if ( newport == mySetupData->get_tcpipport() )         // if same as tcpip server
           {
-            DebugPrintln("wp err: new Port = SERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = SERVERPORT");
           }
           else
           {
-            DebugPrintln("New webserver port = " + String(newport));
+            MSrvr_DebugPrintln("New webserver port = " + String(newport));
             mySetupData->set_webserverport(newport);                  // assign new port and save it
           }
         }
       }
       else
       {
-        DebugPrintln("Attempt to change webserver port when webserver running");
+        MSrvr_DebugPrintln("Attempt to change webserver port when webserver running");
       }
     }
   }
@@ -1311,34 +1299,34 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("setwsrate");
   if ( msg != "" )
   {
-    DebugPrint("set web server page refresh rate: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("set web server page refresh rate: ");
+    MSrvr_DebugPrintln(msg);
     String wr = mserver.arg("wr");                      // process new webserver page refresh rate
     if ( wr != "" )
     {
       int newrate = 0;
-      DebugPrint("wr:");
-      DebugPrintln(wr);
+      MSrvr_DebugPrint("wr:");
+      MSrvr_DebugPrintln(wr);
       newrate = wr.toInt();
       int currentrate = mySetupData->get_webpagerefreshrate();
       if ( newrate == currentrate)
       {
         // port is the same so do not bother to change it
-        DebugPrintln("wr err: new page refresh rate = current page refresh rate");
+        MSrvr_DebugPrintln("wr err: new page refresh rate = current page refresh rate");
       }
       else
       {
         if ( newrate < MINREFRESHPAGERATE )
         {
-          DebugPrintln("wr err: Page refresh rate too low");
+          MSrvr_DebugPrintln("wr err: Page refresh rate too low");
           newrate = MINREFRESHPAGERATE;
         }
         else if ( newrate > MAXREFRESHPAGERATE )
         {
-          DebugPrintln("wr err: Page refresh rate too high");
+          MSrvr_DebugPrintln("wr err: Page refresh rate too high");
           newrate = MAXREFRESHPAGERATE;
         }
-        DebugPrintln("New page refresh rate = " + String(newrate));
+        MSrvr_DebugPrintln("New page refresh rate = " + String(newrate));
         mySetupData->set_webpagerefreshrate(newrate);                // assign new refresh rate and save it
       }
     }
@@ -1348,7 +1336,7 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startas");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg2: startas: ");
+    MSrvr_DebugPrintln("adminpg2: startas: ");
     if ( ascomserverstate == STOPPED )
     {
       start_ascomremoteserver();
@@ -1358,7 +1346,7 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("stopas");
   if ( msg != "" )
   {
-    DebugPrintln("adminpg2: stopas: ");
+    MSrvr_DebugPrintln("adminpg2: stopas: ");
     if ( ascomserverstate == RUNNING)
     {
       stop_ascomremoteserver();
@@ -1369,14 +1357,14 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("setasport");
   if ( msg != "" )
   {
-    DebugPrint("set ascom server port: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("set ascom server port: ");
+    MSrvr_DebugPrintln(msg);
     String ap = mserver.arg("ap");                                    // process new ascomalpaca port number
     if ( ap != "" )
     {
       unsigned long newport = 0;
-      DebugPrint("ap:");
-      DebugPrintln(ap);
+      MSrvr_DebugPrint("ap:");
+      MSrvr_DebugPrintln(ap);
       newport = ap.toInt();
       if ( ascomserverstate == STOPPED )
       {
@@ -1384,36 +1372,36 @@ void MANAGEMENT_handleadminpg2(void)
         if ( newport == currentport)
         {
           // port is the same so do not bother to change it
-          DebugPrintln("ap error: new Port = current port");
+          MSrvr_DebugPrintln("ap error: new Port = current port");
         }
         else
         {
           if ( newport == MSSERVERPORT )                              // if same as management server
           {
-            DebugPrintln("wp err: new Port = MSSERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = MSSERVERPORT");
           }
           else if ( newport == mySetupData->get_webserverport() )     // if same as webserver
           {
-            DebugPrintln("wp err: new Port = ALPACAPORT");
+            MSrvr_DebugPrintln("wp err: new Port = ALPACAPORT");
           }
           else if ( newport == mySetupData->get_mdnsport() )          // if same as mDNS server
           {
-            DebugPrintln("wp err: new Port = MDNSSERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = MDNSSERVERPORT");
           }
           else if ( newport == mySetupData->get_tcpipport() )          // if same as tcpip server
           {
-            DebugPrintln("wp err: new Port = SERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = SERVERPORT");
           }
           else
           {
-            DebugPrintln("New ascomalpaca port = " + String(newport));
+            MSrvr_DebugPrintln("New ascomalpaca port = " + String(newport));
             mySetupData->set_ascomalpacaport(newport);                  // assign new port and save it
           }
         }
       }
       else
       {
-        DebugPrintln("Attempt to change ascomalpaca port when ascomserver running");
+        MSrvr_DebugPrintln("Attempt to change ascomalpaca port when ascomserver running");
       }
     }
   }
@@ -1424,7 +1412,7 @@ void MANAGEMENT_handleadminpg2(void)
   {
     if ( mySetupData->get_brdtemppin() == -1)
     {
-      DebugPrintln("temp pin is -1. Cannot enable pin");
+      MSrvr_DebugPrintln("temp pin is -1. Cannot enable pin");
       mySetupData->set_temperatureprobestate(0);
       tprobe1 = 0;
     }
@@ -1453,7 +1441,7 @@ void MANAGEMENT_handleadminpg2(void)
   {
     if ( mySetupData->get_brdtemppin() == -1)
     {
-      DebugPrintln("temp pin is -1. Cannot enable pin");
+      MSrvr_DebugPrintln("temp pin is -1. Cannot enable pin");
       mySetupData->set_temperatureprobestate(0);
       tprobe1 = 0;
     }
@@ -1477,8 +1465,8 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("tm");
   if ( msg != "" )
   {
-    DebugPrint("Set temp mode: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("Set temp mode: ");
+    MSrvr_DebugPrintln(msg);
     if ( msg == "cel" )
     {
       mySetupData->set_tempmode(1);
@@ -1495,7 +1483,7 @@ void MANAGEMENT_handleadminpg2(void)
   {
     if ( (mySetupData->get_brdinledpin() == -1) || (mySetupData->get_brdinledpin() == -1) )
     {
-      DebugPrintln("led pins are -1. Cannot enable pins");
+      MSrvr_DebugPrintln("led pins are -1. Cannot enable pins");
       mySetupData->set_inoutledstate(0);
     }
     else
@@ -1529,7 +1517,7 @@ void MANAGEMENT_handleadminpg2(void)
   {
     if ( mySetupData->get_brdhpswpin() == -1 )
     {
-      DebugPrintln("hpsw pin is -1. Cannot enable pin");
+      MSrvr_DebugPrintln("hpsw pin is -1. Cannot enable pin");
       mySetupData->set_hpswitchenable(0);
     }
     else
@@ -1654,8 +1642,8 @@ void MANAGEMENT_buildadminpg1(void)
     }
 
     // display %OLE%
-    DebugPrint("Display state: ");
-    DebugPrintln(displaystate);
+    MSrvr_DebugPrint("Display state: ");
+    MSrvr_DebugPrintln(displaystate);
     if ( displaystate == true)
     {
       if ( mySetupData->get_displayenabled() == 1 )
@@ -1730,7 +1718,7 @@ void MANAGEMENT_buildadminpg1(void)
   {
     // could not read file
     TRACE();
-    DebugPrintln("File not found");
+    MSrvr_DebugPrintln("File not found");
     MSpg = "File not found";
   }
 #ifdef TIMEMSBUILDPG1
@@ -1756,7 +1744,7 @@ void MANAGEMENT_handleadminpg1(void)
   msg = mserver.arg("startmdns");
   if ( msg != "" )
   {
-    DebugPrintln("MANAGEMENT_handleadminpg1: startmdns: ");
+    MSrvr_DebugPrintln("MANAGEMENT_handleadminpg1: startmdns: ");
 #ifdef MDNSSERVER
     start_mdns_service();
 #endif
@@ -1764,7 +1752,7 @@ void MANAGEMENT_handleadminpg1(void)
   msg = mserver.arg("stopmdns");
   if ( msg != "" )
   {
-    DebugPrintln("MANAGEMENT_handleadminpg1: stopmdns: ");
+    MSrvr_DebugPrintln("MANAGEMENT_handleadminpg1: stopmdns: ");
 #ifdef MDNSSERVER
     stop_mdns_service();
 #endif
@@ -1773,14 +1761,14 @@ void MANAGEMENT_handleadminpg1(void)
   msg = mserver.arg("setmdnsport");
   if ( msg != "" )
   {
-    DebugPrint("set web server port: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("set web server port: ");
+    MSrvr_DebugPrintln(msg);
     String mp = mserver.arg("mdnsp");                                 // process new webserver port number
     if ( mp != "" )
     {
       unsigned long newport = 0;
-      DebugPrint("mp:");
-      DebugPrintln(mp);
+      MSrvr_DebugPrint("mp:");
+      MSrvr_DebugPrintln(mp);
       newport = mp.toInt();
       if ( mdnsserverstate == STOPPED )
       {
@@ -1788,36 +1776,36 @@ void MANAGEMENT_handleadminpg1(void)
         if ( newport == currentport)
         {
           // port is the same so do not bother to change it
-          DebugPrintln("mp err: new Port = current port");
+          MSrvr_DebugPrintln("mp err: new Port = current port");
         }
         else
         {
           if ( newport == MSSERVERPORT )                              // if same as management server
           {
-            DebugPrintln("mp err: new Port = MSSERVERPORT");
+            MSrvr_DebugPrintln("mp err: new Port = MSSERVERPORT");
           }
           else if ( newport == mySetupData->get_ascomalpacaport() )   // if same as ASCOM REMOTE server
           {
-            DebugPrintln("mp err: new Port = ALPACAPORT");
+            MSrvr_DebugPrintln("mp err: new Port = ALPACAPORT");
           }
           else if ( newport == mySetupData->get_webserverport() )     // if same as web server
           {
-            DebugPrintln("mp err: new Port = WEBSERVERPORT");
+            MSrvr_DebugPrintln("mp err: new Port = WEBSERVERPORT");
           }
           else if ( newport == mySetupData->get_tcpipport() )        // if same as tcpip server
           {
-            DebugPrintln("wp err: new Port = SERVERPORT");
+            MSrvr_DebugPrintln("wp err: new Port = SERVERPORT");
           }
           else
           {
-            DebugPrintln("New webserver port = " + String(newport));
+            MSrvr_DebugPrintln("New webserver port = " + String(newport));
             mySetupData->set_mdnsport(newport);                       // assign new port and save it
           }
         }
       }
       else
       {
-        DebugPrintln("Attempt to change mdnsserver port when mdnsserver running");
+        MSrvr_DebugPrintln("Attempt to change mdnsserver port when mdnsserver running");
       }
     }
   }
@@ -1828,8 +1816,8 @@ void MANAGEMENT_handleadminpg1(void)
     msg = mserver.arg("di");
     if ( msg != "" )
     {
-      DebugPrint("Set display state: ");
-      DebugPrintln(msg);
+      MSrvr_DebugPrint("Set display state: ");
+      MSrvr_DebugPrintln(msg);
       if ( msg == "don" )
       {
         mySetupData->set_displayenabled(1);
@@ -1869,8 +1857,8 @@ void MANAGEMENT_handleadminpg1(void)
         break;
       }
     }
-    DebugPrint(SETPGOPTIONSTR);
-    DebugPrintln(msg);
+    MSrvr_DebugPrint(SETPGOPTIONSTR);
+    MSrvr_DebugPrintln(msg);
     mySetupData->set_oledpageoption(tp);
   }
 
@@ -1890,8 +1878,8 @@ void MANAGEMENT_handleadminpg1(void)
       {
         pgtime = MAXOLEDPAGETIME;
       }
-      DebugPrint(SETPGTIMESTR);
-      DebugPrintln(msg);
+      MSrvr_DebugPrint(SETPGTIMESTR);
+      MSrvr_DebugPrintln(msg);
       mySetupData->set_lcdpagetime(pgtime);
     }
     else
@@ -1904,8 +1892,8 @@ void MANAGEMENT_handleadminpg1(void)
   msg = mserver.arg("ss");
   if ( msg != "" )
   {
-    DebugPrint("Set start screen state: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("Set start screen state: ");
+    MSrvr_DebugPrintln(msg);
     if ( msg == "sson" )
     {
       mySetupData->set_showstartscreen(1);
@@ -1920,8 +1908,8 @@ void MANAGEMENT_handleadminpg1(void)
   msg = mserver.arg("hp");
   if ( msg != "" )
   {
-    DebugPrint("Set hpswmsg state: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("Set hpswmsg state: ");
+    MSrvr_DebugPrintln(msg);
     if ( msg == "hpon" )
     {
       mySetupData->set_showhpswmsg(1);
@@ -1936,8 +1924,8 @@ void MANAGEMENT_handleadminpg1(void)
   msg = mserver.arg("fd");
   if ( msg != "" )
   {
-    DebugPrint("Set ms_force download state: ");
-    DebugPrintln(msg);
+    MSrvr_DebugPrint("Set ms_force download state: ");
+    MSrvr_DebugPrintln(msg);
     if ( msg == "fdon" )
     {
       mySetupData->set_forcedownload(1);
@@ -1965,7 +1953,7 @@ void MANAGEMENT_sendadminpg5(void)
   Serial.println(millis());
 #endif
   MANAGEMENT_buildadminpg5();
-  DebugPrintln("root() - send admin pg5");
+  MSrvr_DebugPrintln("root() - send admin pg5");
   MANAGEMENT_sendmyheader();
   MANAGEMENT_sendmycontent();
   MSpg = "";
@@ -1984,7 +1972,7 @@ void MANAGEMENT_sendadminpg4(void)
   Serial.println(millis());
 #endif
   MANAGEMENT_buildadminpg4();
-  DebugPrintln("root() - send admin pg4");
+  MSrvr_DebugPrintln("root() - send admin pg4");
   MANAGEMENT_sendmyheader();
   MANAGEMENT_sendmycontent();
   MSpg = "";
@@ -2003,7 +1991,7 @@ void MANAGEMENT_sendadminpg3(void)
   Serial.println(millis());
 #endif
   MANAGEMENT_buildadminpg3();
-  DebugPrintln("root() - send admin pg3");
+  MSrvr_DebugPrintln("root() - send admin pg3");
   MANAGEMENT_sendmyheader();
   MANAGEMENT_sendmycontent();
   MSpg = "";
@@ -2022,7 +2010,7 @@ void MANAGEMENT_sendadminpg2(void)
   Serial.println(millis());
 #endif
   MANAGEMENT_buildadminpg2();
-  DebugPrintln("root() - send admin pg2");
+  MSrvr_DebugPrintln("root() - send admin pg2");
   MANAGEMENT_sendmyheader();
   MANAGEMENT_sendmycontent();
   MSpg = "";
@@ -2041,7 +2029,7 @@ void MANAGEMENT_sendadminpg1(void)
   Serial.println(millis());
 #endif
   MANAGEMENT_buildadminpg1();
-  DebugPrintln("root() - send admin pg1");
+  MSrvr_DebugPrintln("root() - send admin pg1");
   MANAGEMENT_sendmyheader();
   MANAGEMENT_sendmycontent();
   MSpg = "";
@@ -2168,7 +2156,7 @@ void MANAGEMENT_handleset(void)
   {
     if ( value == "on" )
     {
-      DebugPrintln("ASCOM server: ON");
+      MSrvr_DebugPrintln("ASCOM server: ON");
       if ( mySetupData->get_ascomserverstate() == 0)
       {
         start_ascomremoteserver();
@@ -2177,7 +2165,7 @@ void MANAGEMENT_handleset(void)
     }
     else if ( value == "off" )
     {
-      DebugPrintln("ASCOM server: OFF");
+      MSrvr_DebugPrintln("ASCOM server: OFF");
       if ( mySetupData->get_ascomserverstate() == 1)
       {
         stop_ascomremoteserver();
@@ -2194,12 +2182,12 @@ void MANAGEMENT_handleset(void)
     {
       if ( (mySetupData->get_brdinledpin() == -1) || (mySetupData->get_brdoutledpin() == -1) )
       {
-        DebugPrintln("led pins are -1. Cannot enable leds");
+        MSrvr_DebugPrintln("led pins are -1. Cannot enable leds");
         mySetupData->set_inoutledstate(0);
       }
       else
       {
-        DebugPrintln("LED's: ON");
+        MSrvr_DebugPrintln("LED's: ON");
         if ( mySetupData->get_inoutledstate() == 0)
         {
           mySetupData->set_inoutledstate(1);
@@ -2214,7 +2202,7 @@ void MANAGEMENT_handleset(void)
     }
     else if ( value == "off" )
     {
-      DebugPrintln("LED's: OFF");
+      MSrvr_DebugPrintln("LED's: OFF");
       if ( mySetupData->get_inoutledstate() == 1)
       {
         mySetupData->set_inoutledstate(0);
@@ -2231,12 +2219,12 @@ void MANAGEMENT_handleset(void)
     {
       if ( mySetupData->get_brdtemppin() == -1)
       {
-        DebugPrintln("temp pin is -1. Cannot enable temp probe");
+        MSrvr_DebugPrintln("temp pin is -1. Cannot enable temp probe");
         mySetupData->set_temperatureprobestate(0);
       }
       else
       {
-        DebugPrintln("Tempprobe: ON");
+        MSrvr_DebugPrintln("Tempprobe: ON");
         if ( mySetupData->get_temperatureprobestate() == 0)
         {
           mySetupData->set_temperatureprobestate(1);
@@ -2247,7 +2235,7 @@ void MANAGEMENT_handleset(void)
     }
     else if ( value == "off" )
     {
-      DebugPrintln("Tempprobe: OFF");
+      MSrvr_DebugPrintln("Tempprobe: OFF");
       if ( mySetupData->get_temperatureprobestate() == 1)
       {
         // there is no destructor call
@@ -2263,7 +2251,7 @@ void MANAGEMENT_handleset(void)
   {
     if ( value == "on" )
     {
-      DebugPrintln("weberver: ON");
+      MSrvr_DebugPrintln("weberver: ON");
       if ( mySetupData->get_webserverstate() == 0)
       {
         start_webserver();
@@ -2272,7 +2260,7 @@ void MANAGEMENT_handleset(void)
     }
     else if ( value == "off" )
     {
-      DebugPrintln("webserver: OFF");
+      MSrvr_DebugPrintln("webserver: OFF");
       if ( mySetupData->get_webserverstate() == 1)
       {
         stop_webserver();
@@ -2286,8 +2274,8 @@ void MANAGEMENT_handleset(void)
   if ( value != "" )
   {
     unsigned long temp = value.toInt();
-    DebugPrint("Set position: ");
-    DebugPrintln(temp);
+    MSrvr_DebugPrint("Set position: ");
+    MSrvr_DebugPrintln(temp);
     ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
     mySetupData->set_fposition(ftargetPosition);      // current position in SPIFFS
     driverboard->setposition(ftargetPosition);        // current position in driver board
@@ -2299,8 +2287,8 @@ void MANAGEMENT_handleset(void)
   if ( value != "" )
   {
     unsigned long temp = value.toInt();
-    DebugPrint("Move to position: ");
-    DebugPrintln(temp);
+    MSrvr_DebugPrint("Move to position: ");
+    MSrvr_DebugPrintln(temp);
     ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
     rflag = true;
   }
@@ -2313,14 +2301,14 @@ void MANAGEMENT_handleset(void)
     {
       if ( value == "on" )
       {
-        DebugPrintln("display: ON");
+        MSrvr_DebugPrintln("display: ON");
         mySetupData->set_displayenabled(1);
         myoled->display_on();
         rflag = true;
       }
       else if ( value == "off" )
       {
-        DebugPrintln("display: OFF");
+        MSrvr_DebugPrintln("display: OFF");
         if ( mySetupData->get_displayenabled() == 1)
         {
           mySetupData->set_displayenabled(0);
@@ -2340,8 +2328,8 @@ void MANAGEMENT_handleset(void)
   if ( value != "" )
   {
     int tmp = value.toInt();
-    DebugPrint("Motorspeed: ");
-    DebugPrintln(tmp);
+    MSrvr_DebugPrint("Motorspeed: ");
+    MSrvr_DebugPrintln(tmp);
     if ( tmp < SLOW )
     {
       tmp = SLOW;
@@ -2358,8 +2346,8 @@ void MANAGEMENT_handleset(void)
   value = mserver.arg("coilpower");
   if ( value != "" )
   {
-    DebugPrint("coilpower:");
-    DebugPrintln(value);
+    MSrvr_DebugPrint("coilpower:");
+    MSrvr_DebugPrintln(value);
     if ( value == "on" )
     {
       mySetupData->set_coilpower(1);
@@ -2378,8 +2366,8 @@ void MANAGEMENT_handleset(void)
   value = mserver.arg("reverse");
   if ( value != "" )
   {
-    DebugPrint("reverse:");
-    DebugPrintln(value);
+    MSrvr_DebugPrint("reverse:");
+    MSrvr_DebugPrintln(value);
     if ( value == "on" )
     {
       mySetupData->set_reversedirection(1);
@@ -2396,11 +2384,11 @@ void MANAGEMENT_handleset(void)
   value = mserver.arg("hpsw");
   if ( value != "" )
   {
-    DebugPrint("hpsw:");
-    DebugPrintln(value);
+    MSrvr_DebugPrint("hpsw:");
+    MSrvr_DebugPrintln(value);
     if ( mySetupData->get_brdhpswpin() == -1 )
     {
-      DebugPrintln("hpsw pin is -1. Cannot enable hpsw");
+      MSrvr_DebugPrintln("hpsw pin is -1. Cannot enable hpsw");
       mySetupData->set_hpswitchenable(0);
     }
     else
@@ -2424,8 +2412,8 @@ void MANAGEMENT_handleset(void)
   if ( value != "" )
   {
     int temp = value.toInt();
-    DebugPrint("Fixedstepmode: ");
-    DebugPrintln(temp);
+    MSrvr_DebugPrint("Fixedstepmode: ");
+    MSrvr_DebugPrintln(temp);
 
     mySetupData->set_brdfixedstepmode(temp);
     rflag = true;
@@ -2435,8 +2423,8 @@ void MANAGEMENT_handleset(void)
   value = mserver.arg("indi");
   if ( value != "" )
   {
-    DebugPrint("indi:");
-    DebugPrintln(value);
+    MSrvr_DebugPrint("indi:");
+    MSrvr_DebugPrintln(value);
     if ( value == "on" )
     {
       mySetupData->set_indi(1);
@@ -2471,7 +2459,7 @@ void MANAGEMENT_fixedstepmode_set(void)
   // set web server option
   if ( mySetupData->get_webserverstate() == 0)
   {
-    DebugPrintln("webserver on");
+    MSrvr_DebugPrintln("webserver on");
     start_webserver();
   }
   mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Web-Server On");
@@ -2513,13 +2501,13 @@ void MANAGEMENT_genbrd()
     if ( SPIFFS.exists("/boards/99.jsn"))
     {
       // delete existing custom file
-      DebugPrintln("File /boards/99.jsn exists");
+      MSrvr_DebugPrintln("File /boards/99.jsn exists");
       SPIFFS.remove("/boards/99.jsn");
     }
     else
     {
       // does not exist so ignore and continue
-      DebugPrintln("File /boards/99.jsn does not exist");
+      MSrvr_DebugPrintln("File /boards/99.jsn does not exist");
     }
 
     // now write new 99.jsn file from  BoardConfigJson
@@ -2528,7 +2516,7 @@ void MANAGEMENT_genbrd()
     File dfile = SPIFFS.open("/boards/99.jsn", "w");
     if (dfile)
     {
-      DebugPrintln("Write new custom file /boards/99.jsn");
+      MSrvr_DebugPrintln("Write new custom file /boards/99.jsn");
       dfile.print(BoardConfigJson);
       dfile.close();
       // file has been written so redirect
@@ -2542,7 +2530,7 @@ void MANAGEMENT_genbrd()
     else
     {
       TRACE();
-      DebugPrintln(CREATEFILEFAILSTR);
+      MSrvr_DebugPrintln(CREATEFILEFAILSTR);
       MSpg = "<html><head><title>Management Server</title></head><body><p>Err: Config Board file not written</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>";
       MANAGEMENT_sendmyheader();
       MANAGEMENT_sendmycontent();
@@ -2703,7 +2691,7 @@ void MANAGEMENT_genbrd()
   {
     // could not find spiffs file
     TRACE();
-    DebugPrintln("File not found");
+    MSrvr_DebugPrintln("File not found");
     MSpg = "File not found";
 
   }
@@ -2785,7 +2773,7 @@ void MANAGEMENT_custombrd()
   {
     // could not find spiffs file
     TRACE();
-    DebugPrintln("File not found");
+    MSrvr_DebugPrintln("File not found");
     MSpg = "File not found";
   }
   MANAGEMENT_sendmyheader();
@@ -2862,7 +2850,7 @@ void MANAGEMENT_showboardconfig()
   {
     // could not find spiffs file
     TRACE();
-    DebugPrintln("File not found");
+    MSrvr_DebugPrintln("File not found");
     MSpg = "File not found";
 
   }
@@ -2875,7 +2863,7 @@ void MANAGEMENT_showboardconfig()
 void MANAGEMENT_buildconfigpg()
 {
   // Filesystem was started earlier when server was started so assume it has started
-  DebugPrintln("buildconfigpg: Start");
+  MSrvr_DebugPrintln("buildconfigpg: Start");
   if ( SPIFFS.exists("/config.html"))
   {
     File file = SPIFFS.open("/config.html", "r");       // open file for read
@@ -2905,7 +2893,7 @@ void MANAGEMENT_buildconfigpg()
   {
     // could not read file
     TRACE();
-    DebugPrintln("File not found");
+    MSrvr_DebugPrintln("File not found");
     MSpg = "File not found";
   }
 }
@@ -2913,7 +2901,7 @@ void MANAGEMENT_buildconfigpg()
 // handler for config page
 void MANAGEMENT_confighandler()
 {
-  DebugPrintln("confighandler");
+  MSrvr_DebugPrintln("confighandler");
 
   // to handle reboot option
   MANAGEMENT_checkreboot();                              // if reboot controller;
@@ -2929,7 +2917,7 @@ void MANAGEMENT_config()
 {
   // This will be start of config options
   // After post this will goto either customconfig() or predefinedconfig() or showboardconfig()
-  DebugPrintln("config");
+  MSrvr_DebugPrintln("config");
   MANAGEMENT_buildconfigpg();
   MANAGEMENT_sendmyheader();
   MANAGEMENT_sendmycontent();
@@ -2942,8 +2930,8 @@ void start_management(void)
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln("Err: spiffs not started");
-    DebugPrintln("stop management server");
+    MSrvr_DebugPrintln("Err: spiffs not started");
+    MSrvr_DebugPrintln("stop management server");
     managementserverstate = STOPPED;
     return;
   }
@@ -2989,7 +2977,7 @@ void start_management(void)
   mserver.begin();
   managementserverstate = RUNNING;
   TRACE();
-  DebugPrintln("management server started");
+  MSrvr_DebugPrintln("management server started");
   delay(10);                                            // small pause so background tasks can run
 }
 
@@ -3001,11 +2989,11 @@ void stop_management(void)
     mserver.stop();
     managementserverstate = STOPPED;
     TRACE();
-    DebugPrintln("management server stopped");
+    MSrvr_DebugPrintln("management server stopped");
   }
   else
   {
-    DebugPrintln("management server not running");
+    MSrvr_DebugPrintln("management server not running");
   }
 }
 

@@ -28,10 +28,8 @@ To get a clear understanding of myFP2ESP features and options, it is essential t
 https://sourceforge.net/projects/myfocuserpro2-esp32/files/Documentation/  
 
 # Compiling for ESP8266
-Compiling the source code requires Arduino IDE **v1.8.13** with the ExpressIF ESP8266 Arduino extensions.
-You will need to add the JSON file for the ESP8266 library by using the File->Preferences menu of the 
-Arduino IDE and add the location for the library into the board manager
-http://arduino.esp8266.com/stable/package_esp8266com_index.json
+Compiling the source code requires Arduino IDE **v1.8.13** with the ExpressIF ESP8266 Arduino extensions. You will need to add the JSON file for the ESP8266 library by using the File->Preferences menu of the Arduino IDE and add the location for the library into the board manager  
+http://arduino.esp8266.com/stable/package_esp8266com_index.json  
 
 Once specified, open the board manager, scroll down to ESP8266 and install version **v2.7.4**.
 Then you can specify the target board as **Node MCU v1.0 (ESP-12E)** with Flash Size set to 4M (1MB SPIFFS) and upload speed of 115200.
@@ -81,8 +79,8 @@ https://github.com/ayushsharma82/EasyDDNS
 ESP32 Sketch Data uploader
 https://github.com/me-no-dev/arduino-esp32fs-plugin/releases/  
 
-ESP8266 LittleFS Data uploader
-https://github.com/earlephilhower/arduino-esp8266littlefs-plugin
+ESP8266 Sketch Data uploader
+https://github.com/esp8266/arduino-esp8266fs-plugin 
 
 After downloading the zip files, you then need to install these into the Arduino IDE environment. To do that, start the Arduino IDE, select Sketch, Include Library, Add .Zip library, then navigate to where the ZIP files are stored and select them (you can only load 1 zip file at a time so please repeat this for all ZIP files).
 

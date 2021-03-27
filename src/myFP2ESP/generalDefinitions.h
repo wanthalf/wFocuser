@@ -18,13 +18,6 @@ enum connection_status { disconnected, connected };
 //  StateMachine definition
 enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Moving, State_DelayAfterMove, State_FinishedMove, State_SetHomePosition };
 
-#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
-#include <LittleFS.h>
-#define SPIFFS LittleFS
-#else                                       // otherwise assume ESP32
-#include "SPIFFS.h"
-#endif
-
 #define DEFAULTPOSITION       5000L
 #define DEFAULTMAXSTEPS       80000L
 
@@ -81,7 +74,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 
 #define moving_in             false
 #define moving_out            !moving_in
-#define moving_main           moving_in               
+#define moving_main           moving_in
 
 #define EOFSTR                '#'
 #define STARTCMDSTR           ':'
@@ -198,39 +191,11 @@ extern const char* WRITEFILESUCCESSSTR;
 #define STARTFMDLOFFSTR           "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdon\"><input type=\"submit\" value=\"Enable\"></form>"
 
 // ======================================================================
-// 2. TRACING -- DO NOT CHANGE
+// 1. HEAP DEBUGGING - DO NOT CHANGE / DO NOT ENABLE
 // ======================================================================
-// ArduinoTrace - github.com/bblanchon/ArduinoTrace
-// Copyright Benoit Blanchon 2018-2019
-// Provide a trace fucntion, printing file, line number, function and parameters
-// DEBUG needs to be defined to get output to Serial Port
-// If DEBUG is not defined nothing happens
-#define TRACE() \
-DebugPrint(__FILE__); \
-DebugPrint(':'); \
-DebugPrint(__LINE__); \
-DebugPrint(": "); \
-DebugPrintln(__PRETTY_FUNCTION__);
+//#define HEAPDEBUG     1
 
-// ======================================================================
-// 3. DEBUGGING -- DO NOT CHANGE
-// ======================================================================
-//#define DEBUG 1
-
-#ifdef  DEBUG                                         // Macros are usually in all capital letters.
-#define DebugPrint(...) Serial.print(__VA_ARGS__)     // DPRINT is a macro, debug print
-#define DebugPrintln(...) Serial.println(__VA_ARGS__) // DPRINTLN is a macro, debug print with new line
-#else
-#define DebugPrint(...)                               // now defines a blank line
-#define DebugPrintln(...)                             // now defines a blank line
-#endif
-
-// ======================================================================
-// 4. HEAP DEBUGGING - DO NOT CHANGE / DO NOT ENABLE
-// ======================================================================
-#define HEAPDEBUG     1
-
-#ifdef  HEAPDEBUG   
+#ifdef  HEAPDEBUG
 #define HDebugPrint(...) Serial.print(__VA_ARGS__)      // HDebugPrint is a macro, serial print
 #define HDebugPrintln(...) Serial.println(__VA_ARGS__)  // HDebugPrintln is a macro, serial print with new line
 #define HDebugPrintf(...) Serial.printf(__VA_ARGS__)    // HDebugPrintf is a macro, serial printf
@@ -239,15 +204,115 @@ DebugPrintln(__PRETTY_FUNCTION__);
 #define HDebugPrintln(...)                              // now defines a blank line
 #define HDebugPrintf(...)
 #endif
+// ======================================================================
+// 2. DEBUGGING -- DO NOT CHANGE
+// ======================================================================
+//#define DEBUG 1
+
+//#define ASCOM_DEBUG       1                                   // for debugging ascomserver
+//#define BOARD_DEBUG       1                                   // for debugging myboards
+//#define COMMS_DEBUG       1                                   // for debugging comms
+//#define MANAGEMENT_DEBUG  1                                   // for debugging management server
+//#define SETUP_DEBUG       1                                   // for debugging setup()
+//#define SETUPDATA_DEBUG   1                                   // for debugging FocuserSetupData
+//#define TEMP_DEBUG        1                                   // for debugging temp probe
+//#define WEBSERVER_DEBUG   1                                   // for debugging webserver
+
+#ifdef  DEBUG                                                   // Macros are usually in all capital letters.
+#define DebugPrint(...)   Serial.print(__VA_ARGS__)             // DPRINT is a macro, debug print
+#define DebugPrintln(...) Serial.println(__VA_ARGS__)           // DPRINTLN is a macro, debug print with new line
+#else
+#define DebugPrint(...)                                         // now defines a blank line
+#define DebugPrintln(...)                                       // now defines a blank line
+#endif
+
+#ifdef  ASCOM_DEBUG                                             // for debugging ascom server
+#define Ascom_DebugPrint(...) Serial.print(__VA_ARGS__)         // DPRINT is a macro, debug print
+#define Ascom_DebugPrintln(...) Serial.println(__VA_ARGS__)     // DPRINTLN is a macro, debug print with new line
+#else
+#define Ascom_DebugPrint(...)                                   // now defines a blank line
+#define Ascom_DebugPrintln(...)                                 // now defines a blank line
+#endif
+
+#ifdef  BOARD_DEBUG                                             // for debugging myboards.cpp
+#define Board_DebugPrint(...) Serial.print(__VA_ARGS__)         // DPRINT is a macro, debug print
+#define Board_DebugPrintln(...) Serial.println(__VA_ARGS__)     // DPRINTLN is a macro, debug print with new line
+#else
+#define Board_DebugPrint(...)                                   // now defines a blank line
+#define Board_DebugPrintln(...)                                 // now defines a blank line
+#endif
+
+#ifdef  COMMS_DEBUG                                             // for debugging comms
+#define Comms_DebugPrint(...) Serial.print(__VA_ARGS__)         // DPRINT is a macro, debug print
+#define Comms_DebugPrintln(...) Serial.println(__VA_ARGS__)     // DPRINTLN is a macro, debug print with new line
+#else
+#define Comms_DebugPrint(...)                                   // now defines a blank line
+#define Comms_DebugPrintln(...)                                 // now defines a blank line
+#endif
+
+#ifdef  MANAGEMENT_DEBUG                                        // for debugging management server
+#define MSrvr_DebugPrint(...) Serial.print(__VA_ARGS__)         // DPRINT is a macro, debug print
+#define MSrvr_DebugPrintln(...) Serial.println(__VA_ARGS__)     // DPRINTLN is a macro, debug print with new line
+#else
+#define MSrvr_DebugPrint(...)                                   // now defines a blank line
+#define MSrvr_DebugPrintln(...)                                 // now defines a blank line
+#endif
+
+#ifdef  SETUP_DEBUG                                             // for debugging setup()
+#define Setup_DebugPrint(...) Serial.print(__VA_ARGS__)         // DPRINT is a macro, debug print
+#define Setup_DebugPrintln(...) Serial.println(__VA_ARGS__)     // DPRINTLN is a macro, debug print with new line
+#else
+#define Setup_DebugPrint(...)                                   // now defines a blank line
+#define Setup_DebugPrintln(...)                                 // now defines a blank line
+#endif
+
+#ifdef  SETUPDATA_DEBUG                                         // for debugging FocuserSetupData
+#define SetupData_DebugPrint(...) Serial.print(__VA_ARGS__)     // DPRINT is a macro, debug print
+#define SetupData_DebugPrintln(...) Serial.println(__VA_ARGS__) // DPRINTLN is a macro, debug print with new line
+#else
+#define SetupData_DebugPrint(...)                               // now defines a blank line
+#define SetupData_DebugPrintln(...)                             // now defines a blank line
+#endif
+
+#ifdef  TEMP_DEBUG                                              // for debugging temp.cpp
+#define Temp_DebugPrint(...) Serial.print(__VA_ARGS__)          // DPRINT is a macro, debug print
+#define Temp_DebugPrintln(...) Serial.println(__VA_ARGS__)      // DPRINTLN is a macro, debug print with new line
+#else
+#define Temp_DebugPrint(...)                                    // now defines a blank line
+#define Temp_DebugPrintln(...)                                  // now defines a blank line
+#endif
+
+#ifdef  WEBSERVER_DEBUG                                         // for debugging webserver
+#define WebS_DebugPrint(...) Serial.print(__VA_ARGS__)          // DPRINT is a macro, debug print
+#define WebS_DebugPrintln(...) Serial.println(__VA_ARGS__)      // DPRINTLN is a macro, debug print with new line
+#else
+#define WebS_DebugPrint(...)                                    // now defines a blank line
+#define WebS_DebugPrintln(...)                                  // now defines a blank line
+#endif
 
 // ======================================================================
-// 5. TIMING TESTS - DO NOT CHANGE / DO NOT ENABLE
+// 3. TRACING -- DO NOT CHANGE
+// ======================================================================
+// ArduinoTrace - github.com/bblanchon/ArduinoTrace
+// Copyright Benoit Blanchon 2018-2019
+// Provide a trace fucntion, printing file, line number, function and parameters
+// DEBUG needs to be defined to get output to Serial Port
+// If DEBUG is not defined nothing happens
+#define TRACE() \
+  DebugPrint(__FILE__); \
+  DebugPrint(':'); \
+  DebugPrint(__LINE__); \
+  DebugPrint(": "); \
+  DebugPrintln(__PRETTY_FUNCTION__);
+  
+// ======================================================================
+// 4. TIMING TESTS - DO NOT CHANGE / DO NOT ENABLE
 // ======================================================================
 //#define TIMEDTESTS 1
 
 #ifdef TIMEDTESTS
 
-#define TIMESETUP                   1
+//#define TIMESETUP                   1
 //#define TIMELOOP                    1
 #define TIMEWSROOTSEND              1
 #define TIMEWSROOTHANDLE            1

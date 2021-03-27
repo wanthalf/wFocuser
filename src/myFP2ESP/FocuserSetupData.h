@@ -9,6 +9,9 @@
 //#include "generalDefinitions.h"
 //#include "boarddefs.h"
 
+// data_per.jsn       650
+// board_config.jsn   265
+
 #define DEFAULTOFF              0
 #define DEFAULTON               1
 #define DEFAULTCELSIUS          1
@@ -29,7 +32,7 @@ class SetupData
     void    SetFocuserDefaults(void);
     boolean CreateBoardConfigfromjson(String);          // create a board config frm a json string - used by Management Server
     boolean LoadBrdConfigStart(String);                 // attempt to load a board config file [DRVBRD] immediately after a firmware reprogram
-    
+
     //  getter data_per
     unsigned long get_fposition();
     byte get_focuserdirection();
@@ -118,7 +121,7 @@ class SetupData
     void set_pbenable(byte);
     void set_irremoteenable(byte);
     void set_indi(byte);
-    
+
     //__getter boardconfig
     String get_brdname(void);
     int get_brdmaxstepmode(void);
@@ -170,7 +173,7 @@ class SetupData
     void LoadDefaultBoardData(void);
     void LoadBoardConfiguration(void);
     void SetDefaultBoardData(void);
-    
+
     void StartDelayedUpdate(unsigned long &, unsigned long);
     void StartDelayedUpdate(float &, float);
     void StartDelayedUpdate(byte &, byte);
@@ -183,11 +186,7 @@ class SetupData
     void StartBoardDelayedUpdate(int &, int);
     void StartBoardDelayedUpdate(String &, String);
 
-#if defined(ESP8266)
-    void ListDir(void);
-#else
     void ListDir(const char*, uint8_t);
-#endif
 
     boolean ReqSaveData_var;        // Flag for request save variable data
     boolean ReqSaveData_per;        // Flag for request save persitant data
@@ -269,5 +268,5 @@ class SetupData
       { "board":"PRO2ESP32DRV8825","maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,
       "temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":-1,
       "fixedsmode":-1,"brdpins":[27,26,25,-1],"mspeed":4000 }
-     */
+    */
 };

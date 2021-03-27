@@ -17,11 +17,14 @@
 #include <WiFiClient.h>
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
-#include <LittleFS.h>                       // include LittleFS
-#define SPIFFS LittleFS                     // change all SPIFFS esp8266 code to LITTLEFS
+#undef DEBUG_ESP_HTTP_SERVER                // prevent messages from WiFiServer 
+#include <ESP8266WiFi.h>
+#include <FS.h>                             // include the SPIFFS library  
 #else                                       // otherwise assume ESP32
+#include <WiFi.h>
 #include "SPIFFS.h"
 #endif
+#include <SPI.h>
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #undef DEBUG_ESP_HTTP_SERVER                // prevent messages from WiFiServer 
@@ -107,13 +110,13 @@ void checkASCOMALPACADiscovery(void)
   int packetSize = ASCOMDISCOVERYUdp.parsePacket();
   if (packetSize)
   {
-    DebugPrint("ASCOM Discovery: Rcd packet size: ");
-    DebugPrintln(packetSize);
-    DebugPrint("From ");
+    Ascom_DebugPrint("ASCOM Discovery: Rcd packet size: ");
+    Ascom_DebugPrintln(packetSize);
+    Ascom_DebugPrint("From ");
     IPAddress remoteIp = ASCOMDISCOVERYUdp.remoteIP();
-    DebugPrint(remoteIp);
-    DebugPrint(", on port ");
-    DebugPrintln(ASCOMDISCOVERYUdp.remotePort());
+    Ascom_DebugPrint(remoteIp);
+    Ascom_DebugPrint(", on port ");
+    Ascom_DebugPrintln(ASCOMDISCOVERYUdp.remotePort());
 
     // read the packet into packetBufffer
     int len = ASCOMDISCOVERYUdp.read(packetBuffer, 255);
@@ -121,25 +124,25 @@ void checkASCOMALPACADiscovery(void)
     {
       packetBuffer[len] = 0;                          // Ensure that it is null terminated
     }
-    DebugPrint("Contents: ");
-    DebugPrintln(packetBuffer);
+    Ascom_DebugPrint("Contents: ");
+    Ascom_DebugPrintln(packetBuffer);
 
     if (len < 16)                                     // No undersized packets allowed
     {
-      DebugPrintln("err: Packet undersized");
+      Ascom_DebugPrintln("err: Packet undersized");
       return;
     }
 
     if (strncmp("alpacadiscovery1", packetBuffer, 16) != 0)    // 0-14 "alpacadiscovery", 15 ASCII Version number of 1
     {
-      DebugPrintln("err: Packet not correct format");
+      Ascom_DebugPrintln("err: Packet not correct format");
       return;
     }
 
     String strresponse = "{\"alpacaport\":" + String(mySetupData->get_ascomalpacaport()) + "}";
     uint8_t response[36] = { 0 };
     len = strresponse.length();
-    DebugPrintln("Response : " + strresponse);
+    Ascom_DebugPrintln("Response : " + strresponse);
     // copy to response
     for ( int i = 0; i < len; i++ )
     {
@@ -278,7 +281,7 @@ void ASCOM_Create_Setup_Focuser_HomePage()
 
   // construct setup page of ascom server
   // header
-  DebugPrint("get pg: ");
+  Ascom_DebugPrint("get pg: ");
   if ( SPIFFS.begin())
   {
     if ( SPIFFS.exists("/assetup.html"))
@@ -287,7 +290,7 @@ void ASCOM_Create_Setup_Focuser_HomePage()
       ASpg = file.readString();
       file.close();
 
-      DebugPrintln("start");
+      Ascom_DebugPrintln("start");
       // process for dynamic data
       String bcol = mySetupData->get_wp_backcolor();
       ASpg.replace("%BKC%", bcol);
@@ -307,19 +310,19 @@ void ASCOM_Create_Setup_Focuser_HomePage()
       ASpg.replace("%RDB%", rdbuffer);
       ASpg.replace("%SMB%", smbuffer);
       ASpg.replace("%MSB%", msbuffer);
-      DebugPrintln("end");
+      Ascom_DebugPrintln("end");
       eflag = 0;
     }
     else
     {
       eflag = 1;                                        // assetup.html not found
-      DebugPrintln("not found");
+      Ascom_DebugPrintln("not found");
     }
   }
   else
   {
     // spiffs not started
-    DebugPrintln("err: spiffs");
+    Ascom_DebugPrintln("err: spiffs");
     eflag = 1;
   }
   if ( eflag == 1 )
@@ -367,12 +370,12 @@ void ASCOM_Create_Setup_Focuser_HomePage()
 // generic ASCOM send reply
 void ASCOM_sendreply( int replycode, String contenttype, String jsonstr)
 {
-  DebugPrint("ASCOM_sendreply: replycode:");
-  DebugPrint(replycode);
-  DebugPrint(" , content-type:");
-  DebugPrint(contenttype);
-  DebugPrint(", \njson:");
-  DebugPrintln(jsonstr);
+  Ascom_DebugPrint("ASCOM_sendreply: replycode:");
+  Ascom_DebugPrint(replycode);
+  Ascom_DebugPrint(" , content-type:");
+  Ascom_DebugPrint(contenttype);
+  Ascom_DebugPrint(", \njson:");
+  Ascom_DebugPrintln(jsonstr);
   // ascomserver.send builds the http header, jsonstr will be in the body
   ascomserver->send(replycode, contenttype, jsonstr );
 }
@@ -381,9 +384,9 @@ void ASCOM_getURLParameters()
 {
   String str;
   // get server args, translate server args to lowercase, they can be mixed case
-  DebugPrintln("ASCOM_getURLParameters START");
-  DebugPrint("Number of args:");
-  DebugPrintln(ascomserver->args());
+  Ascom_DebugPrintln("ASCOM_getURLParameters START");
+  Ascom_DebugPrint("Number of args:");
+  Ascom_DebugPrintln(ascomserver->args());
   for (int i = 0; i < ascomserver->args(); i++)
   {
     if ( i >= ASCOMMAXIMUMARGS )
@@ -392,19 +395,19 @@ void ASCOM_getURLParameters()
     }
     str = ascomserver->argName(i);
     str.toLowerCase();
-    DebugPrint("Parameter Found: ");
-    DebugPrintln(str);
+    Ascom_DebugPrint("Parameter Found: ");
+    Ascom_DebugPrintln(str);
     if ( str.equals("clientid") )
     {
       ASCOMClientID = (unsigned int) ascomserver->arg(i).toInt();
-      DebugPrint("clientID:");
-      DebugPrintln(ASCOMClientID);
+      Ascom_DebugPrint("clientID:");
+      Ascom_DebugPrintln(ASCOMClientID);
     }
     if ( str.equals("clienttransactionid") )
     {
       ASCOMClientTransactionID = (unsigned int) ascomserver->arg(i).toInt();
-      DebugPrint("clienttransactionid:");
-      DebugPrintln(ASCOMClientTransactionID);
+      Ascom_DebugPrint("clienttransactionid:");
+      Ascom_DebugPrintln(ASCOMClientTransactionID);
     }
     if ( str.equals("tempcomp") )
     {
@@ -418,24 +421,24 @@ void ASCOM_getURLParameters()
       {
         ASCOMTempCompState = 0;
       }
-      DebugPrint("ASCOMTempCompState:");
-      DebugPrintln(ASCOMTempCompState);
+      Ascom_DebugPrint("ASCOMTempCompState:");
+      Ascom_DebugPrintln(ASCOMTempCompState);
     }
     if ( str.equals("position") )
     {
       String str1 = ascomserver->arg(i);
-      DebugPrint("ASCOMpos RAW:");
-      DebugPrintln(str1);
+      Ascom_DebugPrint("ASCOMpos RAW:");
+      Ascom_DebugPrintln(str1);
       ASCOMpos = ascomserver->arg(i).toInt();           // this returns a long data type
-      DebugPrint("ASCOMpos:");
-      DebugPrintln(ASCOMpos);
+      Ascom_DebugPrint("ASCOMpos:");
+      Ascom_DebugPrintln(ASCOMpos);
     }
     if ( str.equals("connected") )
     {
       String strtmp = ascomserver->arg(i);
       strtmp.toLowerCase();
-      DebugPrint("conneded RAW:");
-      DebugPrintln(str);
+      Ascom_DebugPrint("conneded RAW:");
+      Ascom_DebugPrintln(str);
       if ( strtmp.equals("true") )
       {
         ASCOMConnectedState = 1;
@@ -444,11 +447,11 @@ void ASCOM_getURLParameters()
       {
         ASCOMConnectedState = 0;
       }
-      DebugPrint("ASCOMConnectedState:");
-      DebugPrintln(ASCOMConnectedState);
+      Ascom_DebugPrint("ASCOMConnectedState:");
+      Ascom_DebugPrintln(ASCOMConnectedState);
     }
   }
-  DebugPrintln("ASCOM_getURLParameters END");
+  Ascom_DebugPrintln("ASCOM_getURLParameters END");
 }
 
 String ASCOM_addclientinfo(String str )
@@ -487,7 +490,7 @@ void ASCOM_handle_setup()
   // The web page must describe the overall device, including name, manufacturer and version number.
   // content-type: text/html
   String ASpg;
-  DebugPrintln("ASCOM_handle_setup()");
+  Ascom_DebugPrintln("ASCOM_handle_setup()");
   // spiffs was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/ashomepage.html"))               // read ashomepage.html from FS
   {
@@ -511,7 +514,7 @@ void ASCOM_handle_setup()
   }
   else
   {
-    DebugPrintln("err: pg not found");
+    Ascom_DebugPrintln("err: pg not found");
     ASpg = ASCOMSERVERNOTFOUNDSTR;
   }
   ASCOMServerTransactionID++;
@@ -539,14 +542,14 @@ void ASCOM_handle_focuser_setup()
   String fpos_str = ascomserver->arg("setpos");
   if ( fpos_str != "" )
   {
-    DebugPrint("setpos:");
-    DebugPrintln(fpos_str);
+    Ascom_DebugPrint("setpos:");
+    Ascom_DebugPrintln(fpos_str);
     String fp = ascomserver->arg("fp");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      Ascom_DebugPrint("fp:");
+      Ascom_DebugPrintln(fp);
       temp = fp.toInt();
       temp = ( temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -561,8 +564,8 @@ void ASCOM_handle_focuser_setup()
   if ( fmax_str != "" )
   {
     long temp = 0;
-    DebugPrint("root() -maxsteps:");
-    DebugPrintln(fmax_str);
+    Ascom_DebugPrint("root() -maxsteps:");
+    Ascom_DebugPrintln(fmax_str);
     temp = fmax_str.toInt();
     if ( temp < (long) driverboard->getposition() )     // if maxstep is less than focuser position
     {
@@ -584,8 +587,8 @@ void ASCOM_handle_focuser_setup()
   if ( fms_str != "" )
   {
     int temp1 = 0;
-    DebugPrint("root() -motorspeed:");
-    DebugPrintln(fms_str);
+    Ascom_DebugPrint("root() -motorspeed:");
+    Ascom_DebugPrintln(fms_str);
     temp1 = fms_str.toInt();
     if ( temp1 < SLOW )
     {
@@ -602,8 +605,8 @@ void ASCOM_handle_focuser_setup()
   String fcp_str = ascomserver->arg("cp");
   if ( fcp_str != "" )
   {
-    DebugPrint("root() -coil power:");
-    DebugPrintln(fcp_str);
+    Ascom_DebugPrint("root() -coil power:");
+    Ascom_DebugPrintln(fcp_str);
     if ( fcp_str == "cp" )
     {
       mySetupData->set_coilpower(1);
@@ -618,8 +621,8 @@ void ASCOM_handle_focuser_setup()
   String frd_str = ascomserver->arg("rd");
   if ( frd_str != "" )
   {
-    DebugPrint("root() -reverse direction:");
-    DebugPrintln(frd_str);
+    Ascom_DebugPrint("root() -reverse direction:");
+    Ascom_DebugPrintln(frd_str);
     if ( frd_str == "rd" )
     {
       mySetupData->set_reversedirection(1);
@@ -636,8 +639,8 @@ void ASCOM_handle_focuser_setup()
   if ( fsm_str != "" )
   {
     int temp1 = 0;
-    DebugPrint("root() -stepmode:");
-    DebugPrintln(fsm_str);
+    Ascom_DebugPrint("root() -stepmode:");
+    Ascom_DebugPrintln(fsm_str);
     temp1 = fsm_str.toInt();
     if ( temp1 < STEP1 )
     {
@@ -650,13 +653,13 @@ void ASCOM_handle_focuser_setup()
     mySetupData->set_brdstepmode(temp1);
   }
 
-  DebugPrintln("build homepage");
+  Ascom_DebugPrintln("build homepage");
 
   ASCOM_Create_Setup_Focuser_HomePage();                // construct the homepage now
 
   // send the homepage to a connected client
   ASCOMServerTransactionID++;
-  DebugPrintln("send homepage");
+  Ascom_DebugPrintln("send homepage");
   ASCOM_sendmyheader();
   ASCOM_sendmycontent();
   ASpg = "";
@@ -680,7 +683,7 @@ void ASCOM_handleapiversions()
   // Returns an integer array of supported Alpaca API version numbers.
   // { "Value": [1,2,3,4],"ClientTransactionID": 9876,"ServerTransactionID": 54321}
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handleapiversions:");
+  Ascom_DebugPrintln("ASCOM_handleapiversions:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -708,7 +711,7 @@ void ASCOM_handleapidescription()
   //   "ManufacturerVersion": "v1.0.0", "Location": "Horsham, UK" },
   //   "ClientTransactionID": 9876, "ServerTransactionID": 54321 }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handleapidescription:");
+  Ascom_DebugPrintln("ASCOM_handleapidescription:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -730,7 +733,7 @@ void ASCOM_handleapiconfigureddevices()
   // content-type: application/json
   // { "Value": [{"DeviceName": "Super focuser 1","DeviceType": "Focuser","DeviceNumber": 0,"UniqueID": "277C652F-2AA9-4E86-A6A6-9230C42876FA"}],"ClientTransactionID": 9876,"ServerTransactionID": 54321}
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handleapiconfigureddevices:");
+  Ascom_DebugPrintln("ASCOM_handleapiconfigureddevices:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -749,7 +752,7 @@ void ASCOM_handleinterfaceversionget()
   // curl -X GET "/api/v1/focuser/0/interfaceversion?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {"Value": 0,  "ErrorNumber": 0,  "ErrorMessage": "string"}
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handleinterfaceversionget:");
+  Ascom_DebugPrintln("ASCOM_handleinterfaceversionget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -765,7 +768,7 @@ void ASCOM_handleconnectedput()
   // PUT "/api/v1/focuser/0/connected" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d "Connected=true&ClientID=1&ClientTransactionID=2"
   // response { "ErrorNumber": 0, "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handleconnectedput:");
+  Ascom_DebugPrintln("ASCOM_handleconnectedput:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -799,7 +802,7 @@ void ASCOM_handlenameget()
   // curl -X GET "/api/v1/focuser/0/name?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": "string",  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handlenameget:");
+  Ascom_DebugPrintln("ASCOM_handlenameget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -815,7 +818,7 @@ void ASCOM_handledescriptionget()
   // GET "/api/v1/focuser/0/description?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": "string",  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handledescriptionget:");
+  Ascom_DebugPrintln("ASCOM_handledescriptionget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -831,7 +834,7 @@ void ASCOM_handledriverinfoget()
   // curl -X GET "/api/v1/focuser/0/driverinfo?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": "string",  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handledescriptionget:");
+  Ascom_DebugPrintln("ASCOM_handledescriptionget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -847,7 +850,7 @@ void ASCOM_handledriverversionget()
   // curl -X GET "/api/v1/focuser/0/driverversion?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": "string",  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handledriverversionget");
+  Ascom_DebugPrintln("ASCOM_handledriverversionget");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -863,7 +866,7 @@ void ASCOM_handleabsoluteget()
   // curl -X GET "/api/v1/focuser/0/absolute?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": true,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handleabsoluteget");
+  Ascom_DebugPrintln("ASCOM_handleabsoluteget");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -880,7 +883,7 @@ void ASCOM_handlemaxstepget()
   // curl -X GET "/api/v1/focuser/0/maxstep?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": 0,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handlemaxstepget");
+  Ascom_DebugPrintln("ASCOM_handlemaxstepget");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -896,7 +899,7 @@ void ASCOM_handlemaxincrementget()
   // curl -X GET "/api/v1/focuser/0/maxincrement?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": 0,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handlemaxincrementget");
+  Ascom_DebugPrintln("ASCOM_handlemaxincrementget");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -912,7 +915,7 @@ void ASCOM_handletemperatureget()
   // curl -X GET "/api/v1/focuser/0/temperature?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": 1.100000023841858,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handletemperatureget");
+  Ascom_DebugPrintln("ASCOM_handletemperatureget");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -935,7 +938,7 @@ void  ASCOM_handlepositionget()
   // curl -X GET "/api/v1/focuser/0/position?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": 0,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handlepositionget");
+  Ascom_DebugPrintln("ASCOM_handlepositionget");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -951,7 +954,7 @@ void  ASCOM_handlehaltput()
   // curl -X PUT "/api/v1/focuser/0/halt" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d "ClientID=22&ClientTransactionID=33"
   // { "ErrorNumber": 0, "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handlehaltput");
+  Ascom_DebugPrintln("ASCOM_handlehaltput");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -969,7 +972,7 @@ void ASCOM_handleismovingget()
   // curl -X GET "/api/v1/focuser/0/ismoving?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": true,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handleismovingget:");
+  Ascom_DebugPrintln("ASCOM_handleismovingget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -992,7 +995,7 @@ void ASCOM_handlestepsizeget()
   // curl -X GET "/api/v1/focuser/0/stepsize?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": 1.100000023841858,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handlestepsizeget:");
+  Ascom_DebugPrintln("ASCOM_handlestepsizeget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -1008,7 +1011,7 @@ void ASCOM_handletempcompget()
   // curl -X GET "/api/v1/focuser/0/tempcomp?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": true,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handletempcompget:");
+  Ascom_DebugPrintln("ASCOM_handletempcompget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -1032,7 +1035,7 @@ void ASCOM_handletempcompput()
   // {  "ErrorNumber": 0,  "ErrorMessage": "string" }
   // look for parameter tempcomp=true or tempcomp=false
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handletempcompput:");
+  Ascom_DebugPrintln("ASCOM_handletempcompput:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -1068,7 +1071,7 @@ void ASCOM_handletempcompavailableget()
   // curl -X GET "/api/v1/focuser/0/tempcompavailable?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": true,  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handletempcompavailableget:");
+  Ascom_DebugPrintln("ASCOM_handletempcompavailableget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -1092,7 +1095,7 @@ void ASCOM_handlemoveput()
   // {  "ErrorNumber": 0,  "ErrorMessage": "string" }
   // extract new value
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handlemoveput:");
+  Ascom_DebugPrintln("ASCOM_handlemoveput:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -1101,13 +1104,13 @@ void ASCOM_handlemoveput()
   // destination is in ASCOMpos
   // this is interfaceversion = 3, so moves are allowed when temperature compensation is on
   unsigned long newpos;
-  DebugPrint("ASCOMpos: ");
-  DebugPrintln(ASCOMpos);
+  Ascom_DebugPrint("ASCOMpos: ");
+  Ascom_DebugPrintln(ASCOMpos);
   if ( ASCOMpos <= 0 )
   {
     newpos = 0;
-    DebugPrint("new position: ");
-    DebugPrintln(newpos);
+    Ascom_DebugPrint("new position: ");
+    Ascom_DebugPrintln(newpos);
     ftargetPosition = newpos;
     jsonretstr = "{" + ASCOM_addclientinfo( jsonretstr );
     ASCOM_sendreply( NORMALWEBPAGE, JSONPAGETYPE, jsonretstr);
@@ -1119,16 +1122,16 @@ void ASCOM_handlemoveput()
     {
       newpos = mySetupData->get_maxstep();
       ftargetPosition = newpos;
-      DebugPrint("new position: ");
-      DebugPrintln(newpos);
+      Ascom_DebugPrint("new position: ");
+      Ascom_DebugPrintln(newpos);
       jsonretstr = "{" + ASCOM_addclientinfo( jsonretstr );
       ASCOM_sendreply( NORMALWEBPAGE, JSONPAGETYPE, jsonretstr);
     }
     else
     {
       ftargetPosition = newpos;
-      DebugPrint("new position: ");
-      DebugPrintln(newpos);
+      Ascom_DebugPrint("new position: ");
+      Ascom_DebugPrintln(newpos);
       jsonretstr = "{" + ASCOM_addclientinfo( jsonretstr );
       ASCOM_sendreply( NORMALWEBPAGE, JSONPAGETYPE, jsonretstr);
     }
@@ -1140,7 +1143,7 @@ void ASCOM_handlesupportedactionsget()
   // curl -X GET "/api/v1/focuser/0/supportedactions?ClientID=1&ClientTransactionID=1234" -H  "accept: application/json"
   // {  "Value": [    "string"  ],  "ErrorNumber": 0,  "ErrorMessage": "string" }
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handlesupportedactionsget:");
+  Ascom_DebugPrintln("ASCOM_handlesupportedactionsget:");
   ASCOMServerTransactionID++;
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
@@ -1154,7 +1157,7 @@ void ASCOM_handleNotFound()
 {
   String message = "Not Found: ";
   String jsonretstr = "";
-  DebugPrintln("ASCOM_handleNotFound:");
+  Ascom_DebugPrintln("ASCOM_handleNotFound:");
   message += "URI: ";
   message += ascomserver->uri();
   message += "\nMethod: ";
@@ -1185,8 +1188,8 @@ void ASCOM_handleNotFound()
   {
     message += " " + ascomserver->argName(i) + ": " + ascomserver->arg(i) + "\n";
   }
-  DebugPrint("Error: ");
-  DebugPrintln(message);
+  Ascom_DebugPrint("Error: ");
+  Ascom_DebugPrintln(message);
   ASCOMErrorNumber  = ASCOMNOTIMPLEMENTED;
   ASCOMErrorMessage = ASCOMERRORNOTIMPLEMENTED;
   ASCOMServerTransactionID++;
@@ -1201,13 +1204,13 @@ void ASCOM_handleRoot()
   // spiffs was started earlier when server was started so assume it has started
   if ( SPIFFS.exists("/ashomepage.html"))               // read ashomepage.html from FS
   {
-    DebugPrintln("ashomepage.html found");
+    Ascom_DebugPrintln("ashomepage.html found");
     File file = SPIFFS.open("/ashomepage.html", "r");   // open file for read
-    DebugPrintln("read pg");
+    Ascom_DebugPrintln("read pg");
     ASpg = file.readString();                           // read contents into string
     file.close();
 
-    DebugPrintln("process pg");
+    Ascom_DebugPrintln("process pg");
     // process for dynamic data
     String bcol = mySetupData->get_wp_backcolor();
     ASpg.replace("%BKC%", bcol);
@@ -1221,11 +1224,11 @@ void ASCOM_handleRoot()
     ASpg.replace("%ALP%", String(mySetupData->get_ascomalpacaport()));
     ASpg.replace("%PRV%", String(programVersion));
     ASpg.replace("%PRN%", mySetupData->get_brdname());
-    DebugPrintln("done");
+    Ascom_DebugPrintln("done");
   }
   else
   {
-    DebugPrintln("err: not found ashomepage.html");
+    Ascom_DebugPrintln("err: not found ashomepage.html");
     ASpg = ASCOMSERVERNOTFOUNDSTR;
   }
   ASCOMServerTransactionID++;
@@ -1240,15 +1243,15 @@ void start_ascomremoteserver(void)
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln("Err: spiffs");
-    DebugPrintln("Stop ASCOM service");
+    Ascom_DebugPrintln("Err: spiffs");
+    Ascom_DebugPrintln("Stop ASCOM service");
     ascomserverstate = STOPPED;
     return;
   }
   ASpg.reserve(MAXASCOMPAGESIZE);
   HDebugPrint("Heap before start_ascomremoteserver = ");
   heapmsg();
-  DebugPrintln("start ascom server");
+  Ascom_DebugPrintln("start ascom server");
 
 #if defined(ESP8266)
   ascomserver = new ESP8266WebServer(mySetupData->get_ascomalpacaport());
@@ -1293,7 +1296,7 @@ void start_ascomremoteserver(void)
   ascomserver->on("/api/v1/focuser/0/supportedactions",   HTTP_GET, ASCOM_handlesupportedactionsget);
   ascomserver->begin();
   ascomserverstate = RUNNING;
-  DebugPrintln("ascom server: RUNNING");
+  Ascom_DebugPrintln("ascom server: RUNNING");
   HDebugPrint("Heap after  start_ascomremoteserver = ");
   heapmsg();
   delay(10);                                            // small pause so background tasks can run
@@ -1303,7 +1306,7 @@ void stop_ascomremoteserver(void)
 {
   if ( ascomserverstate == RUNNING )
   {
-    DebugPrintln("stop ascom server");
+    Ascom_DebugPrintln("stop ascom server");
     ascomserver->close();
     delete ascomserver;                                 // free the ascomserver pointer and associated memory/code
     ascomserverstate = STOPPED;
@@ -1311,7 +1314,7 @@ void stop_ascomremoteserver(void)
   }
   else
   {
-    DebugPrintln("ascomserver not running");
+    Ascom_DebugPrintln("ascomserver not running");
   }
 
   if ( ascomdiscoverystate == STOPPED )
@@ -1321,7 +1324,7 @@ void stop_ascomremoteserver(void)
   }
   else
   {
-    DebugPrintln("ascomserver not running");
+    Ascom_DebugPrintln("ascomserver not running");
   }
   delay(10);                                            // small pause so background tasks can run
 }
