@@ -61,6 +61,7 @@ To compile you will also need to import these libraries in the folder src/myFP2E
 * myHalfStepperESP32
 * myDallasTemperature
 * myfp2eIRremoteESP8266
+* esp8266-oled-ssd1306 
 
 Do not edit or replace any of these library files with others.
 
@@ -90,6 +91,11 @@ Once you have done this, you can start programming the controller.
 
 # Hardware Driver Boards
 One firmware file supports all driver boards [a different file supports the L293D motor shield driver board for the ESP8266]. The user must set the **DRVBRD** at the beginning of the firmware file [myBoards.h] to the correct driver board, eg,#define DRVBRD PRO2EULN2003 will set the driver board to an ULN2003 using an ESP8266 chip [myFP2Exxxx = ESP8266 and myFP2ESPxxx = ESP32].
+
+# OLED Displays
+There are two types of displays (TEXT and GRAPHICS). OLED's can also have two different Driver Chip types (SSD1306 or SSH1106) 
+* OLED_TEXT requires libray myOLED
+* OLED_GRAPHIC requires library esp8266-oled-ssd1306
 
 # focuserconfig.h
 Configuration information about the controller is specified in the *focuserconfig.h* file. This is where you specify the controller options like OLED_TEXT and PUSHBUTTONS, as well as the controller mode such as ACCESSPOINT or STATIONMODE.
