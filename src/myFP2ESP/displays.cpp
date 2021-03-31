@@ -80,7 +80,7 @@ void OLED_NON::display_off(void) {}
 OLED_NON::OLED_NON()  {}
 
 // ======================================================================
-// CODE OLED GRAPHICMODE
+// CODE OLED GRAPHIC MODE
 // ======================================================================
 
 //__constructor
@@ -89,8 +89,12 @@ OLED_NON::OLED_NON()  {}
 // I2CCLKPIN is actually mySetupData->get_brdsck()
 // These pins are not known at compile time so has to be setup inside the constructor
 
-//OLED_GRAPHIC::OLED_GRAPHIC(uint8_t _address, uint8_t _sda, uint8_t _scl)  :   SSD1306Wire(_address, _sda,_scl, GEOMETRY_128_64)
+// OLED_GRAPHIC::OLED_GRAPHIC(uint8_t _address, uint8_t _sda, uint8_t _scl) : SSD1306Wire(_address, _sda,_scl, GEOMETRY_128_64)
+#ifdef USE_SSD1306
 OLED_GRAPHIC::OLED_GRAPHIC()  :  SSD1306Wire(OLED_ADDR, 4, 5, GEOMETRY_128_64) , OLED_NON()
+#else // Assume USE_SSH1106
+OLED_GRAPHIC::OLED_GRAPHIC()  :  SH1106Wire(OLED_ADDR, 4, 5, GEOMETRY_128_64) , OLED_NON()
+#endif // #ifdef USE_SSD1306
 {
   DebugPrintln(F("start init()"));
   this->init();             // init SSD1306Wire
@@ -461,7 +465,7 @@ OLED_TEXT::OLED_TEXT(void)
   begin(&SH1106_128x64, OLED_ADDR);
 #endif
   setFont(Adafruit5x7);
-//  setcolor(WHITE);                    // Draw white text
+//  setcolor(WHITE);                    // draw white text
   clear();                              // clrscr OLED
 
   displaystate = true;

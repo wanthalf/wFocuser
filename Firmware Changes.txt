@@ -1,3 +1,7 @@
+212
+Fix for OLEDTEXT issues and compilation errors
+Change from general debug messages to targeted debug messages
+
 211
 Fixes for reboot issues
 Revert to SPIFFS format - do not use LittleFS for esp8266

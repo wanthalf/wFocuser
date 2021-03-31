@@ -1,2 +1,5 @@
 # OLED Graphics
 If you decide to use OLEDGRAHICS, you must download and install the OLED Graphics library from https://github.com/ThingPulse/esp8266-oled-ssd1306
+
+The library is also in this folder
+esp8266-oled-ssd1306.zip
