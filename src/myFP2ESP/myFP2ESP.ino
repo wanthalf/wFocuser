@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP mfp2esp.ino FIRMWARE OFFICIAL RELEASE 210
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 211
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -209,7 +209,7 @@ String serialline;                            // buffer for serial data
 
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
 IPAddress  ESP32IPAddress;
-String     ServerLocalIP;
+//String     ServerLocalIP;
 WiFiServer myserver(SERVERPORT);
 WiFiClient myclient;                          // only one client supported, multiple connections denied
 IPAddress  myIP;
@@ -409,6 +409,7 @@ void update_irremote()
 
 void init_irremote(void)
 {
+  Setup_DebugPrintln("init_irremote");
   irrecv.enableIRIn();                            // Start the IR
 }
 #endif // #ifdef INFRAREDREMOTE
@@ -530,7 +531,7 @@ void init_joystick2(void)
 // ======================================================================
 bool init_pushbuttons(void)
 {
-  DebugPrint("initPB: ");
+  Setup_DebugPrint("initPB: ");
   if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -538,17 +539,17 @@ bool init_pushbuttons(void)
     {
       pinMode(mySetupData->get_brdpb1pin(), INPUT);
       pinMode(mySetupData->get_brdpb2pin(), INPUT);
-      DebugPrintln("enabled");
+      Setup_DebugPrintln("enabled");
       return true;
     }
     else
     {
-      DebugPrintln("disabled");
+      Setup_DebugPrintln("disabled");
     }
   }
   else
   {
-    DebugPrintln("not permitted");
+    Setup_DebugPrintln("not permitted");
   }
   return false;
 }
@@ -607,19 +608,19 @@ void start_mdns_service(void)
 {
   // Set up mDNS responder:
   // the fully-qualified domain name is "mDNSNAME.local"
-  DebugPrint("MDNS: ");
+  Setup_DebugPrintln("MDNS: ");
 #if defined(ESP8266)
   if (!MDNS.begin(mDNSNAME, WiFi.localIP()))      // ESP8266 supports additional parameter for IP
 #else
   if (!MDNS.begin(mDNSNAME))                      // ESP32 does not support IPaddress parameter
 #endif
   {
-    DebugPrintln("Not started");
+    Setup_DebugPrintln("Not started");
     mdnsserverstate = STOPPED;
   }
   else
   {
-    DebugPrintln("Started");
+    Setup_DebugPrintln("Started");
     // Add service to MDNS-SD, MDNS.addService(service, proto, port)
     MDNS.addService("http", "tcp", MDNSSERVERPORT);
     mdnsserverstate = RUNNING;
@@ -629,7 +630,7 @@ void start_mdns_service(void)
 
 void stop_mdns_service(void)
 {
-  DebugPrint("mdns: ");
+  Setup_DebugPrint("mdns: ");
   if ( mdnsserverstate == RUNNING )
   {
 #if defined(ESP8266)
@@ -638,12 +639,12 @@ void stop_mdns_service(void)
 #else
     MDNS.end();
 #endif
-    DebugPrintln("stopped");
+    Setup_DebugPrintln("stopped");
     mdnsserverstate = STOPPED;
   }
   else
   {
-    DebugPrintln("Not running");
+    Setup_DebugPrintln("Not running");
   }
   delay(10);                      // small pause so background tasks can run
 }
@@ -675,18 +676,18 @@ extern WebServer *webserver;
 
 void start_otaservice()
 {
-  DebugPrint("Start OTA:");
+  Setup_DebugPrint("Start OTA:");
   myoled->oledtextmsg("Start OTA", -1, false, true);
   ArduinoOTA.setHostname(OTAName);                      // Start the OTA service
   ArduinoOTA.setPassword(OTAPassword);
 
   ArduinoOTA.onStart([]()
   {
-    DebugPrintln("Started");
+    Setup_DebugPrintln("Started");
   });
   ArduinoOTA.onEnd([]()
   {
-    DebugPrintln("End");
+    Setup_DebugPrintln("End");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
   {
@@ -695,31 +696,31 @@ void start_otaservice()
   });
   ArduinoOTA.onError([](ota_error_t error)
   {
-    DebugPrint("Err:");
-    DebugPrintln(error);
+    Setup_DebugPrint("Err:");
+    Setup_DebugPrintln(error);
     if (error == OTA_AUTH_ERROR)
     {
-      DebugPrintln("err Auth");
+      Setup_DebugPrintln("err Auth");
     }
     else if (error == OTA_BEGIN_ERROR)
     {
-      DebugPrintln("err Begin");
+      Setup_DebugPrintln("err Begin");
     }
     else if (error == OTA_CONNECT_ERROR)
     {
-      DebugPrintln("err Connect");
+      Setup_DebugPrintln("err Connect");
     }
     else if (error == OTA_RECEIVE_ERROR)
     {
-      DebugPrintln("err Receive");
+      Setup_DebugPrintln("err Receive");
     }
     else if (error == OTA_END_ERROR)
     {
-      DebugPrintln("err End");
+      Setup_DebugPrintln("err End");
     }
   });
   ArduinoOTA.begin();
-  DebugPrintln("Ready");
+  Setup_DebugPrintln("Ready");
   otaupdatestate = RUNNING;
 }
 #endif // #if defined(OTAUPDATES)
@@ -732,7 +733,7 @@ void start_otaservice()
 
 void init_duckdns(void)
 {
-  DebugPrintln("initDuckDNS:");
+  Setup_DebugPrintln("initDuckDNS:");
   myoled->oledtextmsg("Start DuckDNS", -1, false, true);
   EasyDDNS.service("duckdns");                  // Enter your DDNS Service Name - "duckdns" / "noip"
   delay(5);
@@ -790,19 +791,19 @@ void steppermotormove(byte ddir )               // direction moving_in, moving_o
 bool init_leds()
 {
   // Basic assumption rule: If associated pin is -1 then cannot set enable
-  DebugPrint("initleds");
+  Setup_DebugPrintln("initleds");
   if ( mySetupData->get_inoutledstate() == 1)
   {
     pinMode(mySetupData->get_brdinledpin(), OUTPUT);
     pinMode(mySetupData->get_brdoutledpin(), OUTPUT);
     digitalWrite(mySetupData->get_brdinledpin(), 1);
     digitalWrite(mySetupData->get_brdoutledpin(), 1);
-    DebugPrintln("enabled");
+    Setup_DebugPrintln("enabled");
     return true;
   }
   else
   {
-    DebugPrintln("disabled");
+    Setup_DebugPrintln("disabled");
   }
   return false;
 }
@@ -816,6 +817,7 @@ long getrssi()
 bool init_homepositionswitch()
 {
   // Basic assumption rule: If associated pin is -1 then cannot set enable
+  Setup_DebugPrintln("init_homepositionswitch");
   if ( mySetupData->get_hpswitchenable() == 1)
   {
     pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);
@@ -838,25 +840,25 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
   String PASSWORD_1, PASSWORD_2;
   bool   mstatus = false;
 
-  DebugPrintln("readwificonfig");
+  Setup_DebugPrintln("readwificonfig");
   // SPIFFS may have failed to start
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln("err: read file");
+    Setup_DebugPrintln("err: read file");
     return mstatus;
   }
   File f = SPIFFS.open(filename, "r");                  // file open to read
   if (!f)
   {
     TRACE();
-    DebugPrintln("err not found");
+    Setup_DebugPrintln("err not found");
   }
   else
   {
     String data = f.readString();                       // read content of the text file
-    DebugPrint("Config data: ");
-    DebugPrintln(data);                                 // ... and print on serial
+    Setup_DebugPrint("Config data: ");
+    Setup_DebugPrintln(data);                                 // ... and print on serial
     f.close();
 
     // DynamicJsonDocument doc( (const size_t) (JSON_OBJECT_SIZE(1) + JSON_ARRAY_SIZE(2) + 120));  // allocate json buffer
@@ -867,7 +869,7 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
     if (error)
     {
       TRACE();
-      DebugPrintln("err: deserialize");
+      Setup_DebugPrintln("err: deserialize");
     }
     else
     {
@@ -877,14 +879,14 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
       SSID_2     =  doc["mySSID_1"].as<char*>();
       PASSWORD_2 =  doc["myPASSWORD_1"].as<char*>();
 
-      DebugPrint("SSID_1:");
-      DebugPrintln(SSID_1);
-      DebugPrint("PASSWORD_1:");
-      DebugPrintln(PASSWORD_1);
-      DebugPrint("SSID_2:");
-      DebugPrintln(SSID_2);
-      DebugPrint("PASSWORD_2:");
-      DebugPrintln(PASSWORD_2);
+      Setup_DebugPrint("SSID_1:");
+      Setup_DebugPrintln(SSID_1);
+      Setup_DebugPrint("PASSWORD_1:");
+      Setup_DebugPrintln(PASSWORD_1);
+      Setup_DebugPrint("SSID_2:");
+      Setup_DebugPrintln(SSID_2);
+      Setup_DebugPrint("PASSWORD_2:");
+      Setup_DebugPrintln(PASSWORD_2);
 
       if ( retry == false )
       {
@@ -909,6 +911,7 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
 void start_tcpipserver()
 {
+  Setup_DebugPrintln("start tcpipserver");
 #if defined(ESP8266)
   myserver.begin();                       // esp8266 cannot define a port when starting
 #else
@@ -919,6 +922,7 @@ void start_tcpipserver()
 
 void stop_tcpipserver()
 {
+  Setup_DebugPrintln("stop_tcipserver");
   myserver.stop();
   tcpipserverstate = STOPPED;
 }
@@ -942,7 +946,7 @@ void setup()
 #endif
 
   heapmsg();
-  HDebugPrintln("setup(): mySetupData()");
+  Setup_DebugPrintln("setup(): mySetupData()");
   mySetupData = new SetupData();                // instantiate object SetUpData with SPIFFS file
   heapmsg();
 
@@ -953,7 +957,7 @@ void setup()
 #endif // if defined(LOCALSERIAL)
 
 #ifdef BLUETOOTHMODE                            // open Bluetooth port, set bluetooth device name
-  DebugPrintln("Start Bluetooth");
+  Setup_DebugPrintln("Start Bluetooth");
   SerialBT.begin(BLUETOOTHNAME);                // Bluetooth device name
   btline = "";
   clearbtPort();
@@ -965,20 +969,20 @@ void setup()
   // Basic assumption rule: If associated pin is -1 then cannot set enable
   if ( mySetupData->get_inoutledstate() == 1)
   {
-    DebugPrintln("IN OUT LEDS");
+    Setup_DebugPrintln("IN OUT LEDS");
     bool result = init_leds();
     if ( result == true )
     {
-      DebugPrintln("enabled");
+      Setup_DebugPrintln("enabled");
     }
     else
     {
-      DebugPrintln("disabled");
+      Setup_DebugPrintln("disabled");
     }
   }
   else
   {
-    DebugPrintln("disabled");
+    Setup_DebugPrintln("disabled");
   }
 
   // Setup Pushbuttons, active high when pressed
@@ -986,19 +990,19 @@ void setup()
   if ( mySetupData->get_pbenable() == 1)
   {
     bool result = init_pushbuttons();
-    DebugPrintln("Push Buttons");
+    Setup_DebugPrintln("Push Buttons");
     if ( result == true )
     {
-      DebugPrintln("enabled");
+      Setup_DebugPrintln("enabled");
     }
     else
     {
-      DebugPrintln("disabled");
+      Setup_DebugPrintln("disabled");
     }
   }
   else
   {
-    DebugPrintln("disabled");
+    Setup_DebugPrintln("disabled");
   }
 
   heapmsg();
@@ -1007,23 +1011,23 @@ void setup()
 #ifdef OLED_MODE
   if (CheckOledConnected())
   {
-    DebugPrintln("init OLED_MODE");
+    Setup_DebugPrintln("init OLED_MODE");
     myoled = new OLED_MODE;                       // Start configured OLED display object
     displaystate = true;
   }
   else
   {
-    DebugPrintln("init OLED_NON");
+    Setup_DebugPrintln("init OLED_NON");
     myoled = new OLED_NON;
     displaystate = false;
   }
 #else
-  DebugPrintln("init OLED_NON");
+  Setup_DebugPrintln("init OLED_NON");
   myoled = new OLED_NON;
   displaystate = false;
 #endif // #ifdef OLED_MODE
-  DebugPrint("Display state:");
-  DebugPrintln(displaystate);
+  Setup_DebugPrintln("Display state:");
+  Setup_DebugPrintln(displaystate);
 
   heapmsg();
 
@@ -1097,16 +1101,16 @@ void setup()
   tprobe1 = 0;
   lasttemp = 20.0;
   // Basic assumption rule: If associated pin is -1 then cannot set enable
-  DebugPrint("Temp probe:");
+  Setup_DebugPrint("Temp probe:");
   if ( mySetupData->get_temperatureprobestate() == 1)   // if temperature probe enabled then try to start new probe
   {
-    DebugPrintln("enabled");
+    Setup_DebugPrintln("enabled");
     myTempProbe = new TempProbe;                        // create temp probe - should set tprobe1=true if probe found
   }
   else
   {
     tprobe1 = 0;
-    DebugPrintln("disabled");
+    Setup_DebugPrintln("disabled");
   }
 
   // set packet counts to 0
@@ -1116,7 +1120,8 @@ void setup()
 
 #if defined(READWIFICONFIG)
 #if defined(ACCESSPOINT) || defined(STATIONMODE)
-  readwificonfig(mySSID, myPASSWORD, 0);                // read mySSID,myPASSWORD from FS if exist, otherwise use defaults
+  Setup_DebugPrintln("Call readwificonfig");
+  readwificonfig(mySSID, myPASSWORD, false);                // read mySSID,myPASSWORD from FS if exist, otherwise use defaults
 #endif
 #endif
 
@@ -1124,7 +1129,7 @@ void setup()
 
 #ifdef ACCESSPOINT
   myoled->oledtextmsg("Start AP", -1, true, true);
-  DebugPrintln("Start AP");
+  Setup_DebugPrintln("Start AP");
   WiFi.config(ip, dns, gateway, subnet);
   WiFi.mode(WIFI_AP);
   WiFi.softAP(mySSID, myPASSWORD);
@@ -1134,14 +1139,14 @@ void setup()
 
   // this is setup as a station connecting to an existing wifi network
 #ifdef STATIONMODE
-  DebugPrintln("Start Stationmode");
+  Setup_DebugPrintln("Start Stationmode");
   myoled->oledtextmsg("Start Stationmode", -1, false, true);
 
   // Log on to LAN
   WiFi.mode(WIFI_STA);
   if (staticip == STATICIPON)                   // if staticip then set this up before starting
   {
-    DebugPrintln("Set Static IP");
+    Setup_DebugPrintln("Set Static IP");
     myoled->oledtextmsg("Set Static IP", -1, false, true);
     WiFi.config(ip, dns, gateway, subnet);
     delay(5);
@@ -1149,8 +1154,8 @@ void setup()
 
   // attempt to connect using mySSID and myPASSWORD
   WiFi.begin(mySSID, myPASSWORD); // attempt to start the WiFi
-  DebugPrint("Status: ");
-  DebugPrintln(String(connstatus));
+  //DebugPrint("Status: ");
+  //DebugPrintln(String(connstatus));
   delay(1000);                                      // wait 1s
   for (int attempts = 0; WiFi.status() != WL_CONNECTED; attempts++)
   {
@@ -1175,7 +1180,8 @@ void setup()
   {
 #ifdef READWIFICONFIG
     // try alternative credentials, mySSID_1, myPASSWORD_1 in the wificonfig.json file
-    readwificonfig(mySSID, myPASSWORD, 1);
+    Setup_DebugPrintln("Call readwificonfig");
+    readwificonfig(mySSID, myPASSWORD, true);
 #else
     // there was no wificonfig.json file specified
     // so we will try again with 2nd pair of credentials
@@ -1186,8 +1192,8 @@ void setup()
     memcpy( myPASSWORD, myPASSWORD_1, (sizeof(myPASSWORD_1) / sizeof(myPASSWORD_1[0])) );
 #endif
     WiFi.begin(mySSID, myPASSWORD);  // attempt to start the WiFi
-    DebugPrint("Status: ");
-    DebugPrintln(String(connstatus));
+    //DebugPrint("Status: ");
+    //DebugPrintln(String(connstatus));
     delay(1000);                                  // wait 1s
     for (int attempts = 0; WiFi.status() != WL_CONNECTED; attempts++)
     {
@@ -1232,34 +1238,33 @@ void setup()
   rssi = getrssi();                             // get network strength
   // Starting TCP Server
   myoled->oledtextmsg("Start tcp/ip server", -1, false, true);
-  DebugPrintln("Start tcp/ip server");
+  Setup_DebugPrintln("Start tcp/ip server");
   start_tcpipserver();
-  DebugPrintln("Get IP");
-  ESP32IPAddress = WiFi.localIP();
   delay(10);                                    // keep delays small else issue with ASCOM
-  DebugPrintln("TCP/IP started");
+  Setup_DebugPrintln("TCP/IP started");
   myoled->oledtextmsg("TCP/IP started", -1, false, true);
-  
+
   heapmsg();
 
   // connection established
-  DebugPrint("SSID:");
-  DebugPrintln(mySSID);
-  DebugPrint("IP:");
-  DebugPrintln(WiFi.localIP());
-  DebugPrint("Port:");
-  DebugPrintln(SERVERPORT);
-  DebugPrintln("Ready");
-  myIP = WiFi.localIP();
-  snprintf(ipStr, sizeof(ipStr), "%i.%i.%i.%i",  myIP[0], myIP[1], myIP[2], myIP[3]);
+  Setup_DebugPrint("SSID:");
+  Setup_DebugPrintln(mySSID);
+  Setup_DebugPrintln("Ready");
+  Setup_DebugPrintln("Get IP");
+  ESP32IPAddress = WiFi.localIP();
+  snprintf(ipStr, sizeof(ipStr), "%i.%i.%i.%i",  ESP32IPAddress[0], ESP32IPAddress[1], ESP32IPAddress[2], ESP32IPAddress[3]);
+  Setup_DebugPrint("IP:");
+  Setup_DebugPrintln(ipStr);
+  Setup_DebugPrint("Port:");
+  Setup_DebugPrintln(SERVERPORT);
 #endif // if defined(ACCESSPOINT) || defined(STATIONMODE)
 
   // assign to current working values
   //ftargetPosition = fcurrentPosition = mySetupData->get_fposition();
   ftargetPosition = mySetupData->get_fposition();
-
-  DebugPrint("Start drvbrd:");
-  DebugPrintln(DRVBRD);
+  
+  Setup_DebugPrint("Start drvbrd:");
+  Setup_DebugPrintln(DRVBRD);
   myoled->oledtextmsg("Start drvbrd:", DRVBRD, true, true);
 
   heapmsg();
@@ -1267,10 +1272,10 @@ void setup()
   // DebugPrintln("setup(): driverboard");
   // ensure targetposition will be same as focuser position
   // otherwise after loading driverboard focuser will start moving immediately
-  DebugPrintln("driver board: start");
+  Setup_DebugPrintln("driver board: start");
   ftargetPosition = mySetupData->get_fposition();
   driverboard = new DriverBoard(mySetupData->get_fposition() );
-  DebugPrintln("driver board: end");
+  Setup_DebugPrintln("driver board: end");
 
   delay(5);
   heapmsg();
@@ -1290,34 +1295,34 @@ void setup()
   driverboard->setposition(mySetupData->get_fposition());
 
   // set coilpower
-  DebugPrintln("Check CP");
+  Setup_DebugPrintln("Check CP");
   if (mySetupData->get_coilpower() == 0)
   {
     driverboard->releasemotor();
-    DebugPrintln("CP off");
+    Setup_DebugPrintln("CP off");
   }
 
   delay(5);
 
   // setup home position switch input pin
   // Basic assumption rule: If associated pin is -1 then cannot set enable
-  DebugPrintln("hpsw:");
+  Setup_DebugPrint("hpsw:");
   if ( mySetupData->get_hpswitchenable() == 1)
   {
     DebugPrintln("enabled");
     bool result = init_homepositionswitch();
     if ( result == true )
     {
-      DebugPrintln("enabled");
+      Setup_DebugPrintln("enabled");
     }
     else
     {
-      DebugPrintln("disabled");
+      Setup_DebugPrintln("disabled");
     }
   }
   else
   {
-    DebugPrintln("disabled");
+    Setup_DebugPrintln("disabled");
   }
 
   // Setup infra red remote
@@ -1325,12 +1330,12 @@ void setup()
   // Basic assumption rule: If associated pin is -1 then cannot set enable
   if ( mySetupData->get_irremoteenable() == 1)
   {
-    DebugPrintln("ir-remote enabled");
+    Setup_DebugPrintln("ir-remote enabled");
     init_irremote();
   }
   else
   {
-    DebugPrintln("ir-remote disabled");
+    Setup_DebugPrintln("ir-remote disabled");
   }
 #endif
 
@@ -1350,56 +1355,60 @@ void setup()
   {
     if ( tprobe1 != 0 )                                   // if a probe was found
     {
-      DebugPrintln("tprobe1 != 0. read_temp");
+      Setup_DebugPrintln("tprobe1 != 0. read_temp");
       myTempProbe->read_temp(1);                          // read the temperature
     }
     else
     {
-      DebugPrintln("tprobe1 is 0");
+      Setup_DebugPrintln("tprobe1 is 0");
       // disable temperature probe
       mySetupData->set_temperatureprobestate(0);
     }
   }
 
 #ifdef OTAUPDATES
+  Setup_DebugPrintln("Start otaservice");
   start_otaservice();                       // Start the OTA service
 #endif // if defined(OTAUPDATES)
 
   heapmsg();
   HDebugPrintln("setup(): management server");
-  
+
 #ifdef MANAGEMENT
+  Setup_DebugPrintln("setup(): management server");
   start_management();
 #endif
 
   heapmsg();
 
-  DebugPrintln("start web server");
   if ( mySetupData->get_webserverstate() == 1)
   {
+    Setup_DebugPrintln("start web server");
     start_webserver();
   }
 
-  DebugPrintln("start ascom server");
   if ( mySetupData->get_ascomserverstate() == 1)
   {
-    start_ascomremoteserver();
+      Setup_DebugPrintln("start ascom server");
+      start_ascomremoteserver();
   }
 
 #ifdef MDNSSERVER
+  Setup_DebugPrintln("start mdns server");
   start_mdns_service();
 #endif
 
   // setup duckdns
 #ifdef USEDUCKDNS
+  Setup_DebugPrintln("start duckdns");
   init_duckdns();
 #endif
 
-  DebugPrint("Position:");
-  DebugPrintln(driverboard->getposition());
-  DebugPrint("Target Position");
-  DebugPrintln(ftargetPosition);
-  DebugPrintln("Setup done");
+  Setup_DebugPrint("Position:");
+  Setup_DebugPrintln(driverboard->getposition());
+  Setup_DebugPrint("Target Position");
+  Setup_DebugPrintln(ftargetPosition);
+  Setup_DebugPrintln("Setup done");
   myoled->oledtextmsg("Setup done", -1, false, true);
 
   // Basic assumption rule: If associated pin is -1 then cannot set enable

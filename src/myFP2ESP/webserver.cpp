@@ -10,20 +10,15 @@
 #include "temp.h"
 #include "displays.h"
 
+
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #undef DEBUG_ESP_HTTP_SERVER                // prevent messages from WiFiServer 
 #include <ESP8266WiFi.h>
-#else                                       // otherwise assume ESP32
+#include <FS.h>                                 // include the SPIFFS library  
+#else                                           // otherwise assume ESP32
 #include <WiFi.h>
-#endif
-
-#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
-#include <LittleFS.h>                       // include LittleFS
-#define SPIFFS LittleFS                     // change all SPIFFS esp8266 code to LITTLEFS
-#else                                       // otherwise assume ESP32
 #include "SPIFFS.h"
 #endif
-
 #include <SPI.h>
 
 // ======================================================================
@@ -31,13 +26,13 @@
 // ======================================================================
 extern unsigned long ftargetPosition;           // target position
 extern volatile bool halt_alert;
-extern char  ipStr[16];                         // shared between BT mode and other modes
-extern byte  isMoving;                          // is the motor currently moving
-extern bool  webserverstate;
-extern bool  reboot;
-extern int   tprobe1;
-extern float lasttemp;
-extern bool  displaystate;
+extern char         ipStr[16];                  // shared between BT mode and other modes
+extern byte         isMoving;                   // is the motor currently moving
+extern bool         webserverstate;
+extern bool         reboot;
+extern int          tprobe1;
+extern float        lasttemp;
+extern bool         displaystate;
 
 extern TempProbe    *myTempProbe;
 extern SetupData    *mySetupData;
@@ -116,7 +111,7 @@ void WEBSERVER_buildnotfound(void)
   else
   {
     TRACE();
-    DebugPrintln("not found");
+    WebS_DebugPrintln("not found");
     WSpg = WEBSERVERNOTFOUNDSTR;
   }
   delay(10);                                            // small pause so background tasks can run
@@ -175,7 +170,7 @@ void WEBSERVER_buildpresets(void)
   {
     // could not read preset file from SPIFFS
     TRACE();
-    DebugPrintln("not found");
+    WebS_DebugPrintln("not found");
     WSpg = WEBSERVERNOTFOUNDSTR;
   }
 #ifdef TIMEWSBUILDPRESETS
@@ -196,7 +191,7 @@ void WEBSERVER_handlepresets(void)
   if ( halt_str != "" )
   {
     TRACE();
-    DebugPrintln(halt_str);
+    WebS_DebugPrintln(halt_str);
     halt_alert = true;
     //ftargetPosition = fcurrentPosition;
   }
@@ -205,14 +200,14 @@ void WEBSERVER_handlepresets(void)
   String fp_str = webserver->arg("setp0");
   if ( fp_str != "" )
   {
-    DebugPrint("setp0:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp0:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p0");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -224,14 +219,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop0");
   if ( fp_str != "" )
   {
-    DebugPrint("gop0:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop0:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p0");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -245,14 +240,14 @@ void WEBSERVER_handlepresets(void)
 
   if ( fp_str != "" )
   {
-    DebugPrint("setp1:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp1:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p1");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -264,14 +259,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop1");
   if ( fp_str != "" )
   {
-    DebugPrint("gop1:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop1:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p1");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -284,14 +279,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("setp2");
   if ( fp_str != "" )
   {
-    DebugPrint("setp2:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp2:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p2");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -303,14 +298,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop2");
   if ( fp_str != "" )
   {
-    DebugPrint("gop2:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop2:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p2");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -323,14 +318,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("setp3");
   if ( fp_str != "" )
   {
-    DebugPrint("setp3:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp3:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p3");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -342,14 +337,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop3");
   if ( fp_str != "" )
   {
-    DebugPrint("gop3:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop3:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p3");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -362,14 +357,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("setp4");
   if ( fp_str != "" )
   {
-    DebugPrint("setp4:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp4:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p4");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -381,14 +376,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop4");
   if ( fp_str != "" )
   {
-    DebugPrint("gop4:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop4:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p4");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -401,14 +396,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("setp5");
   if ( fp_str != "" )
   {
-    DebugPrint("setp5:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp5:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p5");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -420,14 +415,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop5");
   if ( fp_str != "" )
   {
-    DebugPrint("gop5:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop5:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p5");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -440,14 +435,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("setp6");
   if ( fp_str != "" )
   {
-    DebugPrint("setp6:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp6:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p6");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -459,14 +454,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop6");
   if ( fp_str != "" )
   {
-    DebugPrint("gop6:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop6:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p6");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -479,14 +474,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("setp7");
   if ( fp_str != "" )
   {
-    DebugPrint("setp0:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp0:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p7");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -498,14 +493,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop7");
   if ( fp_str != "" )
   {
-    DebugPrint("gop0:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop0:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p7");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -518,14 +513,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("setp8");
   if ( fp_str != "" )
   {
-    DebugPrint("setp8:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp8:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p8");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -537,14 +532,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop8");
   if ( fp_str != "" )
   {
-    DebugPrint("gop8:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop8:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p8");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -557,14 +552,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("setp9");
   if ( fp_str != "" )
   {
-    DebugPrint("setp9:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setp9:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p9");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -576,14 +571,14 @@ void WEBSERVER_handlepresets(void)
   fp_str = webserver->arg("gop9");
   if ( fp_str != "" )
   {
-    DebugPrint("gop9:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gop9:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("p9");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = ( temp < 0 ) ? 0 : temp;
       temp = ( temp > (long)mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : temp;
@@ -608,7 +603,7 @@ void WEBSERVER_sendpresets(void)
 #endif
   WEBSERVER_buildpresets();
   // send the presetspage to a connected client
-  DebugPrintln(SENDPAGESTR);
+  WebS_DebugPrintln(SENDPAGESTR);
   WEBSERVER_sendmyheader();
   WEBSERVER_sendmycontent();
   WSpg = "";
@@ -655,7 +650,7 @@ void WEBSERVER_buildmove(void)
   {
     // could not read move file from SPIFFS
     TRACE();
-    DebugPrintln("not found");
+    WebS_DebugPrintln("not found");
     WSpg = WEBSERVERNOTFOUNDSTR;
   }
 #ifdef TIMEWSBUILDMOVE
@@ -695,7 +690,7 @@ void WEBSERVER_handlemove()
   if ( halt_str != "" )
   {
     TRACE();
-    DebugPrintln(halt_str);
+    WebS_DebugPrintln(halt_str);
     halt_alert = true;
     //ftargetPosition = fcurrentPosition;
   }
@@ -706,17 +701,17 @@ void WEBSERVER_handlemove()
   {
     long temp = 0;
     TRACE();
-    DebugPrintln(fmv_str);
+    WebS_DebugPrintln(fmv_str);
     temp = fmv_str.toInt();
     long newtemp = (long) driverboard->getposition() + temp;
     newtemp = ( newtemp < 0 ) ? 0 : newtemp;
     newtemp = ( newtemp > (long)mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : newtemp;
     ftargetPosition = (unsigned long) newtemp;
-    DebugPrint("Move = "); DebugPrintln(fmv_str);
-    DebugPrint("Position:");
-    DebugPrintln(driverboard->getposition());
-    DebugPrint("Target");
-    DebugPrintln(ftargetPosition);
+    WebS_DebugPrint("Move = "); WebS_DebugPrintln(fmv_str);
+    WebS_DebugPrint("Position:");
+    WebS_DebugPrintln(driverboard->getposition());
+    WebS_DebugPrint("Target");
+    WebS_DebugPrintln(ftargetPosition);
   }
 
   WEBSERVER_sendmove();
@@ -913,7 +908,7 @@ void WEBSERVER_buildhome(void)
   {
     // could not read index file from SPIFFS
     TRACE();
-    DebugPrintln("not found");
+    WebS_DebugPrintln("not found");
     WSpg = WEBSERVERNOTFOUNDSTR;
   }
 #ifdef TIMEWSROOTBUILD
@@ -935,8 +930,8 @@ void WEBSERVER_handleroot()
   String halt_str = webserver->arg("ha");
   if ( halt_str != "" )
   {
-    DebugPrint("root() -halt:");
-    DebugPrintln(halt_str);
+    WebS_DebugPrint("root() -halt:");
+    WebS_DebugPrintln(halt_str);
     halt_alert = true;;
     //ftargetPosition = fcurrentPosition;
   }
@@ -946,14 +941,14 @@ void WEBSERVER_handleroot()
   fp_str = webserver->arg("setpos");
   if ( fp_str != "" )
   {
-    DebugPrint("setpos:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("setpos:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("fp");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       ftargetPosition = ( temp > (long)mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : (unsigned long)temp;
@@ -966,14 +961,14 @@ void WEBSERVER_handleroot()
   fp_str = webserver->arg("gotopos");
   if ( fp_str != "" )
   {
-    DebugPrint("gotopos:");
-    DebugPrintln(fp_str);
+    WebS_DebugPrint("gotopos:");
+    WebS_DebugPrintln(fp_str);
     String fp = webserver->arg("fp");
     if ( fp != "" )
     {
       long temp = 0;
-      DebugPrint("fp:");
-      DebugPrintln(fp);
+      WebS_DebugPrint("fp:");
+      WebS_DebugPrintln(fp);
       temp = fp.toInt();
       temp = (temp < 0) ? 0 : temp;
       ftargetPosition = ( temp > (long)mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : (unsigned long)temp;
@@ -985,8 +980,8 @@ void WEBSERVER_handleroot()
   if ( fmax_str != "" )
   {
     long temp = 0;
-    DebugPrint("root() -maxsteps:");
-    DebugPrintln(fmax_str);
+    WebS_DebugPrint("root() -maxsteps:");
+    WebS_DebugPrintln(fmax_str);
     temp = fmax_str.toInt();
     if ( temp < (long) driverboard->getposition() )               // if maxstep is less than focuser position
     {
@@ -1008,8 +1003,8 @@ void WEBSERVER_handleroot()
   if ( fms_str != "" )
   {
     int temp1 = 0;
-    DebugPrint("root() -motorspeed:");
-    DebugPrintln(fms_str);
+    WebS_DebugPrint("root() -motorspeed:");
+    WebS_DebugPrintln(fms_str);
     temp1 = fms_str.toInt();
     if ( temp1 < SLOW )
     {
@@ -1026,8 +1021,8 @@ void WEBSERVER_handleroot()
   String fcp_str = webserver->arg("cp");
   if ( fcp_str != "" )
   {
-    DebugPrint("root() -coil power:");
-    DebugPrintln(fcp_str);
+    WebS_DebugPrint("root() -coil power:");
+    WebS_DebugPrintln(fcp_str);
     if ( fcp_str == "cp" )
     {
       mySetupData->set_coilpower(1);
@@ -1042,8 +1037,8 @@ void WEBSERVER_handleroot()
   String frd_str = webserver->arg("rd");
   if ( frd_str != "" )
   {
-    DebugPrint("root() -reverse direction:");
-    DebugPrintln(frd_str);
+    WebS_DebugPrint("root() -reverse direction:");
+    WebS_DebugPrintln(frd_str);
     if ( frd_str == "rd" )
     {
       mySetupData->set_reversedirection(1);
@@ -1060,8 +1055,8 @@ void WEBSERVER_handleroot()
   if ( fsm_str != "" )
   {
     int temp1 = 0;
-    DebugPrint("root() -stepmode:");
-    DebugPrintln(fsm_str);
+    WebS_DebugPrint("root() -stepmode:");
+    WebS_DebugPrintln(fsm_str);
     temp1 = fsm_str.toInt();
     if ( temp1 < STEP1 )
     {
@@ -1079,8 +1074,8 @@ void WEBSERVER_handleroot()
   if ( tres_str != "" )
   {
     int temp = 0;
-    DebugPrint("root() -temperature resolution:");
-    DebugPrintln(tres_str);
+    WebS_DebugPrint("root() -temperature resolution:");
+    WebS_DebugPrintln(tres_str);
     temp = tres_str.toInt();
     if ( temp < 9 )
     {
@@ -1107,8 +1102,8 @@ void WEBSERVER_handleroot()
     String d_str = webserver->arg("di");
     if ( d_str != "" )
     {
-      DebugPrint("root() -set display state: ");
-      DebugPrintln(d_str);
+      WebS_DebugPrint("root() -set display state: ");
+      WebS_DebugPrintln(d_str);
       if ( d_str == "don" )
       {
         mySetupData->set_displayenabled(1);
@@ -1123,7 +1118,7 @@ void WEBSERVER_handleroot()
   }
   else
   {
-    DebugPrint("OLED not defined in firmware");
+    WebS_DebugPrint("OLED not defined in firmware");
   }
 
   WEBSERVER_sendroot();
@@ -1140,7 +1135,7 @@ void WEBSERVER_sendroot(void)
   Serial.println(millis());
 #endif
   WEBSERVER_buildhome();
-  DebugPrintln(SENDPAGESTR);
+  WebS_DebugPrintln(SENDPAGESTR);
   WEBSERVER_sendmyheader();
   WEBSERVER_sendmycontent();
   WSpg = "";
@@ -1192,7 +1187,7 @@ void setup_webserver(void)
 
   webserver->onNotFound(WEBSERVER_handlenotfound);
   webserver->begin();
-  DebugPrintln("start web server");
+  WebS_DebugPrintln("start web server");
   mySetupData->set_webserverstate(1);
   HDebugPrint("Heap after  start_webserver = ");
   heapmsg();
@@ -1204,8 +1199,8 @@ void start_webserver(void)
   if ( !SPIFFS.begin() )
   {
     TRACE();
-    DebugPrintln("spiffs not started");
-    DebugPrintln("stop webserver");
+    WebS_DebugPrintln("spiffs not started");
+    WebS_DebugPrintln("stop webserver");
     mySetupData->set_webserverstate(0);     // disable web server
     return;
   }
@@ -1213,7 +1208,7 @@ void start_webserver(void)
   {
     WSpg.reserve(MAXWEBPAGESIZE);
   }
-  DebugPrintln("start web server");
+  WebS_DebugPrintln("start web server");
   HDebugPrint("Heap before start_webserver = ");
   heapmsg();
   // on a reboot this test will be a 1
@@ -1227,7 +1222,7 @@ void start_webserver(void)
   }
   else
   {
-    DebugPrintln("Web-server already running");
+    WebS_DebugPrintln("Web-server already running");
   }
   webserverstate = RUNNING;
   delay(10);                                            // small pause so background tasks can run
@@ -1241,12 +1236,12 @@ void stop_webserver(void)
     delete webserver;             // free the webserver pointer and associated memory/code
     mySetupData->set_webserverstate(0);
     TRACE();
-    DebugPrintln("web server stopped");
+    WebS_DebugPrintln("web server stopped");
     WSpg = "";
   }
   else
   {
-    DebugPrintln("web server not running");
+    WebS_DebugPrintln("web server not running");
   }
   webserverstate = STOPPED;
   delay(10);                      // small pause so background tasks can run

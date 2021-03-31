@@ -28,10 +28,8 @@ To get a clear understanding of myFP2ESP features and options, it is essential t
 https://sourceforge.net/projects/myfocuserpro2-esp32/files/Documentation/  
 
 # Compiling for ESP8266
-Compiling the source code requires Arduino IDE **v1.8.13** with the ExpressIF ESP8266 Arduino extensions.
-You will need to add the JSON file for the ESP8266 library by using the File->Preferences menu of the 
-Arduino IDE and add the location for the library into the board manager
-http://arduino.esp8266.com/stable/package_esp8266com_index.json
+Compiling the source code requires Arduino IDE **v1.8.13** with the ExpressIF ESP8266 Arduino extensions. You will need to add the JSON file for the ESP8266 library by using the File->Preferences menu of the Arduino IDE and add the location for the library into the board manager  
+http://arduino.esp8266.com/stable/package_esp8266com_index.json  
 
 Once specified, open the board manager, scroll down to ESP8266 and install version **v2.7.4**.
 Then you can specify the target board as **Node MCU v1.0 (ESP-12E)** with Flash Size set to 4M (1MB SPIFFS) and upload speed of 115200.
@@ -63,6 +61,7 @@ To compile you will also need to import these libraries in the folder src/myFP2E
 * myHalfStepperESP32
 * myDallasTemperature
 * myfp2eIRremoteESP8266
+* esp8266-oled-ssd1306 
 
 Do not edit or replace any of these library files with others.
 
@@ -81,8 +80,8 @@ https://github.com/ayushsharma82/EasyDDNS
 ESP32 Sketch Data uploader
 https://github.com/me-no-dev/arduino-esp32fs-plugin/releases/  
 
-ESP8266 LittleFS Data uploader
-https://github.com/earlephilhower/arduino-esp8266littlefs-plugin
+ESP8266 Sketch Data uploader
+https://github.com/esp8266/arduino-esp8266fs-plugin 
 
 After downloading the zip files, you then need to install these into the Arduino IDE environment. To do that, start the Arduino IDE, select Sketch, Include Library, Add .Zip library, then navigate to where the ZIP files are stored and select them (you can only load 1 zip file at a time so please repeat this for all ZIP files).
 
@@ -92,6 +91,11 @@ Once you have done this, you can start programming the controller.
 
 # Hardware Driver Boards
 One firmware file supports all driver boards [a different file supports the L293D motor shield driver board for the ESP8266]. The user must set the **DRVBRD** at the beginning of the firmware file [myBoards.h] to the correct driver board, eg,#define DRVBRD PRO2EULN2003 will set the driver board to an ULN2003 using an ESP8266 chip [myFP2Exxxx = ESP8266 and myFP2ESPxxx = ESP32].
+
+# OLED Displays
+There are two types of displays (TEXT and GRAPHICS). OLED's can also have two different Driver Chip types (SSD1306 or SSH1106) 
+* OLED_TEXT requires libray myOLED
+* OLED_GRAPHIC requires library esp8266-oled-ssd1306
 
 # focuserconfig.h
 Configuration information about the controller is specified in the *focuserconfig.h* file. This is where you specify the controller options like OLED_TEXT and PUSHBUTTONS, as well as the controller mode such as ACCESSPOINT or STATIONMODE.

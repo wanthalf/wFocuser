@@ -524,7 +524,7 @@ void DriverBoard::halt(void)
   timerDetachInterrupt(myfp2timer);   // detach interrupt
   timerEnd(myfp2timer);               // end timer
 #endif
-  DebugPrint(">halt_alert ");
+  Board_DebugPrintln(">halt_alert ");
   delay(10);
 }
 
@@ -535,11 +535,11 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   DriverBoard::enablemotor();
   timerSemaphore = false;
 
-  DebugPrint(">initmove ");
-  DebugPrint(mdir);
-  DebugPrint(":");
-  DebugPrint(steps);
-  DebugPrint(" ");
+  Board_DebugPrint(">initmove ");
+  Board_DebugPrint(mdir);
+  Board_DebugPrint(":");
+  Board_DebugPrint(steps);
+  Board_DebugPrint(" ");
 
   //DebugPrint("initmove: ");
   //DebugPrint(dir);
@@ -562,7 +562,7 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   }
   if (myfp2Timer.attachInterruptInterval(curspd, onTimer) == false)
   {
-    DebugPrint("Can't set myfp2Timer correctly. Select another freq. or interval");
+    Board_DebugPrintln("Can't set myfp2Timer correctly. Select another freq. or interval");
   }
 #else
   // Use 1st timer of 4 (counted from zero).
