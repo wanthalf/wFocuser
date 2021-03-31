@@ -2959,8 +2959,8 @@ void start_management(void)
   mserver.on("/set",                 MANAGEMENT_handleset);               // generic set function
   mserver.on("/get",                 MANAGEMENT_handleget);               // generic get function
 
-  mserver.on("/config",  	HTTP_GET,  MANAGEMENT_config);
-  mserver.on("/config",  	HTTP_POST, MANAGEMENT_confighandler);
+  mserver.on("/config",    HTTP_GET,  MANAGEMENT_config);
+  mserver.on("/config",   HTTP_POST, MANAGEMENT_confighandler);
   mserver.on("/showconfig",          MANAGEMENT_showboardconfig);
   mserver.on("/custombrd",           MANAGEMENT_custombrd);
   mserver.on("/genbrd",              MANAGEMENT_genbrd);

@@ -6,14 +6,31 @@
 #ifndef displays_h
 #define displays_h
 
-#ifdef USE_SSD1306                            // For the OLED 128x64 0.96" display using the SSD1306 driver
-#include <SSD1306Wire.h>
-#endif
-#ifdef USE_SSH1106                            // For the OLED 128x64 1.3" display using the SSH1106 driver
-#include <SH1106Wire.h>
-#endif
+// check for SSD1306 display
+#ifdef USE_SSD1306                            // for the OLED 128x64 0.96" display using the SSD1306 driver
+// check for graphic display
+#if OLED_MODE == OLED_GRAPHICS
+#include <SSD1306Wire.h>                      // requires esp8266-oled-ssd1306 library
+#endif // #if OLED_MODE == OLED_GRAPHICS
+//check for text display
+#if OLED_MODE == OLED_TEXT                    // do NOT use else!
+//#include <mySSD1306Ascii.h>
+#include <mySSD1306AsciiWire.h>               // requires myOLED library
+#endif // if OLED_MODE == OLED_TEXT 
+#endif // #ifdef USE_SSD1306
 
-#include <mySSD1306AsciiWire.h>
+// check for SSH1106 display
+#ifdef USE_SSH1106                            // for the OLED 128x64 1.3" display using the SSH1106 driver
+// check for graphic display
+#if OLED_MODE == OLED_GRAPHICS
+#include <SH1106Wire.h>                       // requires esp8266-oled-ssd1306 library
+#endif // #ifdef OLED_MODE == OLED_GRAPHICS
+// check for text display
+#if OLED_MODE == OLED_TEXT                    // do NOT use else!
+#include <mySSD1306Ascii.h>
+#include <mySSD1306AsciiWire.h>               // requires myOLED library
+#endif // if OLED_MODE == OLED_TEXT 
+#endif // #ifdef USE_SSH1106 
 
 // ======================================================================
 // DEFINITIONS
@@ -58,7 +75,7 @@ class OLED_TEXT : public SSD1306AsciiWire, public OLED_NON
     void update_oledtextdisplay(void);
     void display_on(void);
     void display_off(void);
-private:
+  private:
     void displaylcdpage0(void);      // displaylcd screen
     void displaylcdpage1(void);
     void displaylcdpage2(void);
@@ -71,9 +88,9 @@ private:
 
 #ifdef USE_SSD1306
 class OLED_GRAPHIC : public SSD1306Wire, public OLED_NON
-#else
+#else // Assume USE_SSH1106
 class OLED_GRAPHIC : public SH1106Wire, public OLED_NON
-#endif
+#endif // #ifdef USE_SSD1306
 {
   public:
     OLED_GRAPHIC();
@@ -83,7 +100,7 @@ class OLED_GRAPHIC : public SH1106Wire, public OLED_NON
     void oled_draw_reboot(void);
     void display_on(void);
     void display_off(void);
-    
+
   private:
     void oled_draw_main_update(const connection_status);
     byte count_hb = 0;      // heart beat counter

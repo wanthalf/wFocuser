@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 211
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 212
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -879,13 +879,13 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
       SSID_2     =  doc["mySSID_1"].as<char*>();
       PASSWORD_2 =  doc["myPASSWORD_1"].as<char*>();
 
-      Setup_DebugPrint("SSID_1:");
+      Setup_DebugPrint("SSID:");
       Setup_DebugPrintln(SSID_1);
-      Setup_DebugPrint("PASSWORD_1:");
+      Setup_DebugPrint("PASSWORD:");
       Setup_DebugPrintln(PASSWORD_1);
-      Setup_DebugPrint("SSID_2:");
+      Setup_DebugPrint("SSID_1:");
       Setup_DebugPrintln(SSID_2);
-      Setup_DebugPrint("PASSWORD_2:");
+      Setup_DebugPrint("PASSWORD_1:");
       Setup_DebugPrintln(PASSWORD_2);
 
       if ( retry == false )
@@ -938,6 +938,13 @@ void setup()
   DebugPrintln("Serialbegin");
   DebugPrintln("Debug on");
 #endif
+
+#ifdef LOCALSERIAL
+  Serial.begin(SERIALPORTSPEED);
+  serialline = "";
+  clearSerialPort();
+#endif // if defined(LOCALSERIAL)
+
   delay(100);                                   // go on after statement does appear
 
 #ifdef TIMESETUP
@@ -949,12 +956,6 @@ void setup()
   Setup_DebugPrintln("setup(): mySetupData()");
   mySetupData = new SetupData();                // instantiate object SetUpData with SPIFFS file
   heapmsg();
-
-#ifdef LOCALSERIAL
-  Serial.begin(SERIALPORTSPEED);
-  serialline = "";
-  clearSerialPort();
-#endif // if defined(LOCALSERIAL)
 
 #ifdef BLUETOOTHMODE                            // open Bluetooth port, set bluetooth device name
   Setup_DebugPrintln("Start Bluetooth");

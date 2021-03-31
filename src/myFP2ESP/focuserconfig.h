@@ -79,11 +79,11 @@
 // ======================================================================
 // 4: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
 // ======================================================================
-// If you need no support for OLED skip this section. To enable the 
-// OLED TEXT or GRAPHIC DISPLAY uncomment the related line. 
+// If NOT using an OLED skip this section. 
+// To enable the OLED_TEXT or OLED_GRAPHIC display uncomment the related line below. 
 
 //#define OLED_MODE OLED_TEXT       // OLED text only mode
-//#define OLED_MODE OLED_GRAPHIC  // OLED graphic mode
+//#define OLED_MODE OLED_GRAPHIC    // OLED graphic mode
 
 // and
 // only uncomment one of the following USE_SSxxxx lines depending upon your lcd type
@@ -97,7 +97,6 @@
 // ======================================================================
 // 5: SPECIFY HARDWARE OPTIONS
 // ======================================================================
-
 // To enable the 2-Axis Joystick [ESP32 only], uncomment the next line
 //#define JOYSTICK1 1
 
@@ -112,7 +111,6 @@
 // ======================================================================
 // 6: SPECIFY CONTROLLER OPTIONS
 // ======================================================================
-
 // to enable Bluetooth mode, uncomment the next line [ESP32 only]
 //#define BLUETOOTHMODE 1
 
@@ -147,7 +145,6 @@
 // ======================================================================
 // DO NOT CHANGE: THESE DEFINITIONS NOW DEPRECATED
 // ======================================================================
-
 // To enable In and Out Pushbuttons [ESP32 only], uncomment the next line
 // This has moved to MANAGEMENT SERVER
 

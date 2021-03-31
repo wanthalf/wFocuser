@@ -11,8 +11,8 @@
 #include "displays.h"
 
 
-#if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
-#undef DEBUG_ESP_HTTP_SERVER                // prevent messages from WiFiServer 
+#if defined(ESP8266)                            // this "define(ESP8266)" comes from Arduino IDE
+#undef DEBUG_ESP_HTTP_SERVER                    // prevent messages from WiFiServer 
 #include <ESP8266WiFi.h>
 #include <FS.h>                                 // include the SPIFFS library  
 #else                                           // otherwise assume ESP32
