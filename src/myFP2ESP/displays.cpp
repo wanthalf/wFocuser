@@ -9,12 +9,12 @@
 // ======================================================================
 
 #include <Arduino.h>
+#include "generalDefinitions.h"
 #include "focuserconfig.h"
 //#include "boarddefs.h"                    // included as part of focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 #include "images.h"
-#include "generalDefinitions.h"
 #include "displays.h"
 #include "temp.h"
 
@@ -338,12 +338,12 @@ void OLED_TEXT::displaylcdpage1(void)
 
 void OLED_TEXT::displaylcdpage2(void)
 {
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   setCursor(0, 0);
-#if defined(ACCESSPOINT)
+#if (CONTROLLERMODE == ACCESSPOINT)
   println("Access point");
 #endif
-#if defined(STATIONMODE)
+#if (CONTROLLERMODE == STATIONMODE)
   println("Station mode");
 #endif
   print("SSID:");
@@ -353,16 +353,16 @@ void OLED_TEXT::displaylcdpage2(void)
   print("IP  :");
   print(ipStr);
   println();
-#endif // if defined(ACCESSPOINT) || defined(STATIONMODE)
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
 
   if ( mySetupData->get_webserverstate() == 1)
   {
     setCursor(0, 0);
     println("Web server");
-#if defined(ACCESSPOINT)
+#if (CONTROLLERMODE == ACCESSPOINT)
     println("Access point");
 #endif
-#if defined(STATIONMODE)
+#if (CONTROLLERMODE == STATIONMODE)
     println("Station mode");
 #endif
     print("IP  :");
@@ -380,12 +380,12 @@ void OLED_TEXT::displaylcdpage2(void)
     println(mySetupData->get_ascomalpacaport());
   }
 
-#if defined(BLUETOOTHMODE)
+#if (CONTROLLERMODE == BLUETOOTHMODE)
   setCursor(0, 0);
   print("Bluetooth");
   println();
 #endif
-#if defined(LOCALSERIAL)
+#if (CONTROLLERMODE == LOCALSERIAL)
   setCursor(0, 0);
   println("Local serial");
 #endif
@@ -578,14 +578,14 @@ void OLED_TEXT::display_oledtext_page1(void)
 
 void OLED_TEXT::display_oledtext_page2(void)
 {
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   setCursor(0, 0);
-#if defined(ACCESSPOINT)
+#if (CONTROLLERMODE == ACCESSPOINT)
   print("Access Point");
   clearToEOL();
   println();
 #endif
-#if defined(STATIONMODE)
+#if (CONTROLLERMODE == STATIONMODE)
   print("Station mode");
   clearToEOL();
   println();
@@ -598,7 +598,7 @@ void OLED_TEXT::display_oledtext_page2(void)
   print(ipStr);
   clearToEOL();
   println();
-#endif // if defined(ACCESSPOINT) || defined(STATIONMODE)
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
 
   if ( mySetupData->get_webserverstate() == 1)
   {
@@ -630,14 +630,14 @@ void OLED_TEXT::display_oledtext_page2(void)
     println();
   }
 
-#if defined(BLUETOOTHMODE)
+#if (CONTROLLERMODE == BLUETOOTHMODE)
   setCursor(0, 0);
   print("Bluetooth");
   clearToEOL();
   println();
 #endif
 
-#if defined(LOCALSERIAL)
+#if (CONTROLLERMODE == LOCALSERIAL)
   setCursor(0, 0);
   println("Local Serial");
 #endif

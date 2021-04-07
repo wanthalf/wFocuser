@@ -5,11 +5,31 @@
 // ======================================================================
 
 #include <Arduino.h>
+#include "boarddefs.h"
 #include "generalDefinitions.h"
-#include "focuserconfig.h"                // included as part of focuserconfig.h"
+#include "focuserconfig.h"  
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 
+// ======================================================================
+// Defines for TMCxxxx
+// ======================================================================
+#define STALL_VALUE         1             // [0... 255]
+#define TMC2209CURRENT      600           // 600mA for 8HS15-0604S NEMA8 stepper motor
+#define TMC2225CURRENT      300           // 300mA for recommended stepper NEMA motor - you can change this 
+#define TMC2225SPEED        57600
+#define TMC2209SPEED        57600
+
+#define BTRX                10            // tmc2209 interface xxxxxxxxxxxxxxxxxx
+#define BTTX                11            // xxxxxxxxxxxxxxxxx
+
+#define DRIVER_ADDRESS      0b00          // TMC2209 Driver address according to MS1 and MS2
+#define R_SENSE             0.11f         // Match to your driver
+                                          // SilentStepStick series use 0.11
+                                          // UltiMachine Einsy and Archim2 boards use 0.2
+                                          // Panucatt BSD2660 uses 0.1
+                                          // Watterott TMC5160 uses 0.075
+                                          
 // ======================================================================
 // Externs
 // ======================================================================
@@ -166,7 +186,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       digitalWrite(mySetupData->get_brdenablepin(), 1);
       digitalWrite(mySetupData->get_brdsteppin(), 0);
     }
-    else if ( boardnum == PRO2ESP32DRV8825 )
+    else if ( boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32TMC2225 || boardnum == PRO2ESP32TMC2209)
     {
       pinMode(mySetupData->get_brdenablepin(), OUTPUT);
       pinMode(mySetupData->get_brddirpin(), OUTPUT);
@@ -266,7 +286,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
 DriverBoard::~DriverBoard()
 {
   String drvbrd = mySetupData->get_brdname();
-  if ( boardnum == PRO2EULN2003        || boardnum == PRO2ESP32ULN2003  \
+  if ( boardnum == PRO2EULN2003      || boardnum == PRO2ESP32ULN2003  \
        || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N    \
        || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI \
        || boardnum == PRO2EL9110S    || boardnum == PRO2ESP32L9110S)
@@ -277,7 +297,73 @@ DriverBoard::~DriverBoard()
   {
     delete mystepper;
   }
+  else if (boardnum == PRO2ESP32TMC2225)
+  {
+    delete mystepper;
+  }
+  else if (boardnum == PRO2ESP32TMC2209)
+  {
+    delete mystepper;
+  }
 }
+
+#if (DRVBRD == PRO2ESP32TMC2209)
+void DriverBoard::init_TMC2209(void)
+{
+  mystepper = new TMC2209Stepper(BTRX, BTTX, R_SENSE, DRIVER_ADDRESS);     // Specify the serial interface to the tmc2225
+  mystepper->beginSerial(TMC2209SPEED);
+  mystepper->pdn_disable(1);                      // Use PDN/UART pin for communication
+  mystepper->mstep_reg_select(true);              // Adjust stepMode from the registers
+
+  // if you want to adjust current by software, uncomment these lines
+  mystepper->I_scale_analog(0);                   // Adjust current from the registers
+  mystepper->rms_current( TMC2209CURRENT );       // Set driver current
+  mystepper->toff(3);                             // Use TMC2225 Calculations sheet to get these.
+  mystepper->tbl(2);                              // Use TMC2225 Calculations sheet to get these.
+  mystepper->hysteresis_start(7);                 // Use TMC2225 Calculations sheet to get these.
+  mystepper->hysteresis_end(7);                   // Use TMC2225 Calculations sheet to get these.
+
+  // StallGuard settings
+
+  // Lower threshold velocity for switching on smart energy CoolStep and StallGuard to DIAG output
+  mystepper->TCOOLTHRS(0xFFFFF); // 20bit max
+
+  // CoolStep lower threshold [0... 15].
+  // If SG_RESULT goes below this threshold, CoolStep increases the current to both coils.
+  // 0: disable CoolStep
+  mystepper->semin(0);
+
+  // CoolStep upper threshold [0... 15].
+  // If SG is sampled equal to or above this threshold enough times,
+  // CoolStep decreases the current to both coils.
+  mystepper->semax(0);
+
+  // Sets the number of StallGuard2 readings above the upper threshold necessary
+  // for each current decrement of the motor current.
+  mystepper->sedn(0b00);
+
+  // StallGuard4 threshold [0... 255] level for stall detection. It compensates for
+  // motor specific characteristics and controls sensitivity. A higher value gives a higher
+  // sensitivity. A higher value makes StallGuard4 more sensitive and requires less torque to
+  // indicate a stall. The double of this value is compared to SG_RESULT.
+  // The stall output becomes active if SG_RESULT falls below this value.
+  mystepper->SGTHRS(STALL_VALUE);
+}
+#endif // #if (DRVBRD == PRO2ESP32TMC2209)
+
+#if (DRVBRD == PRO2ESP32TMC2225)
+void DriverBoard::init_TMC2225(void)
+{
+  mystepper= new TMC2208Stepper(BTRX, BTTX);      // Specify the serial interface to the tmc2225
+  mystepper->beginSerial(TMC2225SPEED);
+  mystepper->pdn_disable(1);                      // Use PDN/UART pin for communication
+  mystepper->mstep_reg_select(true);
+
+  mystepper->I_scale_analog(0);                   // Adjust current from the registers
+  mystepper->rms_current(TMC2225CURRENT);         // Set driver current [recommended NEMA = 400mA, set to 300mA]
+  mystepper->toff(0x2);                           // Enable driver
+}
+#endif // #if (DRVBRD == PRO2ESP32TMC2225)
 
 void DriverBoard::setstepmode(int smode)
 {
@@ -402,7 +488,7 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
     }
   }
 
-  if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
+  else if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H || boardnum == PRO2ESP32TMC2225 || boardnum == PRO2ESP32TMC2209 )
   {
     if ( mySetupData->get_reversedirection() == 1 )
     {
@@ -441,7 +527,7 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
     digitalWrite(mySetupData->get_brdsteppin(), 0);               // Step pin off
   }
 
-  if (boardnum == PRO2EULN2003      || boardnum == PRO2ESP32ULN2003  \
+  else if (boardnum == PRO2EULN2003 || boardnum == PRO2ESP32ULN2003  \
       || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N \
       || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI \
       || boardnum == PRO2EL9110S    || boardnum == PRO2ESP32L9110S)

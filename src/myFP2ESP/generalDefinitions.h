@@ -18,6 +18,12 @@ enum connection_status { disconnected, connected };
 //  StateMachine definition
 enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Moving, State_DelayAfterMove, State_FinishedMove, State_SetHomePosition };
 
+// controller modes
+#define BLUETOOTHMODE         1
+#define ACCESSPOINT           2
+#define STATIONMODE           3
+#define LOCALSERIAL           4
+
 #define DEFAULTPOSITION       5000L
 #define DEFAULTMAXSTEPS       80000L
 

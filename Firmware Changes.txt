@@ -1,3 +1,10 @@
+213
+Add 51.jsn board file for TMC2225
+Add 52.jsn board file for TMC2209
+// Code yet not migrated for TMC2209 and TMC2205 - do not use at this time
+Ensure controller mode and options correctly applied
+Fix issues with LocalSerial
+
 212
 Fix for OLEDTEXT issues and compilation errors
 Change from general debug messages to targeted debug messages

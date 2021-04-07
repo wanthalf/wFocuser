@@ -39,14 +39,19 @@ extern bool  init_leds(void);
 extern bool  init_homepositionswitch(void);
 extern bool  init_pushbuttons(void);
 
+#if defined(CONTROLLERMODE)
 // ======================================================================
 // DATA
 // ======================================================================
+String board_data;
 
 // ======================================================================
 // CODE
 // ======================================================================
-#if defined(ACCESSPOINT) || defined(STATIONMODE) || defined(LOCALSERIAL) || defined(BLUETOOTHMODE)
+
+// forward declaration to keep compiler happy
+void send_boardconfig_file(void);
+
 
 char *ftoa(char *a, double f, int precision)
 {
@@ -67,50 +72,58 @@ void SendMessage(const char *str)
   Comms_DebugPrint("Send:");
   Comms_DebugPrintln(str);
 
-#if defined(ACCESSPOINT) || defined(STATIONMODE)  // for Accesspoint or Station mode
+#if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )  // for Accesspoint or Station mode
   myclient.print(str);
   packetssent++;
-#elif defined(BLUETOOTHMODE)  // for bluetooth
+#elif (CONTROLLERMODE == BLUETOOTHMODE)  // for bluetooth
   SerialBT.print(str);
-#elif defined(LOCALSERIAL)
+#elif (CONTROLLERMODE == LOCALSERIAL)
   Serial.print(str);
 #endif
 }
 
+void SendPaket(const char token, String str, bool bigstr)
+{
+  char mbuffer[320];
+  board_data.toCharArray(mbuffer, board_data.length() + 1);
+  //snprintf(buffer, sizeof(buffer), "%c%s%c", token,  str, EOFSTR);
+  SendMessage(mbuffer);
+}
+
 void SendPaket(const char token, const char *str)
 {
-  char buffer[32];
-  snprintf(buffer, sizeof(buffer), "%c%s%c", token,  str, EOFSTR);
-  SendMessage(buffer);
+  char mbuffer[32];
+  snprintf(mbuffer, sizeof(mbuffer), "%c%s%c", token,  str, EOFSTR);
+  SendMessage(mbuffer);
 }
 
 void SendPaket(const char token, const unsigned char val)
 {
-  char buffer[32];
+  char mbuffer[32];
 
-  snprintf(buffer, sizeof(buffer), "%c%u%c", token,  val, EOFSTR);
-  SendMessage(buffer);
+  snprintf(mbuffer, sizeof(mbuffer), "%c%u%c", token,  val, EOFSTR);
+  SendMessage(mbuffer);
 }
 
 void SendPaket(const char token, const int val)
 {
-  char buffer[32];
-  snprintf(buffer, sizeof(buffer), "%c%i%c", token,  val, EOFSTR);
-  SendMessage(buffer);
+  char mbuffer[32];
+  snprintf(mbuffer, sizeof(mbuffer), "%c%i%c", token,  val, EOFSTR);
+  SendMessage(mbuffer);
 }
 
 void SendPaket(const char token, const unsigned long val)
 {
-  char buffer[32];
-  snprintf(buffer, sizeof(buffer), "%c%lu%c", token,  val, EOFSTR);
-  SendMessage(buffer);
+  char mbuffer[32];
+  snprintf(mbuffer, sizeof(mbuffer), "%c%lu%c", token,  val, EOFSTR);
+  SendMessage(mbuffer);
 }
 
 void SendPaket(const char token, const long val)
 {
-  char buffer[32];
-  snprintf(buffer, sizeof(buffer), "%c%ld%c", token,  val, EOFSTR);
-  SendMessage(buffer);
+  char mbuffer[32];
+  snprintf(mbuffer, sizeof(mbuffer), "%c%ld%c", token,  val, EOFSTR);
+  SendMessage(mbuffer);
 }
 
 void SendPaket(const char token, const float val, int i)    // i => decimal place
@@ -132,9 +145,9 @@ void ESP_Communication()
   long paramval = 0;
   String drvbrd = mySetupData->get_brdname();
 
-#if defined(BLUETOOTHMODE)
+#if (CONTROLLERMODE == BLUETOOTHMODE)
   receiveString = STARTCMDSTR + queue.pop();
-#elif defined(LOCALSERIAL)
+#elif (CONTROLLERMODE == LOCALSERIAL)
   receiveString = STARTCMDSTR + queue.pop();
 #else   // for Accesspoint or Station mode
   packetsreceived++;
@@ -467,13 +480,13 @@ void ESP_Communication()
       SendPaket('f', packetsreceived);
       break;
     case 54: // return ESP32 Controller SSID
-#ifdef LOCALSERIAL
+#if (CONTROLLERMODE == LOCALSERIAL)
       SendPaket('g', "SERIAL");
 #endif
-#ifdef BLUETOOTH
+#if (CONTROLLERMODE == BLUETOOTH)
       SendPaket('g', "BLUETOOTH");
 #endif
-#if !defined(LOCALSERIAL) && !defined(BLUETOOTHMODE)
+#if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )
       SendPaket('g', mySSID);
 #endif
       break;
@@ -537,11 +550,6 @@ void ESP_Communication()
       break;
     case 68:  // Get jogging direction, 0=IN, 1=OUT
       SendPaket('V', 0);
-      break;
-    case 69:  // RETIRED (sets EEPROMWRITES to 0. Do this one time only when first setting up focuser)
-      break;
-    case 70:  // RETIRED (gets number of EEPROMWrites so far, Nano up to 10,000)
-      SendPaket('W', 0);
       break;
     case 71: // set DelayAfterMove in milliseconds
       WorkString = receiveString.substring(3, receiveString.length() - 1);
@@ -634,7 +642,7 @@ void ESP_Communication()
           // ascom server start if not already started
           if ( mySetupData->get_ascomserverstate() == 0)
           {
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
+#if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )
             start_ascomremoteserver();
 #endif
           }
@@ -644,7 +652,7 @@ void ESP_Communication()
           // ascom server stop if running
           if ( mySetupData->get_ascomserverstate() == 1)
           {
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
+#if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )
             stop_ascomremoteserver();
 #endif
           }
@@ -725,7 +733,7 @@ void ESP_Communication()
           // set web server option
           if ( mySetupData->get_webserverstate() == 0)
           {
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
+#if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )
             start_webserver();
 #endif
           }
@@ -734,7 +742,7 @@ void ESP_Communication()
         {
           if ( mySetupData->get_webserverstate() == 1)
           {
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
+#if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )
             stop_webserver();
 #endif
           }
@@ -793,11 +801,43 @@ void ESP_Communication()
         }
       }
       break;
+
+    case 69:    // send boardconfig.jsn file
+      send_boardconfig_file();
+      break;
+
+    case 70:
+      SendPaket('W', 0);
+      break;
   }
 }
-#endif // if defined(ACCESSPOINT) || defined(STATIONMODE) || defined(LOCALSERIAL) || defined(BLUETOOTHMODE)
 
-#if defined(LOCALSERIAL)
+void send_boardconfig_file(void)
+{
+  // send board configuration
+  delay(10);
+  // Open board_config.jsn file for reading
+  File bfile = SPIFFS.open("/board_config.jsn", "r");
+  if (!bfile)
+  {
+    Comms_DebugPrintln("err: no board config file. create defaults.");
+    SendPaket('W', "Not found" );
+  }
+  else
+  {
+    delay(10);
+    // Reading board_config.jsn
+    board_data = bfile.readString();                                // read content of the text file
+    SetupData_DebugPrint("LoadConfiguration(): Board_data= ");
+    SetupData_DebugPrintln(board_data);                             // ... and print on serial
+    bfile.close();
+    board_data = board_data + EOFSTR;
+    SendPaket('W', "null", true );
+  }
+}
+#endif // #if defined(CONTROLLERMODE)
+
+#if (CONTROLLERMODE == LOCALSERIAL)
 void clearSerialPort()
 {
   while (Serial.available())
@@ -832,9 +872,9 @@ void processserial()
     }
   }
 }
-#endif // if defined(LOCALSERIAL)
+#endif // #if (CONTROLLERMODE == LOCALSERIAL)
 
-#if defined(BLUETOOTHMODE)
+#if (CONTROLLERMODE == BLUETOOTHMODE)
 void clearbtPort()
 {
   while (SerialBT.available())
@@ -869,7 +909,7 @@ void processbt()
     }
   }
 }
-#endif // if defined(BLUETOOTHMODE)
+#endif // #if (CONTROLLERMODE == BLUETOOTHMODE)
 
 
 #endif

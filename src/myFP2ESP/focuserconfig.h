@@ -22,7 +22,7 @@
 // ESP8266 Boards
 //#define DRVBRD WEMOSDRV8825H                    // driver definition for Holger
 //#define DRVBRD WEMOSDRV8825
-#define DRVBRD PRO2EULN2003
+//#define DRVBRD PRO2EULN2003
 //#define DRVBRD PRO2EDRV8825
 //#define DRVBRD PRO2EL293DNEMA
 //#define DRVBRD PRO2EL293D28BYJ48
@@ -32,11 +32,13 @@
 //#define DRVBRD CUSTOMBRD
 // ESP32 Boards
 //#define DRVBRD PRO2ESP32DRV8825
-//#define DRVBRD PRO2ESP32ULN2003
+#define DRVBRD PRO2ESP32ULN2003
 //#define DRVBRD PRO2ESP32L298N
 //#define DRVBRD PRO2ESP32L293DMINI
 //#define DRVBRD PRO2ESP32L9110S
 //#define DRVBRD PRO2ESP32R3WEMOS
+//#define DRVBRD PRO2ESP32TMC2225
+//#define DRVBRD PRO2ESP32TMC2209
 //#define DRVBRD CUSTOMBRD
 
 // On bootup following a controller firmware update, a default driver board file 
@@ -109,20 +111,29 @@
 
 
 // ======================================================================
-// 6: SPECIFY CONTROLLER OPTIONS
+// 6: CONTROLLER MODE
 // ======================================================================
-// to enable Bluetooth mode, uncomment the next line [ESP32 only]
-//#define BLUETOOTHMODE 1
+// Note: defines for Controller Modes are in generalDefinitions.h
+// which should be included by anycode before including focuserconfig.h
+
+// The following controller modes are MUTUALLY EXCLUSIVE and cannot be combined
 
 // to work as an access point, define accesspoint - cannot use DUCKDNS
-#define ACCESSPOINT 2
+//#define CONTROLLERMODE  ACCESSPOINT
 
 // to work as a station accessing a AP, define stationmode
-//#define STATIONMODE 3
+//#define CONTROLLERMODE  STATIONMODE
 
 // to work only via USB cable as Serial port, uncomment the next line
-//#define LOCALSERIAL 4
+#define CONTROLLERMODE  LOCALSERIAL
 
+// to enable Bluetooth mode, uncomment the next line [ESP32 only]
+//#define CONTROLLERMODE  BLUETOOTHMODE
+
+
+// ======================================================================
+// 7: SPECIFY CONTROLLER OPTIONS
+// ======================================================================
 // To enable OTA updates, uncomment the next line [only works in STATIONMODE]
 //#define OTAUPDATES 5
 
@@ -131,7 +142,7 @@
 //#define MDNSSERVER 8
 
 // Management Server Control Interface [Port 6060] - DO NOT CHANGE
-#define MANAGEMENT 9
+//#define MANAGEMENT 9
 
 // Cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
 // To enable DUCKDNS [STATIONMODE only]
@@ -140,6 +151,181 @@
 // to enable reading SSID and PASSWORD 
 // from SPIFFS file wificonfig at boot time, uncomment the following file
 //#define READWIFICONFIG 1
+
+
+// ======================================================================
+// DO NOT CHANGE:
+// ======================================================================
+
+// ======================================================================
+// CHECK BOARD AND HW OPTIONS
+// ======================================================================
+#ifndef DRVBRD
+#halt // ERROR you must have DRVBRD defined in myBoards.h
+#endif
+
+#if defined(USE_SSD1306) && defined(USE_SSH1106)
+#halt //Error - you can must define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
+#endif
+
+#ifndef USE_SSD1306
+#ifndef USE_SSH1106
+#halt //Error - you  must define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
+#endif
+#endif
+
+// DO NOT CHANGE
+#if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
+  || DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N   || DRVBRD == PRO2EL293DMINI \
+  || DSRVBRD == PRO2EL9110S || DRVBRD == PRO2EL293D   || DRVBRD == PRO2ESP32R3WEMOS )
+// no support for pushbuttons, inout leds, irremote
+#ifdef PUSHBUTTONS
+#halt // ERROR - PUSHBUTTONS not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#endif
+#ifdef INFRAREDREMOTE
+#halt // ERROR - INFRAREDREMOTE not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#endif
+#if defined(JOYSTICK1) || defined(JOYSTICK2)
+#halt // ERROR - JOYSTICK not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#endif
+#endif // #if defined(JOYSTICK1) || defined(JOYSTICK2)
+
+// Check board availability for a specific controller mode
+#if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
+  || DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N   || DRVBRD == PRO2EL293DMINI \
+  || DSRVBRD == PRO2EL9110S || DRVBRD == PRO2EL293D )
+// no support for bluetooth mode
+#if (CONTROLLERMODE == BLUETOOTHMODE)
+#halt // ERROR - BLUETOOTHMODE not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#endif
+#endif
+
+#if ((DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48))
+#if (CONTROLLERMODE == LOCALSERIAL)
+#halt // ERROR - LOCALSERIAL not supported L293D Motor Shield [ESP8266] boards
+#endif
+#endif // #if ((DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48))
+
+#if defined(JOYSTICK1) || defined(JOYSTICK2)
+#ifdef PUSHBUTTONS
+#halt // ERROR - you cannot have PUSHBUTTONS and JOYSTICK enabled at the same time
+#endif
+#endif // #if defined(JOYSTICK1) || defined(JOYSTICK2)
+
+#ifdef JOYSTICK1
+#ifdef JOYSTICK2
+#halt // ERROR - you cannot have both JOYSTICK1 or JOYSTICK2 defined at the same time
+#endif
+#endif // #ifdef JOYSTICK1
+
+// ======================================================================
+// CHECK CONTROLLER OPTIONS
+// ======================================================================
+
+#if defined(OTAUPDATES)
+#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL)
+#halt //ERROR you cannot have both OTAUPDATES with either BLUETOOTHMODE or LOCALSERIAL enabled at the same time
+#endif
+#if (CONTROLLERMODE == ACCESSPOINT)
+#halt //ERROR you cannot use ACCESSPOINT with OTAUPDATES
+#endif
+#endif // #if defined(OTAUPDATES)
+
+#if defined(MDNSSERVER)
+#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE ==ACCESSPOINT)
+#halt // ERROR, mDNS only available with CONTROLLERMODE == STATIONMODE
+#endif
+#endif // MDNSSERVER
+
+// Check management server only available in accesspoint or stationmode
+#ifdef MANAGEMENT
+#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL)
+#halt // ERROR You cannot run the MANAGEMENT service in Bluetooth or Local Serial modes
+#endif
+#endif
+
+// cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
+#ifdef USEDUCKDNS
+#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) ||(CONTROLLERMODE == ACCESSPOINT)
+#halt // Error- DUCKDNS only works with STATIONMODE
+#endif
+#ifndef STATIONMODE
+#halt // Error- DUCKDNS only works with STATIONMODE, you must enable STATIONMODE
+#endif
+#endif
+
+// DO NOT CHANGE
+#if defined(READWIFICONFIG)
+#if ((CONTROLLERMODE == BLUETOOTH) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT) )
+#halt // ERROR, READWIFICONFIG only available with CONTROLLERMODE == STATIONMODE
+#endif
+#endif // #if defined(READWIFICONFIG)
+
+
+// ======================================================================
+// CHECK CONTROLLER MODES
+// ======================================================================
+
+#if !defined(CONTROLLERMODE) 
+#halt // Error CONTROLLERMODE NOT DEFINED
+#endif
+
+// check bluetooth mode, cannot be used for esp8266 and accesspoint and stationmode and localserial
+#if (CONTROLLERMODE == BLUETOOTHMODE)
+#if defined(ESP8266)
+#halt // ERROR Bluetooth only available on ESP32 boards
+#endif
+#ifdef OTAUPDATES
+#halt // Error Cannot enable OTAUPDATES with BLUETOOTHMODE
+#endif
+#ifdef MDNSSERVER
+#halt // Error Cannot enable MDNSSERVER with BLUETOOTHMODE
+#endif
+#ifdef MANAGEMENT
+#halt // Error Cannot enable MANAGEMENT with BLUETOOTHMODE
+#endif
+#ifdef READWIFICONFIG
+#halt // ERROR, Cannot enabled READWIFICONFIG with BLUETOOTHMODE
+#endif
+#ifdef USEDUCKDNS
+#halt // ERROR, Cannot enable DUCKDNS with with BLUETOOTHMODE
+#endif
+#endif // #if (CONTROLLERMODE == BLUETOOTHMODE)
+
+// check localserial mode
+#if (CONTROLLERMODE == LOCALSERIAL)
+#ifdef OTAUPDATES
+#halt // Error Cannot enable OTAUPDATES with LOCALSERIAL
+#endif
+#ifdef MDNSSERVER
+#halt // Error Cannot enable MDNSSERVER with LOCALSERIAL
+#endif
+#ifdef MANAGEMENT
+#halt // Error Cannot enable MANAGEMENT with LOCALSERIAL
+#endif
+#ifdef DEBUG
+#halt // Error Cannot enable DEBUG with LOCALSERIAL
+#endif
+#ifdef READWIFICONFIG
+#halt // ERROR, READWIFICONFIG only available with CONTROLLERMODE == STATIONMODE
+#endif
+#ifdef USEDUCKDNS
+#halt // ERROR, Cannot enable DUCKDNS with with BLUETOOTHMODE
+#endif
+#endif // #if (CONTROLLERMODE == LOCALSERIAL)
+
+// check accesspoint mode
+#if (CONTROLLERMODE == ACCESSPOINT)
+#ifdef MDNSSERVER
+#halt // Error Cannot enable MDNSSERVER with ACCESSPOINT
+#endif
+#ifdef OTAUPDATES
+#halt // Error Cannot enable OTAUPDATES with ACCESSPOINT
+#endif
+#ifdef USEDUCKDNS
+#halt // ERROR, Cannot enable DUCKDNS with with ACCESSPOINT
+#endif
+#endif // #if (CONTROLLERMODE == ACCESSPOINT)
 
 
 // ======================================================================
@@ -183,138 +369,5 @@
 // To make the firmware return the correct firmware value when talking to a
 // myFocuserpro2 INDI driver [use only for INDI support], uncomment the following line
 // This has moved to MANAGEMENT SERVER
-
-// ======================================================================
-// DO NOT CHANGE: OPTIONS DRIVER BOARD CHECKS
-// ======================================================================
-
-#ifndef DRVBRD
-#halt // ERROR you must have DRVBRD defined in myBoards.h
-#endif
-
-#if defined(USE_SSD1306) && defined(USE_SSH1106)
-#halt //Error - you can must define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
-#endif
-
-#ifndef USE_SSD1306
-#ifndef USE_SSH1106
-#halt //Error - you  must define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
-#endif
-#endif
-
-// DO NOT CHANGE
-#if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
-  || DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N   || DRVBRD == PRO2EL293DMINI \
-  || DSRVBRD == PRO2EL9110S || DRVBRD == PRO2EL293D   || DRVBRD == PRO2ESP32R3WEMOS )
-// no support for pushbuttons, inout leds, irremote
-#ifdef PUSHBUTTONS
-#halt // ERROR - PUSHBUTTONS not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
-#ifdef INFRAREDREMOTE
-#halt // ERROR - INFRAREDREMOTE not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
-#if defined(JOYSTICK1) || defined(JOYSTICK2)
-#halt // ERROR - JOYSTICK not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
-#endif // 
-
-#if defined(JOYSTICK1) || defined(JOYSTICK2)
-#ifdef PUSHBUTTONS
-#halt // ERROR - you cannot have PUSHBUTTONS and JOYSTICK enabled at the same time
-#endif
-#endif
-
-#ifdef JOYSTICK1
-#ifdef JOYSTICK2
-#halt // ERROR - you cannot have both JOYSTICK1 or JOYSTICK2 defined at the same time
-#endif
-#endif
-
-// DO NOT CHANGE
-#if defined(MDNSSERVER)
-#if defined(BLUETOOTHMODE) || defined(LOCALSERIAL) || defined(ACCESSPOINT)
-#halt // ERROR, mDNS only available with STATIONMODE
-#endif
-#endif // MDNSSERVER
-
-#if defined(OTAUPDATES)
-#if defined(BLUETOOTHMODE) || defined(LOCALSERIAL)
-#halt //ERROR you cannot have both OTAUPDATES with either BLUETOOTHMODE or LOCALSERIAL enabled at the same time
-#endif
-#if defined(ACCESSPOINT)
-#halt //ERROR you cannot use ACCESSPOINT with OTAUPDATES
-#endif
-#endif
-
-#ifdef ACCESSPOINT
-#ifdef STATIONMODE
-#halt // ERROR - Cannot have both ACCESSPOINT and STATIONMODE defined at the same time
-#endif
-#endif
-
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
-#if defined(BLUETOOTHMODE)
-#halt //ERROR you cannot have BLUETOOTHMODE with either ACCESSPOINT and STATIONMODE
-#endif
-#endif
-
-#if defined(STATIONMODE) || defined(ACCESSPOINT) || defined(BLUETOOTHMODE)
-#if defined(LOCALSERIAL)
-#halt // ERROR - Cannot have both STATIONMODE/ACCESSPOINT/BLUETOOTHMODE and LOCALSERIAL mode defined at the same time
-#endif
-#endif
-
-#if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
-  || DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N   || DRVBRD == PRO2EL293DMINI \
-  || DSRVBRD == PRO2EL9110S || DRVBRD == PRO2EL293D )
-// no support for bluetooth mode
-#ifdef BLUETOOTHMODE
-#halt // ERROR - BLUETOOTHMODE not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
-#endif
-
-#if ((DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48))
-#ifdef LOCALSERIAL
-#halt // ERROR - LOCALSERIAL not supported L293D Motor Shield [ESP8266] boards
-#endif
-#endif
-
-// cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
-#ifdef USEDUCKDNS
-#if defined(BLUETOOTHMODE) || defined(LOCALSERIAL) || defined(ACCESSPOINT)
-#halt // Error- DUCKDNS only works with STATIONMODE
-#endif
-#ifndef STATIONMODE
-#halt // Error- DUCKDNS only works with STATIONMODE, you must enable STATIONMODE
-#endif
-#endif
-
-#ifdef LOCALSERIAL
-#ifdef OTAUPDATES
-#halt // Error Cannot enable OTAUPDATES with LOCALSERIAL
-#endif
-#ifdef MDNSSERVER
-#halt // Error Cannot enable MDNSSERVER with LOCALSERIAL
-#endif
-#ifdef MANAGEMENT
-#halt // Error Cannot enable MANAGEMENT with LOCALSERIAL
-#endif
-#ifdef DEBUG
-#halt // Error Cannot enable DEBUG with LOCALSERIAL
-#endif
-#endif
-
-#ifdef MANAGEMENT
-#if !defined(ACCESSPOINT) && !defined(STATIONMODE)
-#halt // ERROR You must have ACCESSPOINT or STATIONMODE defined to enable the MANAGEMENT console
-#endif
-#endif
-
-#ifdef BLUETOOTHMODE
-#if defined(ESP8266)
-#halt // ERROR Bluetooth only available on ESP32 boards
-#endif
-#endif
-
 
 #endif

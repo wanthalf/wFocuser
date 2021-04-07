@@ -5,11 +5,11 @@
 // ======================================================================
 
 #include <Arduino.h>
+#include "generalDefinitions.h"
 #include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 #include "images.h"
-#include "generalDefinitions.h"
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #include <FS.h>                             // include the SPIFFS library  
@@ -1022,7 +1022,6 @@ void MANAGEMENT_buildadminpg2(void)
     MSpg.replace("%NAM%", mySetupData->get_brdname());
 
     // tcp/ip server
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
     if ( tcpipserverstate == RUNNING )
     {
       MSpg.replace("%TBT%", String(STOPTSSTR));
@@ -1041,10 +1040,8 @@ void MANAGEMENT_buildadminpg2(void)
     // esp32
     MSpg.replace("%TPO%", "<form action=\"/msindex2\" method =\"post\">Port: <input type=\"text\" name=\"tp\" size=\"6\" value=" + String(mySetupData->get_tcpipport()) + "> <input type=\"submit\" name=\"settsport\" value=\"Set\"></form>");
 #endif // #if defined(ESP8266)
-#else
     MSpg.replace("%TPO%", "Port: " + String(mySetupData->get_tcpipport()));
     MSpg.replace("%TBT%", String(NOTDEFINEDSTR));
-#endif // #if defined(ACCESSPOINT) || defined(STATIONMODE)
 
     // Webserver status %WST%
     if ( webserverstate == RUNNING )
@@ -1157,18 +1154,22 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startts");
   if ( msg != "" )
   {
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: startts: ");
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
     start_tcpipserver();
-#endif
+#else
+    MSrvr_DebugPrintln("Err: Controller mode does not support this");
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   msg = mserver.arg("stopts");
   if ( msg != "" )
   {
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: stopts: ");
-#if defined(ACCESSPOINT) || defined(STATIONMODE)
     stop_tcpipserver();
-#endif
+#else
+    MSrvr_DebugPrintln("Err: Controller mode does not support this");
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   // tcpip server change port
   msg = mserver.arg("settsport");
@@ -1227,22 +1228,30 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startws");
   if ( msg != "" )
   {
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: startws: ");
     if ( webserverstate == STOPPED)
     {
       start_webserver();
       mySetupData->set_webserverstate(1);
     }
+#else
+    MSrvr_DebugPrintln("Err: Controller mode does not support this");
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   msg = mserver.arg("stopws");
   if ( msg != "" )
   {
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: stopws: ");
     if ( webserverstate == RUNNING )
     {
       stop_webserver();
       mySetupData->set_webserverstate(0);
     }
+#else
+    MSrvr_DebugPrintln("Err: Controller mode does not support this");
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   // webserver change port - we should be able to change port if not running or enabled or not enabled
   msg = mserver.arg("setwsport");
@@ -1336,22 +1345,30 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startas");
   if ( msg != "" )
   {
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: startas: ");
     if ( ascomserverstate == STOPPED )
     {
       start_ascomremoteserver();
       mySetupData->set_ascomserverstate(1);
     }
+#else
+    MSrvr_DebugPrintln("Err: Controller mode does not support this");
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   msg = mserver.arg("stopas");
   if ( msg != "" )
   {
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: stopas: ");
     if ( ascomserverstate == RUNNING)
     {
       stop_ascomremoteserver();
       mySetupData->set_ascomserverstate(0);
     }
+#else
+    MSrvr_DebugPrintln("Err: Controller mode does not support this");
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   // ascom server port
   msg = mserver.arg("setasport");
@@ -1568,16 +1585,13 @@ void MANAGEMENT_buildadminpg1(void)
     MSpg.replace("%HEC%", hcol);
     MSpg.replace("%VER%", String(programVersion));
     MSpg.replace("%NAM%", mySetupData->get_brdname());
-#ifdef BLUETOOTHMODE
+#if (CONTROLLERMODE == BLUETOOTHMODE)
     MSpg.replace("%MOD%", "BLUETOOTH : " + String(BLUETOOTHNAME));
-#endif
-#ifdef ACCESSPOINT
+#elif (CONTROLLERMODE == ACCESSPOINT)
     MSpg.replace("%MOD%", "ACCESSPOINT");
-#endif
-#ifdef STATIONMODE
+#elif (CONTROLLERMODE == STATIONMODE)
     MSpg.replace("%MOD%", "STATIONMODE");
-#endif
-#ifdef LOCALSERIAL
+#elif (CONTROLLERMODE == LOCALSERIAL)
     MSpg.replace("%MOD%", "LOCALSERIAL");
 #endif
 
@@ -1747,6 +1761,8 @@ void MANAGEMENT_handleadminpg1(void)
     MSrvr_DebugPrintln("MANAGEMENT_handleadminpg1: startmdns: ");
 #ifdef MDNSSERVER
     start_mdns_service();
+#else
+    MSrvr_DebugPrintln("Err: MSDNSSERVER not defined");
 #endif
   }
   msg = mserver.arg("stopmdns");
@@ -1755,6 +1771,8 @@ void MANAGEMENT_handleadminpg1(void)
     MSrvr_DebugPrintln("MANAGEMENT_handleadminpg1: stopmdns: ");
 #ifdef MDNSSERVER
     stop_mdns_service();
+#else
+    MSrvr_DebugPrintln("Err: MSDNSSERVER not defined");
 #endif
   }
   // mdns port
@@ -2151,6 +2169,7 @@ void MANAGEMENT_handleset(void)
   // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode, indi
 
   // ascom remote server
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   value = mserver.arg("ascom");
   if ( value != "" )
   {
@@ -2173,6 +2192,9 @@ void MANAGEMENT_handleset(void)
       }
     }
   }
+#else
+  MSrvr_DebugPrintln("Err Service not defined");
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
 
   // in out leds
   value = mserver.arg("leds");
@@ -2246,6 +2268,7 @@ void MANAGEMENT_handleset(void)
   }
 
   // web server
+#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   value = mserver.arg("webserver");
   if ( value != "" )
   {
@@ -2268,6 +2291,9 @@ void MANAGEMENT_handleset(void)
       }
     }
   }
+#else
+  MSrvr_DebugPrintln("Err Service not defined");
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
 
   // position - does not move focuser
   value = mserver.arg("position");
@@ -2447,25 +2473,6 @@ void MANAGEMENT_handleset(void)
     MANAGEMENT_sendjson("{ \"cmd:\":\"nok\" }");
   }
 }
-
-
-
-
-
-
-// set fixed step mode value in board config
-void MANAGEMENT_fixedstepmode_set(void)
-{
-  // set web server option
-  if ( mySetupData->get_webserverstate() == 0)
-  {
-    MSrvr_DebugPrintln("webserver on");
-    start_webserver();
-  }
-  mserver.send(NORMALWEBPAGE, PLAINTEXTPAGETYPE, "Web-Server On");
-}
-
-
 
 // return network signal strength
 void MANAGEMENT_rssi(void)

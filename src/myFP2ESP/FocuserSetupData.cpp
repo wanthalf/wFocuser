@@ -435,21 +435,21 @@ void SetupData::LoadDefaultPersistantData()
   this->webpagerefreshrate    = WS_REFRESHRATE;       // 30s
   this->mdnsport              = MDNSSERVERPORT;       // 7070
   this->tcpipport             = SERVERPORT;           // 2020
-  this->startscreen           = DEFAULTON;
+  this->startscreen           = DEFAULTOFF;           // this should be default OFF
   this->backcolor             = "333333";
   this->textcolor             = "5d6d7e";
   this->headercolor           = "3399ff";
   this->titlecolor            = "8e44ad";
   this->ascomserverstate      = DEFAULTOFF;           // this should be default OFF
-  this->webserverstate        = DEFAULTON;            // this should be default OFF
-  this->temperatureprobestate = DEFAULTON;            // this should be default OFF - if HW not fitted could crash
+  this->webserverstate        = DEFAULTOFF;           // this should be default OFF
+  this->temperatureprobestate = DEFAULTOFF;           // this should be default OFF - if HW not fitted could crash
   this->inoutledstate         = DEFAULTOFF;           // this should be default OFF - if HW not fitted could crash
   this->showhpswmessages      = DEFAULTOFF;           // this should be default OFF
   this->forcedownload         = DEFAULTOFF;           // this should be default OFF, MANAGEMENT Server only
-  this->oledpageoption        = OLEDPGOPTIONALL;
-  this->hpswitchenable        = DEFAULTOFF;
-  this->pbenable              = DEFAULTOFF;
-  this->indi                  = DEFAULTOFF;
+  this->oledpageoption        = OLEDPGOPTIONALL;    
+  this->hpswitchenable        = DEFAULTOFF;           // this should be default OFF
+  this->pbenable              = DEFAULTOFF;           // this should be default OFF
+  this->indi                  = DEFAULTOFF;           // this should be default OFF
 
   this->SavePersitantConfiguration();                 // write default values to SPIFFS
 }
