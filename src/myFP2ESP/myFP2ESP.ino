@@ -154,7 +154,7 @@ IPAddress subnet(255, 255, 255, 0);
 // ======================================================================
 // 10: BLUETOOTH MODE NAME
 // ======================================================================
-#ifdef BLUETOOTHMODE
+#if (CONTROLLERMODE == BLUETOOTHMODE)
 String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth controller, this name you can change
 #endif // #ifdef BLUETOOTHMODE
 
@@ -194,7 +194,7 @@ const char* duckdnstoken = "0a0379d5-3979-44ae-b1e2-6c371a4fe9bf";
 // ======================================================================
 
 // BLUETOOTH SETTINGS - Do not change
-#ifdef BLUETOOTHMODE
+#if (CONTROLLERMODE == BLUETOOTHMODE)
 #include "BluetoothSerial.h"                  // needed for Bluetooth comms
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error "Bluetooth Not enabled"
