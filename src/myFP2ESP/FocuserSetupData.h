@@ -46,6 +46,7 @@ class SetupData
     byte get_tempcoefficient();
     byte get_tempresolution();
     byte get_coilpower();
+    unsigned long get_coilpower_timeout();
     byte get_reversedirection();
     byte get_stepsizeenabled();
     byte get_tempmode();
@@ -90,6 +91,7 @@ class SetupData
     void set_tempcoefficient(byte);
     void set_tempresolution(byte);
     void set_coilpower(byte);
+    void set_coilpower_timeout(unsigned long);
     void set_reversedirection(byte);
     void set_stepsizeenabled(byte);
     void set_tempmode(byte);
@@ -212,6 +214,7 @@ class SetupData
     byte tempcoefficient;           // steps per degree temperature coefficient value (maxval=255)
     byte tempresolution;            // 9 -12
     byte coilpower;                 // if 1, coil power is enabled
+    unsigned long coilpowertimeout; // how long before coil power is turned off
     byte reversedirection;          // if 1, motor direction is reversed
     byte stepsizeenabled;           // if 1, controller returns step size
     byte tempmode;                  // temperature display mode, Celcius=1, Fahrenheit=0

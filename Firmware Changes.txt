@@ -1,3 +1,22 @@
+214
+Add download boardconfig.jsn to comms case 69
+Add coil power timeout setting to management server (get and set) and comms cases 58 and 59
+Rewrite State_Idle park routine to use coilpowertimeout rather than MotorReleaseDelay
+Rewrite myBoards.h/.cpp to exclude code if those driverboards not selected
+Rewrite management server set calls to return new states/values instead of generic message
+Fix for get/set calls in Management Server: Incorrect usage of #ifdef ACCESSPOINT etc
+Fix for ASCOM server unable to start in Management Server: State was not being set correctly
+Fix for myBoards.cpp setstepmode not saving new stepmode correctly
+Remove TMC chip support at this time: Software Serial Not Supported.
+NEW CALLS v214
+:58#		mxxxx#		Get coilpower timeout value (in millseconds)
+:59xxxx#			Set coilpower timeout value (in milliseconds)
+:69#		Wstring#	Get boardconfig.jsn file
+//set?coilpowertimeout=30000	Set coilpower timeout release value to 30s
+//get?coilpowertimeout=		Return value of Coil power timeout release (in milliseconds)
+//get?boardconfig=
+//get?dataconfig=
+
 213
 Add 51.jsn board file for TMC2225
 Add 52.jsn board file for TMC2209

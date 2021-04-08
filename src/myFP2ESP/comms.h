@@ -221,8 +221,6 @@ void ESP_Communication()
     case 8: // get maxStep
       SendPaket('M', mySetupData->get_maxstep());
       break;
-    case 9:   // unused
-      break;
     case 10: // get maxIncrement
       SendPaket('Y', mySetupData->get_maxstep());
       break;
@@ -424,8 +422,6 @@ void ESP_Communication()
     case 39: // get the new motor position (target) XXXXXX
       SendPaket('N', ftargetPosition);
       break;
-    case 41:  // troubleshoot
-      break;
     case 40: // reset Arduino myFocuserPro2E controller
       software_Reboot(2000);      // reboot with 2s delay
       break;
@@ -440,18 +436,6 @@ void ESP_Communication()
       break;
     case 43: // get motorspeed
       SendPaket('C', mySetupData->get_motorspeed());
-      break;
-    case 44: // set motorspeed threshold when moving - switches to slowspeed when nearing destination
-      //ignore
-      break;
-    case 45: // get motorspeedchange threshold value
-      SendPaket('G', "200");
-      break;
-    case 46: // enable/Disable motorspeed change when moving
-      //ignore
-      break;
-    case 47: // get motorspeedchange enabled? on/off
-      SendPaket('J', "0");
       break;
     case 48: // save settings to FS
       mySetupData->set_fposition(driverboard->getposition());       // need to save setting
@@ -502,18 +486,6 @@ void ESP_Communication()
         mySetupData->set_brdmsdelay(newdelay);
       }
       break;
-    case 57: // set Super Slow Jogging Speed
-      // ignore
-      break;
-    case 58: // get controller features .. deprecated
-      SendPaket('m', 0);
-      break;
-    case 59:  // Unused
-      // ignore
-      break;
-    case 60:  // set MotorSpeed when jogging
-      // ignore
-      break;
     case 61: // set update of position on lcd when moving (0=disable, 1=enable)
       mySetupData->set_lcdupdateonmove((byte) (receiveString[3] - '0'));
       break;
@@ -538,18 +510,6 @@ void ESP_Communication()
         pos  = (pos < 0) ? 0 : pos;
         ftargetPosition = ( pos > (long)mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : (unsigned long)pos;
       }
-      break;
-    case 65:  // Set jogging state enable/disable
-      // ignore
-      break;
-    case 66:  // Get jogging state enabled/disabled
-      SendPaket('K', 0);
-      break;
-    case 67: // Set jogging direction, 0=IN, 1=OUT
-      // ignore
-      break;
-    case 68:  // Get jogging direction, 0=IN, 1=OUT
-      SendPaket('V', 0);
       break;
     case 71: // set DelayAfterMove in milliseconds
       WorkString = receiveString.substring(3, receiveString.length() - 1);
@@ -586,8 +546,6 @@ void ESP_Communication()
       break;
     case 81:  // Get number of backlashmaximum steps
       SendPaket('8', 400);
-      break;
-    case 82:  // Set backlash maximum steps
       break;
     case 83: // get if there is a temperature probe
       SendPaket('c', tprobe1);
@@ -627,11 +585,6 @@ void ESP_Communication()
         mySetupData->get_oledpageoption().toCharArray(tempbuff, mySetupData->get_oledpageoption().length() + 1);
         SendPaket('l', tempbuff);
       }
-      break;
-    case 94:  // Set DelayedDisplayUpdate (0=disabled, 1-enabled)
-      break;
-    case 95:  // Get DelayedDisplayUpdate (0=disabled, 1-enabled)
-      SendPaket('n', 0);
       break;
     case 96: // Set management options
       {
@@ -802,12 +755,65 @@ void ESP_Communication()
       }
       break;
 
+    // new cases v214
+    case 58:    // get coilpowertimeout value
+      SendPaket('m', mySetupData->get_coilpower_timeout() );
+      break;
+    case 59:    // set coilpower timeout value (in milliseconds)
+      {
+        unsigned long cptime = 0;
+        WorkString = receiveString.substring(3, receiveString.length() - 1);
+        cptime = WorkString.toInt();
+        mySetupData->set_coilpower_timeout(cptime);
+        Comms_DebugPrint("cp timeout=");
+        Comms_DebugPrintln(cptime);
+      }
+      break;
     case 69:    // send boardconfig.jsn file
       send_boardconfig_file();
       break;
 
-    case 70:
-      SendPaket('W', 0);
+    // now cases for myFP2 compatibility
+    case 9:
+      break;
+    case 41:
+      break;
+    case 44: // myFP2 set motorspeed threshold when moving - switches to slowspeed when nearing destination
+      //ignore
+      break;
+    case 45: // myFP2 get motorspeedchange threshold value
+      SendPaket('G', "200");
+      break;
+    case 46: // myFP2 enable/Disable motorspeed change when moving
+      //ignore
+      break;
+    case 47: // get motorspeedchange enabled? on/off
+      SendPaket('J', "0");
+      break;
+    case 57: // myFP2 set Super Slow Jogging Speed
+      // ignore
+      break;
+    case 60:  //  myFP2 Set MotorSpeed when jogging
+      // ignore
+      break;
+    case 65:  // myFP2 Set jogging state enable/disable
+      // ignore
+      break;
+    case 66:  // myFP2 Get jogging state enabled/disabled
+      SendPaket('K', 0);
+      break;
+    case 67: // myFP2 Set jogging direction, 0=IN, 1=OUT
+      // ignore
+      break;
+    case 68:  // myFP2 Get jogging direction, 0=IN, 1=OUT
+      SendPaket('V', 0);
+      break;
+    case 82:  // myFP2 Set backlash maximum steps
+      break;
+    case 94:  // myFP2 Set DelayedDisplayUpdate (0=disabled, 1-enabled)
+      break;
+    case 95:  // myFP2 Get DelayedDisplayUpdate (0=disabled, 1-enabled)
+      SendPaket('n', 0);
       break;
   }
 }

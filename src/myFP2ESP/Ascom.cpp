@@ -53,7 +53,7 @@ extern SetupData      *mySetupData;
 extern DriverBoard*   driverboard;
 extern unsigned long  ftargetPosition;              // target position
 extern volatile bool  halt_alert;
-extern char           ipStr[]; 
+extern char           ipStr[];
 extern byte           isMoving;                     // is the motor currently moving
 extern bool           ascomserverstate;
 extern bool           ascomdiscoverystate;
@@ -74,7 +74,7 @@ WebServer     *ascomserver;
 WiFiUDP       ASCOMDISCOVERYUdp;
 char          packetBuffer[255];            // buffer to hold incoming discovery UDP packet
 
-String        ASpg;                         
+String        ASpg;
 unsigned int  ASCOMClientID;
 unsigned int  ASCOMClientTransactionID;
 unsigned int  ASCOMServerTransactionID = 0;
@@ -1296,6 +1296,7 @@ void start_ascomremoteserver(void)
   ascomserver->on("/api/v1/focuser/0/supportedactions",   HTTP_GET, ASCOM_handlesupportedactionsget);
   ascomserver->begin();
   ascomserverstate = RUNNING;
+  mySetupData->set_ascomserverstate(RUNNING);
   Ascom_DebugPrintln("ascom server: RUNNING");
   HDebugPrint("Heap after  start_ascomremoteserver = ");
   heapmsg();
@@ -1310,6 +1311,7 @@ void stop_ascomremoteserver(void)
     ascomserver->close();
     delete ascomserver;                                 // free the ascomserver pointer and associated memory/code
     ascomserverstate = STOPPED;
+    mySetupData->set_ascomserverstate(STOPPED);
     ASCOMDISCOVERYUdp.stop();                           // stop discovery service
   }
   else

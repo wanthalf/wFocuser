@@ -1154,22 +1154,14 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startts");
   if ( msg != "" )
   {
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: startts: ");
     start_tcpipserver();
-#else
-    MSrvr_DebugPrintln("Err: Controller mode does not support this");
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   msg = mserver.arg("stopts");
   if ( msg != "" )
   {
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: stopts: ");
     stop_tcpipserver();
-#else
-    MSrvr_DebugPrintln("Err: Controller mode does not support this");
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   // tcpip server change port
   msg = mserver.arg("settsport");
@@ -1228,30 +1220,22 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startws");
   if ( msg != "" )
   {
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: startws: ");
     if ( webserverstate == STOPPED)
     {
       start_webserver();
       mySetupData->set_webserverstate(1);
     }
-#else
-    MSrvr_DebugPrintln("Err: Controller mode does not support this");
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   msg = mserver.arg("stopws");
   if ( msg != "" )
   {
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: stopws: ");
     if ( webserverstate == RUNNING )
     {
       stop_webserver();
       mySetupData->set_webserverstate(0);
     }
-#else
-    MSrvr_DebugPrintln("Err: Controller mode does not support this");
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   // webserver change port - we should be able to change port if not running or enabled or not enabled
   msg = mserver.arg("setwsport");
@@ -1345,30 +1329,22 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("startas");
   if ( msg != "" )
   {
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: startas: ");
     if ( ascomserverstate == STOPPED )
     {
       start_ascomremoteserver();
       mySetupData->set_ascomserverstate(1);
     }
-#else
-    MSrvr_DebugPrintln("Err: Controller mode does not support this");
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   msg = mserver.arg("stopas");
   if ( msg != "" )
   {
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
     MSrvr_DebugPrintln("adminpg2: stopas: ");
     if ( ascomserverstate == RUNNING)
     {
       stop_ascomremoteserver();
       mySetupData->set_ascomserverstate(0);
     }
-#else
-    MSrvr_DebugPrintln("Err: Controller mode does not support this");
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   }
   // ascom server port
   msg = mserver.arg("setasport");
@@ -2152,6 +2128,53 @@ void MANAGEMENT_handleget(void)
     jsonstr = "{ \"indi\":" + String(mySetupData->get_indi()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
+  else if ( mserver.argName(0) == "coilpowertimeout" )
+  {
+    jsonstr = "{ \"coilpowertimeout\":" + String(mySetupData->get_coilpower_timeout()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "boardconfig" )
+  {
+    // send board configuration
+    delay(10);
+    // Open board_config.jsn file for reading
+    File bfile = SPIFFS.open("/board_config.jsn", "r");
+    if (!bfile)
+    {
+      jsonstr = "{ \"err\":\"unable to read file\" }";
+    }
+    else
+    {
+      delay(10);
+      // Reading board_config.jsn
+      jsonstr = bfile.readString();                                // read content of the text file
+      MSrvr_DebugPrint("LoadConfiguration(): Board_data= ");
+      MSrvr_DebugPrintln(jsonstr);                             // ... and print on serial
+      bfile.close();
+    }
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "dataconfig" )
+  {
+    // send controller configuration
+    delay(10);
+    // Open board_config.jsn file for reading
+    File bfile = SPIFFS.open("/data_per.jsn", "r");
+    if (!bfile)
+    {
+      jsonstr = "{ \"err\":\"unable to read file\" }";
+    }
+    else
+    {
+      delay(10);
+      // Reading data_per.jsn
+      jsonstr = bfile.readString();                                // read content of the text file
+      MSrvr_DebugPrint("LoadConfiguration(): Board_data= ");
+      MSrvr_DebugPrintln(jsonstr);                             // ... and print on serial
+      bfile.close();
+    }
+    MANAGEMENT_sendjson(jsonstr);
+  }
   else
   {
     jsonstr = "{ \"error\":\"unknown-command\" }";
@@ -2163,38 +2186,47 @@ void MANAGEMENT_handleget(void)
 void MANAGEMENT_handleset(void)
 {
   // get parameter after ?
+  String jsonstr;
   String value;
-  bool rflag = false;
   String drvbrd = mySetupData->get_brdname();
-  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode, indi
+  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode, indi, coilpowertimeout.
+  // boardconfig, dataconfig
 
   // ascom remote server
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   value = mserver.arg("ascom");
   if ( value != "" )
   {
     if ( value == "on" )
     {
-      MSrvr_DebugPrintln("ASCOM server: ON");
-      if ( mySetupData->get_ascomserverstate() == 0)
+      MSrvr_DebugPrintln("ASCOM server:" + value);
+      if ( ascomserverstate == STOPPED)
       {
+        MSrvr_DebugPrintln("current state off: set on");
         start_ascomremoteserver();
-        rflag = true;
       }
+      else
+      {
+        // already on
+        MSrvr_DebugPrintln("current state on");
+      }
+      jsonstr = "{ \"ascom\":\"on\" }";
     }
     else if ( value == "off" )
     {
-      MSrvr_DebugPrintln("ASCOM server: OFF");
-      if ( mySetupData->get_ascomserverstate() == 1)
+      MSrvr_DebugPrintln("ASCOM server:" + value);
+      if ( ascomserverstate == RUNNING)
       {
+        MSrvr_DebugPrintln("current state on: set off");
         stop_ascomremoteserver();
-        rflag = true;
       }
+      else
+      {
+        // already off
+        MSrvr_DebugPrintln("current state off");
+      }
+      jsonstr = "{ \"ascom\":\"off\" }";
     }
   }
-#else
-  MSrvr_DebugPrintln("Err Service not defined");
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
 
   // in out leds
   value = mserver.arg("leds");
@@ -2206,6 +2238,7 @@ void MANAGEMENT_handleset(void)
       {
         MSrvr_DebugPrintln("led pins are -1. Cannot enable leds");
         mySetupData->set_inoutledstate(0);
+        jsonstr = "{ \"err\":\"off\" }";
       }
       else
       {
@@ -2218,7 +2251,11 @@ void MANAGEMENT_handleset(void)
           {
             init_leds();
           }
-          rflag = true;
+          else
+          {
+            // already on
+          }
+          jsonstr = "{ \"err\":\"off\" }";
         }
       }
     }
@@ -2228,8 +2265,12 @@ void MANAGEMENT_handleset(void)
       if ( mySetupData->get_inoutledstate() == 1)
       {
         mySetupData->set_inoutledstate(0);
-        rflag = true;
       }
+      else
+      {
+        // already off
+      }
+      jsonstr = "{ \"leds\":\"off\" }";
     }
   }
 
@@ -2243,6 +2284,7 @@ void MANAGEMENT_handleset(void)
       {
         MSrvr_DebugPrintln("temp pin is -1. Cannot enable temp probe");
         mySetupData->set_temperatureprobestate(0);
+        jsonstr = "{ \"err\":\"off\" }";
       }
       else
       {
@@ -2251,8 +2293,12 @@ void MANAGEMENT_handleset(void)
         {
           mySetupData->set_temperatureprobestate(1);
           myTempProbe = new TempProbe;
-          rflag = true;
         }
+        else
+        {
+          // already enabled
+        }
+        jsonstr = "{ \"tempprobe\":\"on\" }";
       }
     }
     else if ( value == "off" )
@@ -2262,13 +2308,16 @@ void MANAGEMENT_handleset(void)
       {
         // there is no destructor call
         mySetupData->set_temperatureprobestate(0);
-        rflag = true;
       }
+      else
+      {
+        // already off
+      }
+      jsonstr = "{ \"tempprobe\":\"off\" }";
     }
   }
 
   // web server
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   value = mserver.arg("webserver");
   if ( value != "" )
   {
@@ -2278,8 +2327,12 @@ void MANAGEMENT_handleset(void)
       if ( mySetupData->get_webserverstate() == 0)
       {
         start_webserver();
-        rflag = true;
       }
+      else
+      {
+        // already on
+      }
+      jsonstr = "{ \"webserver\":\"on\" }";
     }
     else if ( value == "off" )
     {
@@ -2287,13 +2340,14 @@ void MANAGEMENT_handleset(void)
       if ( mySetupData->get_webserverstate() == 1)
       {
         stop_webserver();
-        rflag = true;
       }
+      else
+      {
+        // already off
+      }
+      jsonstr = "{ \"webserver\":\"off\" }";
     }
   }
-#else
-  MSrvr_DebugPrintln("Err Service not defined");
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
 
   // position - does not move focuser
   value = mserver.arg("position");
@@ -2305,7 +2359,7 @@ void MANAGEMENT_handleset(void)
     ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
     mySetupData->set_fposition(ftargetPosition);      // current position in SPIFFS
     driverboard->setposition(ftargetPosition);        // current position in driver board
-    rflag = true;
+    jsonstr = "{ \"position\":" + String(ftargetPosition) + " }";
   }
 
   // move - moves focuser position
@@ -2316,7 +2370,7 @@ void MANAGEMENT_handleset(void)
     MSrvr_DebugPrint("Move to position: ");
     MSrvr_DebugPrintln(temp);
     ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
-    rflag = true;
+    jsonstr = "{ \"move\":" + String(ftargetPosition) + " }";
   }
 
   if ( displaystate == true )
@@ -2330,7 +2384,7 @@ void MANAGEMENT_handleset(void)
         MSrvr_DebugPrintln("display: ON");
         mySetupData->set_displayenabled(1);
         myoled->display_on();
-        rflag = true;
+        jsonstr = "{ \"display\":\"on\" }";
       }
       else if ( value == "off" )
       {
@@ -2339,14 +2393,14 @@ void MANAGEMENT_handleset(void)
         {
           mySetupData->set_displayenabled(0);
           myoled->display_off();
-          rflag = true;
         }
+        else
+        {
+          // already off
+        }
+        jsonstr = "{ \"display\":\"off\" }";
       }
     }
-  }
-  else
-  {
-    MSpg.replace("%OLE%", "Display not defined in firmware");     // not checked
   }
 
   // motorspeed
@@ -2365,7 +2419,7 @@ void MANAGEMENT_handleset(void)
       tmp = FAST;
     }
     mySetupData->set_motorspeed(tmp);
-    rflag = true;
+    jsonstr = "{ \"motorspeed\":\"" + String(tmp) + " }";
   }
 
   // coilpower
@@ -2378,13 +2432,13 @@ void MANAGEMENT_handleset(void)
     {
       mySetupData->set_coilpower(1);
       driverboard->enablemotor();
-      rflag = true;
+      jsonstr = "{ \"coilpower\":\"on\" }";
     }
     else if ( value == "off" )
     {
       mySetupData->set_coilpower(0);
       driverboard->releasemotor();
-      rflag = true;
+      jsonstr = "{ \"coilpower\":\"off\" }";
     }
   }
 
@@ -2397,12 +2451,12 @@ void MANAGEMENT_handleset(void)
     if ( value == "on" )
     {
       mySetupData->set_reversedirection(1);
-      rflag = true;
+      jsonstr = "{ \"reverse\":\"on\" }";
     }
     else if ( value == "off" )
     {
       mySetupData->set_reversedirection(0);
-      rflag = true;
+      jsonstr = "{ \"reverse\":\"off\" }";
     }
   }
 
@@ -2416,6 +2470,7 @@ void MANAGEMENT_handleset(void)
     {
       MSrvr_DebugPrintln("hpsw pin is -1. Cannot enable hpsw");
       mySetupData->set_hpswitchenable(0);
+      jsonstr = "{ \"err\":\"off\" }";
     }
     else
     {
@@ -2423,12 +2478,12 @@ void MANAGEMENT_handleset(void)
       {
         mySetupData->set_hpswitchenable(1);
         init_homepositionswitch();
-        rflag = true;
+        jsonstr = "{ \"hpsw\":\"on\" }";
       }
       else if ( value == "off" )
       {
         mySetupData->set_hpswitchenable(0);
-        rflag = true;
+        jsonstr = "{ \"hpsw\":\"off\" }";
       }
     }
   }
@@ -2442,7 +2497,7 @@ void MANAGEMENT_handleset(void)
     MSrvr_DebugPrintln(temp);
 
     mySetupData->set_brdfixedstepmode(temp);
-    rflag = true;
+    jsonstr = "{ \"fixedstepmode\"" + String(temp) + " }";
   }
 
   // INDI
@@ -2454,23 +2509,33 @@ void MANAGEMENT_handleset(void)
     if ( value == "on" )
     {
       mySetupData->set_indi(1);
-      rflag = true;
+      jsonstr = "{ \"indi\":\"on\" }";
     }
     else if ( value == "off" )
     {
       mySetupData->set_indi(0);
-      rflag = true;
+      jsonstr = "{ \"indi\":\"off\" }";
     }
   }
 
-  // send generic OK
-  if ( rflag == true )
+  // CoilPowerTimeout
+  value = mserver.arg("coilpowertimeout");
+  if ( value != "" )
   {
-    MANAGEMENT_sendjson("{ \"cmd:\":\"ok\" }");
+    MSrvr_DebugPrint("coilpowertimeout:");
+    MSrvr_DebugPrintln(value);
+    unsigned long temp = value.toInt();
+    mySetupData->set_coilpower_timeout(temp);
+    jsonstr = "{ \"coilpowertimeout\":" + String(temp) + " }";
+  }
+
+  if ( jsonstr != "" )
+  {
+    MANAGEMENT_sendjson(jsonstr);
   }
   else
   {
-    MANAGEMENT_sendjson("{ \"cmd:\":\"nok\" }");
+    MANAGEMENT_sendjson("{ \"err:\":\"not set\" }");
   }
 }
 

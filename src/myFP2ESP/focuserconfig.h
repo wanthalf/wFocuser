@@ -20,26 +20,24 @@
 // Uncomment only your board - ONLY ONE BOARD SHOULD BE UNCOMMENTED
 
 // ESP8266 Boards
-//#define DRVBRD WEMOSDRV8825H                    // driver definition for Holger
-//#define DRVBRD WEMOSDRV8825
-//#define DRVBRD PRO2EULN2003
-//#define DRVBRD PRO2EDRV8825
-//#define DRVBRD PRO2EL293DNEMA
-//#define DRVBRD PRO2EL293D28BYJ48
-//#define DRVBRD PRO2EL298N
-//#define DRVBRD PRO2EL293DMINI
-//#define DRVBRD PRO2EL9110S
-//#define DRVBRD CUSTOMBRD
+//#define DRVBRD 	WEMOSDRV8825H                    // driver definition for Holger
+//#define DRVBRD 	WEMOSDRV8825
+//#define DRVBRD 	PRO2EULN2003
+//#define DRVBRD 	PRO2EDRV8825
+//#define DRVBRD 	PRO2EL293DNEMA
+//#define DRVBRD 	PRO2EL293D28BYJ48
+//#define DRVBRD 	PRO2EL298N
+//#define DRVBRD 	PRO2EL293DMINI
+//#define DRVBRD 	PRO2EL9110S
+//#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
-//#define DRVBRD PRO2ESP32DRV8825
-#define DRVBRD PRO2ESP32ULN2003
-//#define DRVBRD PRO2ESP32L298N
-//#define DRVBRD PRO2ESP32L293DMINI
-//#define DRVBRD PRO2ESP32L9110S
-//#define DRVBRD PRO2ESP32R3WEMOS
-//#define DRVBRD PRO2ESP32TMC2225
-//#define DRVBRD PRO2ESP32TMC2209
-//#define DRVBRD CUSTOMBRD
+//#define DRVBRD 	PRO2ESP32DRV8825
+#define DRVBRD 	PRO2ESP32ULN2003
+//#define DRVBRD 	PRO2ESP32L298N
+//#define DRVBRD 	PRO2ESP32L293DMINI
+//#define DRVBRD 	PRO2ESP32L9110S
+//#define DRVBRD 	PRO2ESP32R3WEMOS
+//#define DRVBRD 	CUSTOMBRD
 
 // On bootup following a controller firmware update, a default driver board file 
 // is created based on your board selection above.
@@ -51,15 +49,15 @@
 // For ESP8266 boards, set the fixedmode value to match the stepmode jumper
 // settings on the board [only one line can be enabled]
 // Applies to boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
-#define FIXEDSTEPMODE 1
-//#define FIXEDSTEPMODE 2
-//#define FIXEDSTEPMODE 4
-//#define FIXEDSTEPMODE 8
-//#define FIXEDSTEPMODE 16
-//#define FIXEDSTEPMODE 32
-//#define FIXEDSTEPMODE 64            // for future release
-//#define FIXEDSTEPMODE 128           // for future release
-//#define FIXEDSTEPMODE 256           // for future release
+#define FIXEDSTEPMODE   	1
+//#define FIXEDSTEPMODE 	2     
+//#define FIXEDSTEPMODE 	4
+//#define FIXEDSTEPMODE 	8
+//#define FIXEDSTEPMODE 	16
+//#define FIXEDSTEPMODE 	32
+//#define FIXEDSTEPMODE 	64            // for future release
+//#define FIXEDSTEPMODE 	128           // for future release
+//#define FIXEDSTEPMODE 	256           // for future release
 
 // ======================================================================
 // 3: SPECIFY STEPS PER REVOLUTION
@@ -69,13 +67,13 @@
 // PRO2EL293DMINI, PRO2ESP32L293MINI, PRO2EL9110S, PRO2ESPL9110S
 // PRO2EL293DNEMA, PRO2EL293D28BYJ48
 
-#define STEPSPERREVOLUTION 2048           // 28BYJ-48 stepper motor unipolar with ULN2003 board
-//#define STEPSPERREVOLUTION  200        // NEMA17 FULL STEPPED
-//#define STEPSPERREVOLUTION  400        // NEMA14HM11-0404S 0.9 motor FULL STEPPED
-//#define STEPSPERREVOLUTION 1028        // 17HS13-0404S-PG5
-//#define STEPSPERREVOLUTION 5370        // NEMA17HS13-0404S-PG27
-//#define STEPSPERREVOLUTION 1036        // NEMA14HS13-0804S-PG5
-//#define STEPSPERREVOLUTION 1036        // NEMA16HS13-0604S-PG5
+#define STEPSPERREVOLUTION 		2048           // 28BYJ-48 stepper motor unipolar with ULN2003 board
+//#define STEPSPERREVOLUTION  	200        // NEMA17 FULL STEPPED
+//#define STEPSPERREVOLUTION  	400        // NEMA14HM11-0404S 0.9 motor FULL STEPPED
+//#define STEPSPERREVOLUTION 	1028        // 17HS13-0404S-PG5
+//#define STEPSPERREVOLUTION 	5370        // NEMA17HS13-0404S-PG27
+//#define STEPSPERREVOLUTION 	1036        // NEMA14HS13-0804S-PG5
+//#define STEPSPERREVOLUTION 	1036        // NEMA16HS13-0604S-PG5
 
 
 // ======================================================================
@@ -84,8 +82,8 @@
 // If NOT using an OLED skip this section. 
 // To enable the OLED_TEXT or OLED_GRAPHIC display uncomment the related line below. 
 
-//#define OLED_MODE OLED_TEXT       // OLED text only mode
-//#define OLED_MODE OLED_GRAPHIC    // OLED graphic mode
+//#define OLED_MODE 	OLED_TEXT       // OLED text only mode
+//#define OLED_MODE 	OLED_GRAPHIC    // OLED graphic mode
 
 // and
 // only uncomment one of the following USE_SSxxxx lines depending upon your lcd type
@@ -100,11 +98,11 @@
 // 5: SPECIFY HARDWARE OPTIONS
 // ======================================================================
 // To enable the 2-Axis Joystick [ESP32 only], uncomment the next line
-//#define JOYSTICK1 1
+//#define JOYSTICK1 	1
 
 // To enable the Keyes KY-023 PS2 2-Axis Joystick [ESP32 only],
 // uncomment the next line
-//#define JOYSTICK2 2
+//#define JOYSTICK2 	2
 
 // To enable the Infrared remote controller [ESP32 only], uncomment the next line
 //#define INFRAREDREMOTE
@@ -135,22 +133,22 @@
 // 7: SPECIFY CONTROLLER OPTIONS
 // ======================================================================
 // To enable OTA updates, uncomment the next line [only works in STATIONMODE]
-//#define OTAUPDATES 5
+//#define OTAUPDATES 	5
 
 // mdns support [myfp2eap.local:8080]
 // to enable multicast DNS, uncomment the next line [only works in STATIONMODE]
-//#define MDNSSERVER 8
+//#define MDNSSERVER 	8
 
 // Management Server Control Interface [Port 6060] - DO NOT CHANGE
-//#define MANAGEMENT 9
+//#define MANAGEMENT 	9
 
 // Cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
 // To enable DUCKDNS [STATIONMODE only]
-//#define USEDUCKDNS 1
+//#define USEDUCKDNS 	1
 
 // to enable reading SSID and PASSWORD 
 // from SPIFFS file wificonfig at boot time, uncomment the following file
-//#define READWIFICONFIG 1
+//#define READWIFICONFIG 	1
 
 
 // ======================================================================

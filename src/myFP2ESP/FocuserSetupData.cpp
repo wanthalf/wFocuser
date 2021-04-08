@@ -92,6 +92,7 @@ byte SetupData::LoadConfiguration()
       this->tempcoefficient       = doc_per["tempcoefficient"];           // steps per degree temperature coefficient value (maxval=256)
       this->tempresolution        = doc_per["tempresolution"];            // 9 -12
       this->coilpower             = doc_per["coilpwr"];
+      this->coilpowertimeout      = doc_per["cptimeout"];
       this->reversedirection      = doc_per["rdirection"];
       this->stepsizeenabled       = doc_per["stepsizestate"];             // if 1, controller returns step size
       this->tempmode              = doc_per["tempmode"];                  // temperature display mode, Celcius=1, Fahrenheit=0
@@ -409,6 +410,7 @@ void SetupData::LoadDefaultPersistantData()
   SetupData_DebugPrintln("Load default persistance values");
   this->maxstep               = DEFAULTMAXSTEPS;
   this->coilpower             = DEFAULTOFF;
+  this->coilpowertimeout      = MotorReleaseDelay;            // 120s
   this->reversedirection      = DEFAULTOFF;
   this->stepsizeenabled       = DEFAULTOFF;
   this->stepsize              = DEFAULTSTEPSIZE;
@@ -497,6 +499,7 @@ byte SetupData::SavePersitantConfiguration()
   doc["tempcoefficient"]    = this->tempcoefficient;            // steps per degree temperature coefficient value (maxval=256)
   doc["tempresolution"]     = this->tempresolution;
   doc["coilpwr"]            = this->coilpower;
+  doc["cptimeout"]          = this->coilpowertimeout;
   doc["rdirection"]         = this->reversedirection;
   doc["stepsizestate"]      = this->stepsizeenabled;            // if 1, controller returns step size
   doc["tempmode"]           = this->tempmode;                   // temperature display mode, Celcius=1, Fahrenheit=0
@@ -610,6 +613,11 @@ byte SetupData::get_tempresolution()
 byte SetupData::get_coilpower()
 {
   return this->coilpower;             // state of coil power, 0 = !enabled, 1= enabled
+}
+
+unsigned long SetupData::get_coilpower_timeout()
+{
+  return this->coilpowertimeout;      // how long after a move before coil power is turned off
 }
 
 byte SetupData::get_reversedirection()
@@ -823,6 +831,11 @@ void SetupData::set_tempresolution(byte tempresolution)
 void SetupData::set_coilpower(byte coilpower)
 {
   this->StartDelayedUpdate(this->coilpower, coilpower);
+}
+
+void SetupData::set_coilpower_timeout(unsigned long cptimeoutval)
+{
+  this->StartDelayedUpdate(this->coilpowertimeout, cptimeoutval);
 }
 
 void SetupData::set_reversedirection(byte reversedirection)

@@ -65,12 +65,6 @@
 #ifndef WEMOSDRV8825H
 #define WEMOSDRV8825H         50          // this is for Holger
 #endif
-#ifndef PRO2ESP32TMC2225
-#define PRO2ESP32TMC2225      51
-#endif
-#ifndef PRO2ESP32TMC2209
-#define PRO2ESP32TMC2209      52        
-#endif
 
 // ======================================================================
 // DEFINES FOR MOTOR SPEEDS

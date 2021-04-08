@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 213
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 214
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -96,13 +96,13 @@
 // ======================================================================
 // 6: SPECIFY THE CONTROLLER MODE IN 6: focuserconfig.h
 // ======================================================================
-// Please specify your controller mode in focuserconfig.h, such as 
+// Please specify your controller mode in focuserconfig.h, such as
 // ACCESSPOINT, STATIONMODE, LOCALSERIAL or BLUETOOTHMODE
 
 // ======================================================================
 // 7: SPECIFY CONTROLLER OPTIONS in 7: focuserconfig.h
 // ======================================================================
-// Please specify your controller options in focuserconfig.h, such as 
+// Please specify your controller options in focuserconfig.h, such as
 // OTAUPDATES, MDNSSERVER, MANAGEMENT, USEDUCKDNS and READWIFICONFIG
 
 // ======================================================================
@@ -1631,7 +1631,7 @@ void loop()
         // Parked is set false after State_DelayAfterMove is ended
         if (Parked == false)
         {
-          if (TimeCheck(TimeStampPark, MotorReleaseDelay))   // Power off after MotorReleaseDelay
+          if (TimeCheck(TimeStampPark, mySetupData->get_coilpower_timeout()))   // coil power off after delay time expired
           {
             // need to obey rule - can only release motor if coil power is disabled
             if ( mySetupData->get_coilpower() == 0 )
