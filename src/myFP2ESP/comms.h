@@ -39,7 +39,6 @@ extern bool  init_leds(void);
 extern bool  init_homepositionswitch(void);
 extern bool  init_pushbuttons(void);
 
-#if defined(CONTROLLERMODE)
 // ======================================================================
 // DATA
 // ======================================================================
@@ -915,7 +914,6 @@ void processbt()
     }
   }
 }
-#endif // #if (CONTROLLERMODE == BLUETOOTHMODE)
 
 
 #endif

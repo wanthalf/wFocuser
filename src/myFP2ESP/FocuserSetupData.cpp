@@ -4,6 +4,9 @@
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // ======================================================================
 
+// ======================================================================
+// Includes
+// ======================================================================
 #include <ArduinoJson.h>
 
 #if defined(ESP8266)
@@ -16,16 +19,24 @@
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"
 
-// delay(10) required in ESP8266 code around file handling
-
-extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+// ======================================================================
+// Extern Data
+// ======================================================================extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
 extern int brdfixedstepmode;            // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
 extern int brdstepsperrev;
+extern int DefaultBoardNumber;
+
+// ======================================================================
+// Defines
+// ======================================================================
 #define DEFAULTSAVETIME       30000 
 
+// ======================================================================
+// SetupData Class
+// ======================================================================
 SetupData::SetupData(void)
 {
-  SetupData_DebugPrintln("Constructor Setupdata");
+  SetupData_DebugPrintln("Setupdata: Constructor");
 
   this->SnapShotMillis      = millis();
   this->BoardSnapShotMillis = millis();
@@ -38,7 +49,7 @@ SetupData::SetupData(void)
     SetupData_DebugPrintln("FS not mounted");
     SetupData_DebugPrintln("Formatting, please wait...");
     SPIFFS.format();
-    SetupData_DebugPrintln("Format FS done");
+    SetupData_DebugPrintln("FS Format done");
   }
   else
   {
@@ -58,7 +69,7 @@ byte SetupData::LoadConfiguration()
   delay(10);
   if (!dfile)
   {
-    SetupData_DebugPrintln("Err: no Persistant data file. create defaults.");
+    SetupData_DebugPrintln("Err: no data_per file. Create defaults.");
     LoadDefaultPersistantData();
     delay(10);
   }
@@ -77,7 +88,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_per, fdata);
     if (error)
     {
-      SetupData_DebugPrintln("Err: no persistant data file. create defaults.");
+      SetupData_DebugPrintln("Err: no data_per file. Create defaults.");
       LoadDefaultPersistantData();
     }
     else
@@ -90,7 +101,7 @@ byte SetupData::LoadConfiguration()
       this->backlash_in_enabled   = doc_per["backlash_in_enabled"];
       this->backlash_out_enabled  = doc_per["backlash_out_enabled"];
       this->tempcoefficient       = doc_per["tempcoefficient"];           // steps per degree temperature coefficient value (maxval=256)
-      this->tempresolution        = doc_per["tempresolution"];            // 9 -12
+      this->tempresolution        = doc_per["tempresolution"];            // 9 - 12
       this->coilpower             = doc_per["coilpwr"];
       this->coilpowertimeout      = doc_per["cptimeout"];
       this->reversedirection      = doc_per["rdirection"];
@@ -127,18 +138,18 @@ byte SetupData::LoadConfiguration()
       this->pbenable              = doc_per["pbenable"];
       this->indi                  = doc_per["indi"];
     }
-    SetupData_DebugPrintln("Config file persistant data loaded");
+    SetupData_DebugPrintln("data_per loaded");
   }
 
   // Process board configuration
   delay(10);
   // Open board_config.jsn file for reading
-  SetupData_DebugPrint("Default board config file:");
+  SetupData_DebugPrint("Open board_config file:");
   SetupData_DebugPrintln(filename_boardconfig);
   File bfile = SPIFFS.open(filename_boardconfig, "r");
   if (!bfile)
   {
-    SetupData_DebugPrint("err: no board config file. create defaults.");
+    SetupData_DebugPrint("err: no board_config file. Create defaults.");
     LoadDefaultBoardData();
     delay(10);
     retval = 4;
@@ -148,7 +159,7 @@ byte SetupData::LoadConfiguration()
     delay(10);
     // Reading board_config.jsn
     String board_data = bfile.readString();               // read content of the text file
-    SetupData_DebugPrint("LoadConfiguration(): Board_data= ");
+    SetupData_DebugPrint("LoadConfiguration(): board_config= ");
     SetupData_DebugPrintln(board_data);                             // ... and print on serial
     bfile.close();
 
@@ -159,7 +170,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_brd, board_data);
     if (error)
     {
-      SetupData_DebugPrintln("Err: deserialize board config file, create defaults.");
+      SetupData_DebugPrintln("Err: deserialize board_config file, Create defaults.");
       LoadDefaultBoardData();
     }
     else
@@ -192,7 +203,7 @@ byte SetupData::LoadConfiguration()
       }
       this->msdelay        = doc_brd["msdelay"];                    // motor speed delay - do not confuse with motorspeed
 
-      SetupData_DebugPrintln("Board configuration file loaded");
+      SetupData_DebugPrintln("board_config file loaded");
     }
     retval = 5;
   }
@@ -203,14 +214,14 @@ byte SetupData::LoadConfiguration()
   dfile = SPIFFS.open(filename_variable, "r");
   if (!dfile)
   {
-    SetupData_DebugPrintln("Err: no Variable data found. create defaults.");
+    SetupData_DebugPrintln("Err: data_var not found. Create defaults.");
     LoadDefaultVariableData();
     retval = 1;
   }
   else
   {
     String fdata = dfile.readString();               // read content of the text file
-    SetupData_DebugPrint("LoadConfiguration: Variable SetupData= ");
+    SetupData_DebugPrint("LoadConfiguration: data_var= ");
     SetupData_DebugPrintln(fdata);                             // ... and print on serial
     dfile.close();
 
@@ -221,7 +232,7 @@ byte SetupData::LoadConfiguration()
     DeserializationError error = deserializeJson(doc_var, fdata);
     if (error)
     {
-      SetupData_DebugPrintln("Err: no variable data file. create defaults.");
+      SetupData_DebugPrintln("Err: no data_var file. Create defaults.");
       LoadDefaultVariableData();
       retval = 2;
     }
@@ -236,7 +247,7 @@ byte SetupData::LoadConfiguration()
     }
   }
   dfile.close();
-  SetupData_DebugPrintln("variable data loaded");
+  SetupData_DebugPrintln("data_var loaded");
   return retval;
 }
 
@@ -274,12 +285,12 @@ boolean SetupData::SaveBoardConfiguration()
     {
       if (this->WriteBoardConfiguration() == false)
       {
-        SetupData_DebugPrintln("Error save driver board configuration");
+        SetupData_DebugPrintln("Error save board_config");
       }
       else
       {
         delay(10);
-        SetupData_DebugPrintln("++ driver board data saved");
+        SetupData_DebugPrintln("board_config saved");
       }
       cstatus = true;
       this->ReqSaveBoard_var = false;
@@ -291,14 +302,14 @@ boolean SetupData::SaveBoardConfiguration()
 // Saves the configuration to a file
 boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTravel)
 {
-  DebugPrintln("SaveConfiguration:");
+  SetupData_DebugPrintln("SaveConfiguration:");
   if (this->fposition != currentPosition || this->focuserdirection != DirOfTravel)  // last focuser position
   {
     this->fposition = currentPosition;
     this->focuserdirection = DirOfTravel;
     this->ReqSaveData_var = true;
     this->SnapShotMillis = millis();
-    SetupData_DebugPrintln("++ request for saving variable data");
+    SetupData_DebugPrintln("++ request for saving data_var");
     delay(10);
   }
 
@@ -311,12 +322,12 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
     {
       if (SavePersitantConfiguration() == false)
       {
-        SetupData_DebugPrintln("Error save persistant configuration");
+        SetupData_DebugPrintln("Error saving data_per");
       }
       else
       {
         delay(10);
-        SetupData_DebugPrintln("++ persistant data saved");
+        SetupData_DebugPrintln("++ data_per saved");
       }
       cstatus = true;
       this->ReqSaveData_per = false;
@@ -326,12 +337,12 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
     {
       if (SaveVariableConfiguration() == false)
       {
-        SetupData_DebugPrintln("Error save variable configuration");
+        SetupData_DebugPrintln("Error saving data_var");
       }
       else
       {
         delay(10);
-        SetupData_DebugPrintln("++ variable data saved");
+        SetupData_DebugPrintln("++ data_var saved");
       }
       cstatus = true;
       this->ReqSaveData_var = false;
@@ -407,7 +418,7 @@ byte SetupData::SaveVariableConfiguration()
 // ======================================================================
 void SetupData::LoadDefaultPersistantData()
 {
-  SetupData_DebugPrintln("Load default persistance values");
+  SetupData_DebugPrintln("Load default data_per");
   this->maxstep               = DEFAULTMAXSTEPS;
   this->coilpower             = DEFAULTOFF;
   this->coilpowertimeout      = MotorReleaseDelay;            // 120s

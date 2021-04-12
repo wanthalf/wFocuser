@@ -7,7 +7,6 @@
 // ======================================================================
 // INCLUDES:
 // ======================================================================
-
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"               // needed for mySetupData class
 #include "myBoards.h"                       // needed for driverboard class

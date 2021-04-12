@@ -12,6 +12,9 @@
 // data_per.jsn       650
 // board_config.jsn   265
 
+// ======================================================================
+// Defines
+// ======================================================================
 #define DEFAULTOFF              0
 #define DEFAULTON               1
 #define DEFAULTCELSIUS          1
@@ -20,6 +23,9 @@
 #define DEFAULTVARDOCSIZE       64
 #define DEFAULTBOARDSIZE        1024      // board configuration - about 300 - https://arduinojson.org/v6/assistant/ deserialize
 
+// ======================================================================
+// SetupData Class
+// ======================================================================
 class SetupData
 {
   public:

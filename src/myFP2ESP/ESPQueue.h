@@ -1,11 +1,8 @@
-/*
- * Queue.h
- * By Steven de Salas
- * 
- * Defines a templated (generic) class for a queue of things.
- * Used for Arduino projects, just #include "Queue.h" and add this file via the IDE.
- */
- 
+// ======================================================================
+// Queue.h: myFP2ESP Queue Routines
+// (c) Copyright Steven de Salas. All Rights Reserved.
+// Defines a templated (generic) class for a queue of things.
+// ======================================================================
 // Modified by Robert Brown for use with ESP32, August 2019
 
 #ifndef ESPQueue_H

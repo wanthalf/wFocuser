@@ -535,7 +535,7 @@ void init_joystick2(void)
 // ======================================================================
 bool init_pushbuttons(void)
 {
-  Setup_DebugPrint("initPB: ");
+  //Setup_DebugPrint("initPB: ");
   if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -543,24 +543,24 @@ bool init_pushbuttons(void)
     {
       pinMode(mySetupData->get_brdpb1pin(), INPUT);
       pinMode(mySetupData->get_brdpb2pin(), INPUT);
-      Setup_DebugPrintln("enabled");
+      //Setup_DebugPrintln("enabled");
       return true;
     }
     else
     {
-      Setup_DebugPrintln("disabled");
+      //Setup_DebugPrintln("disabled");
     }
   }
   else
   {
-    Setup_DebugPrintln("not permitted");
+    //Setup_DebugPrintln("not permitted");
   }
   return false;
 }
 
 void update_pushbuttons(void)
 {
-  DebugPrint("updatePB: ");
+  //DebugPrint("updatePB: ");
   if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -573,7 +573,7 @@ void update_pushbuttons(void)
         newpos = ftargetPosition - 1;
         newpos = (newpos < 0 ) ? 0 : newpos;
         ftargetPosition = newpos;
-        DebugPrintln("pb1 updated");
+        //DebugPrintln("pb1 updated");
       }
       if ( digitalRead(mySetupData->get_brdpb2pin()) == 1 )
       {
@@ -583,17 +583,17 @@ void update_pushbuttons(void)
         // which would in likely be much much greater than maxstep
         newpos = (newpos > (long) mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : newpos;
         ftargetPosition = newpos;
-        DebugPrintln("pb2 updated");
+        //DebugPrintln("pb2 updated");
       }
     }
     else
     {
-      DebugPrintln("disabled");
+      //DebugPrintln("disabled");
     }
   }
   else
   {
-    DebugPrintln("not permitted");
+    //DebugPrintln("not permitted");
   }
 }
 

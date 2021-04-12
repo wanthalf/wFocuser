@@ -4,6 +4,9 @@
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // ======================================================================
 
+// ======================================================================
+// Includes
+// ======================================================================
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"
 #include "myBoards.h"
@@ -14,9 +17,11 @@
 #undef DEBUG_ESP_HTTP_SERVER                    // prevent messages from WiFiServer 
 #include <ESP8266WiFi.h>
 #include <FS.h>                                 // include the SPIFFS library  
+#include <ESP8266WebServer.h>
 #else                                           // otherwise assume ESP32
 #include <WiFi.h>
 #include "SPIFFS.h"
+#include <WebServer.h>
 #endif
 #include <SPI.h>
 
@@ -42,16 +47,10 @@ extern void         heapmsg(void);
 void WEBSERVER_sendpresets(void);
 void WEBSERVER_sendroot(void);
 
-// ======================================================================
-// 23: WEBSERVER - CHANGE AT YOUR OWN PERIL
-// ======================================================================
-#if defined(ESP8266)
-#undef DEBUG_ESP_HTTP_SERVER
-#include <ESP8266WebServer.h>
-#else
-#include <WebServer.h>
-#endif // if defined(esp8266)
 
+// ======================================================================
+// WEBSERVER Data
+// ======================================================================
 #include "webserver.h"
 #if defined(ESP8266)
 #undef DEBUG_ESP_HTTP_SERVER
@@ -61,6 +60,9 @@ WebServer *webserver;
 #endif // if defined(esp8266)
 String WSpg;
 
+// ======================================================================
+// WEBSERVER Code
+// ======================================================================
 void WEBSERVER_sendACAOheader(void)
 {
   webserver->sendHeader("Access-Control-Allow-Origin", "*");

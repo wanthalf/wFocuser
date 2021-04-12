@@ -46,5 +46,3 @@ const char* SETPGTIMESTR              = "set OLED pg time";
 const char* CREATEFILEFAILSTR         = "err: file";
 const char* WRITEFILEFAILSTR          = "err: write to file";
 const char* WRITEFILESUCCESSSTR       = "write file ok";
-
-;

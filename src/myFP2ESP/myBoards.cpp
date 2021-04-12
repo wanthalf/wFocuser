@@ -167,7 +167,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
       digitalWrite(mySetupData->get_brdenablepin(), 1);
       digitalWrite(mySetupData->get_brdsteppin(), 0);
     }
-    else if ( boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32TMC2225 || boardnum == PRO2ESP32TMC2209)
+    else if ( boardnum == PRO2ESP32DRV8825 )
     {
       pinMode(mySetupData->get_brdenablepin(), OUTPUT);
       pinMode(mySetupData->get_brddirpin(), OUTPUT);
@@ -266,7 +266,6 @@ DriverBoard::DriverBoard(unsigned long startposition)
 // destructor
 DriverBoard::~DriverBoard()
 {
-  String drvbrd = mySetupData->get_brdname();
   if ( boardnum == PRO2EULN2003      || boardnum == PRO2ESP32ULN2003  \
        || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N    \
        || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI \
@@ -282,7 +281,6 @@ DriverBoard::~DriverBoard()
 
 void DriverBoard::setstepmode(int smode)
 {
-  String drvbrd = mySetupData->get_brdname();
   do {
     if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
     {
@@ -360,7 +358,6 @@ void DriverBoard::setstepmode(int smode)
 
 void DriverBoard::enablemotor(void)
 {
-  String drvbrd = mySetupData->get_brdname();
   if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
   {
     digitalWrite(mySetupData->get_brdenablepin(), 0);
@@ -370,7 +367,6 @@ void DriverBoard::enablemotor(void)
 
 void DriverBoard::releasemotor(void)
 {
-  String drvbrd = mySetupData->get_brdname();
   if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
   {
     digitalWrite(mySetupData->get_brdenablepin(), 1);
@@ -390,7 +386,6 @@ void DriverBoard::releasemotor(void)
 
 void DriverBoard::movemotor(byte dir, bool updatefpos)
 {
-  String drvbrd = mySetupData->get_brdname();
   //DebugPrint("movemotor() : ");
   //DebugPrintln(dir);
   // only ESP32 boards have in out leds
@@ -404,7 +399,7 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
   }
 
   // do direction, enable and step motor
-  if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H || boardnum == PRO2ESP32TMC2225 || boardnum == PRO2ESP32TMC2209 )
+  if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H )
   {
     if ( mySetupData->get_reversedirection() == 1 )
     {

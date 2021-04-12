@@ -4,6 +4,9 @@
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // ======================================================================
 
+// ======================================================================
+// Includes
+// ======================================================================
 #include <Arduino.h>
 #include "generalDefinitions.h"
 #include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
@@ -15,10 +18,6 @@
 #include <FS.h>                             // include the SPIFFS library  
 #else                                       // otherwise assume ESP32
 #include "SPIFFS.h"
-#endif
-
-#ifndef STATICIPON
-#define STATICIPON    1
 #endif
 
 #include "displays.h"
@@ -69,6 +68,13 @@ extern bool init_pushbuttons(void);
 #ifdef MDNSSERVER
 extern void start_mdns_service(void);
 extern void stop_mdns_service(void);
+#endif
+
+// ======================================================================
+// Defines
+// ======================================================================
+#ifndef STATICIPON
+#define STATICIPON    1
 #endif
 
 // ======================================================================

@@ -1,3 +1,10 @@
+==============================================================
+myFP2ESP Focus Controller [ESP8266/ESP32]
+© Copyright Robert Brown 2014-2021. All Rights Reserved.
+© Copyright Holger M, 2019-2021. All Rights Reserved.
+==============================================================
+
+
 214
 Add download boardconfig.jsn to comms case 69
 Add coil power timeout setting to management server (get and set) and comms cases 58 and 59

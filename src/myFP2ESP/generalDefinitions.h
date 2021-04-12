@@ -24,66 +24,99 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define STATIONMODE           3
 #define LOCALSERIAL           4
 
-#define DEFAULTPOSITION       5000L
-#define DEFAULTMAXSTEPS       80000L
-
-#define DEFAULTSAVETIME       30000         // default time to wait before saving data to FS
-
-#define ALPACAPORT            4040          // ASCOM Remote port
-#define WEBSERVERPORT         80            // Web server port
-#define MSSERVERPORT          6060          // Management interface - cannot be changed
-#define MDNSSERVERPORT        7070          // mDNS service
-#define WS_REFRESHRATE        60            // web server page refresh time 60s
-#define MINREFRESHPAGERATE    10            // 10s - too low and the overhead becomes too much for the controller
-#define MAXREFRESHPAGERATE    900           // 15m
-#define DUCKDNS_REFRESHRATE   60000         // duck dns, check ip address every 60s for an update
-#define RUNNING               true          // service state running
-#define STOPPED               false         // service state stopped
-#define MSREBOOTPAGEDELAY     20000         // management service reboot page, time (s) between next page refresh
-#define REBOOTDELAY           2000          // When rebooting controller, delay (2s) from msg to actual reboot
-#define MotorReleaseDelay     120*1000      // motor release power after 120s
-
-#define MINOLEDPAGETIME       2000L
-#define MAXOLEDPAGETIME       10000L
-#define OLEDPGOPTIONALL       "111"         // oled page enable, ALL pages
-
-#define MOTORPULSETIME        2             // DO NOT CHANGE
-#define SERVERPORT            2020          // TCPIP port for myFP2ESP
-#define TEMPREFRESHRATE       3000L         // refresh rate between temperature conversions unless an update is requested via serial command
-#define SERIALPORTSPEED       115200        // 9600, 14400, 19200, 28800, 38400, 57600, 115200
+// INTERFACE SETTINGS
+#define EOFSTR                '#'
+#define STARTCMDSTR           ':'
 #define ESPDATA               0             // command has come from tcp/ip
 #define BTDATA                1             // command has come from bluetooth
 #define SERIALDATA            2             // command has come from serial port
 #define QUEUELENGTH           20            // number of commands that can be saved in the serial queue
-
-#define DEFAULTSTEPSIZE       50.0          // This is the default setting for the step size in microns
-#define MINIMUMSTEPSIZE       0.0
-#define MAXIMUMSTEPSIZE       100.0
-#define TEMPRESOLUTION        10            // Set the default DS18B20 precision to 0.25 of a degree 9=0.5, 10=0.25, 11=0.125, 12=0.0625
-#define LCDUPDATEONMOVE       15            // defines how many steps before refreshing position when moving if lcdupdateonmove is 1
-#define FOCUSERUPPERLIMIT     2000000000L   // arbitary focuser limit up to 2000000000
-#define FOCUSERLOWERLIMIT     1024L         // lowest value that maxsteps can be
-#define LCDPAGETIMEMIN        2             // 2s minimum lcd page display time
-#define LCDPAGETIMEMAX        10            // 10s maximum lcd page display time
-#define HOMESTEPS             200           // Prevent searching for home position switch never returning, this should be > than # of steps between closed and open
-#define HPSWOPEN              0             // hpsw states refelect status of switch
-#define HPSWCLOSED            1
-
-#define MAXWEBPAGESIZE        4100          // largest = / = 3943
-#define MAXASCOMPAGESIZE      2200          // largest = /setuppage = 2042
-#define MAXMANAGEMENTPAGESIZE 3700          // largest = /msindex2 = 3568
-#define MAXCUSTOMBRDJSONSIZE   300
-
-// ======================================================================
-// 2: DO NOT CHANGE
-// ======================================================================
-
+#define RUNNING               true          // service state running
+#define STOPPED               false         // service state stopped
+#define REBOOTDELAY           2000          // When rebooting controller, delay (2s) from msg to actual reboot
 #define moving_in             false
 #define moving_out            !moving_in
 #define moving_main           moving_in
 
-#define EOFSTR                '#'
-#define STARTCMDSTR           ':'
+// MOTOR SETTINGS
+#define MOTORPULSETIME        2             // DO NOT CHANGE
+#define DEFAULTSTEPSIZE       50.0          // This is the default setting for the step size in microns
+#define MINIMUMSTEPSIZE       0.0
+#define MAXIMUMSTEPSIZE       100.0
+#define DEFAULTPOSITION       5000L
+#define DEFAULTMAXSTEPS       80000L
+#define MotorReleaseDelay     120*1000      // motor release power after 120s
+#define FOCUSERUPPERLIMIT     2000000000L   // arbitary focuser limit up to 2000000000
+#define FOCUSERLOWERLIMIT     1024L         // lowest value that maxsteps can be
+#define HOMESTEPS             200           // Prevent searching for home position switch never returning, this should be > than # of steps between closed and open
+#define HPSWOPEN              0             // hpsw states refelect status of switch
+#define HPSWCLOSED            1
+
+// ASCOM SERVICE
+#define ALPACAPORT            4040          // ASCOM Remote port
+#define MAXASCOMPAGESIZE      2200          // largest = /setuppage = 2042
+
+// DISPLAY
+#define LCDPAGETIMEMIN        2             // 2s minimum lcd page display time
+#define LCDPAGETIMEMAX        10            // 10s maximum lcd page display time
+#define OLEDPGOPTIONALL       "111"         // oled page enable, ALL pages
+#define LCDUPDATEONMOVE       15            // defines how many steps before refreshing position when moving if lcdupdateonmove is 1
+#define MINOLEDPAGETIME       2000L
+#define MAXOLEDPAGETIME       10000L
+
+// DUCKDNS SERVICE
+#define DUCKDNS_REFRESHRATE   60000         // duck dns, check ip address every 60s for an update
+
+// MANAGEMENT SERVICE
+#define MSSERVERPORT          6060          // Management interface - cannot be changed
+#define MSREBOOTPAGEDELAY     20000         // management service reboot page, time (s) between next page refresh
+#define MAXMANAGEMENTPAGESIZE 3700          // largest = /msindex2 = 3568
+#define MAXCUSTOMBRDJSONSIZE   300
+
+// MDNS SERVICE
+#define MDNSSERVERPORT        7070          // mDNS service
+
+// SERIAL PORT
+#define SERIALPORTSPEED       57600         // 9600, 14400, 19200, 28800, 38400, 57600, 115200
+
+// TCPIP SERVICE
+#define SERVERPORT            2020          // TCPIP port for myFP2ESP
+
+// TEMPERATURE PROBE
+#define TEMPREFRESHRATE       3000L         // refresh rate between temperature conversions unless an update is requested via serial command
+#define TEMPRESOLUTION        10            // Set the default DS18B20 precision to 0.25 of a degree 9=0.5, 10=0.25, 11=0.125, 12=0.0625
+
+// TIMES AND DELAYS SETTINGS
+#define DEFAULTSAVETIME       30000         // default time to wait before saving data to FS
+
+// WEBSERVER SERVICE
+#define WEBSERVERPORT         80            // Web server port
+#define WS_REFRESHRATE        60            // web server page refresh time 60s
+#define MINREFRESHPAGERATE    10            // 10s - too low and the overhead becomes too much for the controller
+#define MAXREFRESHPAGERATE    900           // 15m
+#define MAXWEBPAGESIZE        4100          // largest = / = 3943
+
+// defines for ASCOMSERVER, MDNSSERVER, WEBSERVER
+#define ASCOMREMOTESTR            "ASCOM Remote: "
+#define WEBSERVERSTR              "Webserver: "
+#define NORMALWEBPAGE             200
+#define FILEUPLOADSUCCESS         300
+#define BADREQUESTWEBPAGE         400
+#define NOTFOUNDWEBPAGE           404
+#define INTERNALSERVERERROR       500
+#define TEXTPAGETYPE              "text/html"
+#define PLAINTEXTPAGETYPE         "text/plain"
+#define JSONTEXTPAGETYPE          "text/json"
+#define JSONPAGETYPE              "application/json"
+#define FILENOTFOUNDSTR           "Not found"
+#define FILEFOUNDSTR              "Found"
+#define NOTDEFINEDSTR             "Not defined"
+#define MDNSSTARTFAILSTR          "Err starting MDNS responder"
+#define MDNSSTARTEDSTR            "mDNS responder started"
+
+// ======================================================================
+// 2: DO NOT CHANGE
+// ======================================================================
 
 extern const char* programVersion;
 extern const char* ProgramAuthor;
@@ -124,31 +157,16 @@ extern const char* CREATEFILEFAILSTR;
 extern const char* WRITEFILEFAILSTR;
 extern const char* WRITEFILESUCCESSSTR;
 
-
-// defines for ASCOMSERVER, MDNSSERVER, WEBSERVER
-#define ASCOMREMOTESTR            "ASCOM Remote: "
-#define WEBSERVERSTR              "Webserver: "
-#define NORMALWEBPAGE             200
-#define FILEUPLOADSUCCESS         300
-#define BADREQUESTWEBPAGE         400
-#define NOTFOUNDWEBPAGE           404
-#define INTERNALSERVERERROR       500
-
-#define TEXTPAGETYPE              "text/html"
-#define PLAINTEXTPAGETYPE         "text/plain"
-#define JSONTEXTPAGETYPE          "text/json"
-#define JSONPAGETYPE              "application/json"
-#define FILENOTFOUNDSTR           "Not found"
-#define FILEFOUNDSTR              "Found"
-#define NOTDEFINEDSTR             "Not defined"
+// ======================================================================
+// 2: DO NOT CHANGE
+// ======================================================================
+// DO NOT CHANGE ANY OF THESE
+// DO NOT CHANGE ANY OF THESE
 
 #define MANAGEMENTISMOVINGSTR     "<html><head><title>Management Server</title></head><body><p>Focuser is Moving. Please try again once focuser has stopped</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define MANAGEMENTNOTFOUNDSTR     "<html><head><title>Management Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define WEBSERVERNOTFOUNDSTR      "<html><head><title>Web Server</title></head><body><p>URL not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOMEPAGE\"></form></p></body></html>"
 #define ASCOMSERVERNOTFOUNDSTR    "<html><head><title>ASCOM REMOTE Server</title></head><body><p>FS not started</p><p><p><a href=\"/setup/v1/focuser/0/setup\">Setup page</a></p></body></html>";
-
-#define MDNSSTARTFAILSTR          "Err starting MDNS responder"
-#define MDNSSTARTEDSTR            "mDNS responder started"
 
 #define CREBOOTSTR                "<form action=\"/\" method=\"post\"><input type=\"hidden\" name=\"srestart\" value=\"true\"><input type=\"submit\" onclick=\"return confirm('Are you sure?')\" value=\"REBOOT CONTROLLER\"></form>"
 
@@ -197,7 +215,7 @@ extern const char* WRITEFILESUCCESSSTR;
 #define STARTFMDLOFFSTR           "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdon\"><input type=\"submit\" value=\"Enable\"></form>"
 
 // ======================================================================
-// 1. HEAP DEBUGGING - DO NOT CHANGE / DO NOT ENABLE
+// 4. HEAP DEBUGGING - DO NOT CHANGE / DO NOT ENABLE
 // ======================================================================
 //#define HEAPDEBUG     1
 
@@ -210,8 +228,9 @@ extern const char* WRITEFILESUCCESSSTR;
 #define HDebugPrintln(...)                              // now defines a blank line
 #define HDebugPrintf(...)
 #endif
+
 // ======================================================================
-// 2. DEBUGGING -- DO NOT CHANGE
+// 5. DEBUGGING -- DO NOT CHANGE
 // ======================================================================
 //#define DEBUG 1
 
@@ -297,7 +316,7 @@ extern const char* WRITEFILESUCCESSSTR;
 #endif
 
 // ======================================================================
-// 3. TRACING -- DO NOT CHANGE
+// 6. TRACING -- DO NOT CHANGE
 // ======================================================================
 // ArduinoTrace - github.com/bblanchon/ArduinoTrace
 // Copyright Benoit Blanchon 2018-2019
@@ -312,7 +331,7 @@ extern const char* WRITEFILESUCCESSSTR;
   DebugPrintln(__PRETTY_FUNCTION__);
   
 // ======================================================================
-// 4. TIMING TESTS - DO NOT CHANGE / DO NOT ENABLE
+// 7. TIMING TESTS - DO NOT CHANGE / DO NOT ENABLE
 // ======================================================================
 //#define TIMEDTESTS 1
 

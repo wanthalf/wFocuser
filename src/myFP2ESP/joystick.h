@@ -17,11 +17,17 @@
 // If using WiFi use ADC1 pins
 // ADC1 [GPIO33/GPIO32/GPIO35/GPIO34/GPIO39/GPIO36]
 
-#include <Arduino.h>
-
 #ifndef joystick_h
 #define joystick_h
 
+// ======================================================================
+// Includes
+// ======================================================================
+#include <Arduino.h>
+
+// ======================================================================
+// Definitions
+// ======================================================================
 #if defined(JOYSTICK1) || defined(JOYSTICK2)
 #ifdef  JOYSTICK1
 #define JOYINOUTPIN   34      	// ADC1_6, D34 - Wire to X
@@ -30,7 +36,7 @@
 #define JTHRESHOLD    300     	// margin of error around center position
 #define JMAXVALUE     4095      // maximum value reading of joystick
 #define JMINVALUE     0         // minimum value reading of joystick
-#endif
+#endif // #ifdef  JOYSTICK1
 
 #ifdef  JOYSTICK2
 #define JOYINOUTPIN   34        // ADC1_6, D34 - Wire to VRx
@@ -39,7 +45,7 @@
 #define JTHRESHOLD    300     	// margin of error around center position
 #define JMAXVALUE     4095      // maximum value reading of joystick
 #define JMINVALUE     0         // minimum value reading of joystick
-#endif
+#endif // #ifdef  JOYSTICK2
 
 #endif // #if defined(JOYSTICK1) || defined(JOYSTICK2)
 

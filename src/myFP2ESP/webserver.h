@@ -10,6 +10,7 @@
 // ======================================================================
 // DATA
 // ======================================================================
+// stepmode html to create radio buttons on web page
 #define WS_SM1CHECKED             "<input type=\"radio\" name=\"sm\" value=\"1\" Checked> 1"
 #define WS_SM1UNCHECKED           "<input type=\"radio\" name=\"sm\" value=\"1\"> 1"
 #define WS_SM2CHECKED             "<input type=\"radio\" name=\"sm\" value=\"2\" Checked> 2"
@@ -23,6 +24,7 @@
 #define WS_SM32CHECKED            "<input type=\"radio\" name=\"sm\" value=\"32\" Checked> 32"
 #define WS_SM32UNCHECKED          "<input type=\"radio\" name=\"sm\" value=\"32\"> 32"
 
+// Motor speed html to create radio buttons on web page
 #define WS_MSSLOWCHECKED          "<input type=\"radio\" name=\"ms\" value=\"0\" Checked> S"
 #define WS_MSSLOWUNCHECKED        "<input type=\"radio\" name=\"ms\" value=\"0\"> S"
 #define WS_MSMEDCHECKED           "<input type=\"radio\" name=\"ms\" value=\"1\" Checked> M"
