@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 214
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 214-1
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -339,13 +339,13 @@ void update_irremote()
       switch ( lastcode )
       {
         case IR_SLOW:
-          mySetupData->set_motorSpeed(SLOW);
+          mySetupData->set_motorspeed(SLOW);
           break;
         case IR_MEDIUM:
-          mySetupData->set_motorSpeed(MED);
+          mySetupData->set_motorspeed(MED);
           break;
         case IR_FAST:
-          mySetupData->set_motorSpeed(FAST);
+          mySetupData->set_motorspeed(FAST);
           break;
         case IR_IN1:
           adjpos = -1;
@@ -1250,7 +1250,7 @@ void setup()
   heapmsg();
 
   // Setup TCP/IP server to handle client requests
-#if (mycontrollermode == ACCESSPOINT) || (mycontrollermode == STATIONMODE)
+#if (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE)
   rssi = getrssi();                             // get network strength
   // Starting TCP Server
   myoled->oledtextmsg("Start tcp/ip server", -1, false, true);
@@ -1273,7 +1273,7 @@ void setup()
   Setup_DebugPrintln(ipStr);
   Setup_DebugPrint("Port:");
   Setup_DebugPrintln(SERVERPORT);
-#endif // #if (mycontrollermode == ACCESSPOINT) || (mycontrollermode == STATIONMODE) 
+#endif // #if (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE)
 
   // Setup Driverboard
   Setup_DebugPrint("Start drvbrd:");
