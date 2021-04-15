@@ -13,7 +13,7 @@
 #include "generalDefinitions.h"
 #include "myBoards.h"
 #include <OneWire.h>                          // https://github.com/PaulStoffregen/OneWire
-#include <DallasTemperature.h>
+#include <myDallasTemperature.h>
 
 #include "temp.h"
 
