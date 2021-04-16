@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 214-1
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 215
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -1294,8 +1294,8 @@ void setup()
   mySetupData->set_brdstepmode((mySetupData->get_brdstepmode() < 1 ) ? 1 : mySetupData->get_brdstepmode());
   mySetupData->set_coilpower((mySetupData->get_coilpower() >= 1) ?  1 : 0);
   mySetupData->set_reversedirection((mySetupData->get_reversedirection() >= 1) ?  1 : 0);
-  mySetupData->set_lcdpagetime((mySetupData->get_lcdpagetime() < LCDPAGETIMEMIN) ? mySetupData->get_lcdpagetime() : LCDPAGETIMEMIN);
-  mySetupData->set_lcdpagetime((mySetupData->get_lcdpagetime() > LCDPAGETIMEMAX) ? LCDPAGETIMEMAX : mySetupData->get_lcdpagetime());
+  mySetupData->set_oledpagetime((mySetupData->get_oledpagetime() < OLEDPAGETIMEMIN) ? mySetupData->get_oledpagetime() : OLEDPAGETIMEMIN);
+  mySetupData->set_oledpagetime((mySetupData->get_oledpagetime() > OLEDPAGETIMEMAX) ? OLEDPAGETIMEMAX : mySetupData->get_oledpagetime());
   mySetupData->set_maxstep((mySetupData->get_maxstep() < FOCUSERLOWERLIMIT) ? FOCUSERLOWERLIMIT : mySetupData->get_maxstep());
   mySetupData->set_stepsize((float)(mySetupData->get_stepsize() < 0.0 ) ? 0 : mySetupData->get_stepsize());
   mySetupData->set_stepsize((float)(mySetupData->get_stepsize() > MAXIMUMSTEPSIZE ) ? MAXIMUMSTEPSIZE : mySetupData->get_stepsize());
@@ -1806,19 +1806,19 @@ void loop()
         } // if (HPS_alert() )
 
         // if the update position on display when moving is enabled, then update the display
-        if ( mySetupData->get_lcdupdateonmove() == 1)
+        if ( mySetupData->get_oledupdateonmove() == 1)
         {
           // update position counter on display if there is an enabled display
           if (mySetupData->get_displayenabled() == 1)
           {
             updatecount++;
-            if ( updatecount > LCDUPDATEONMOVE )        // only update every 15th move to avoid overhead
+            if ( updatecount > OLEDUPDATEONMOVE )        // only update every 15th move to avoid overhead
             {
               updatecount = 0;
               myoled->update_oledtext_position();
             }
           } // if (mySetupData->get_displayenabled() == 1)
-        } // if ( get_lcdupdateonmove() == 1)
+        } // if ( get_oledupdateonmove() == 1)
       }
       break;
 

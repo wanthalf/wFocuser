@@ -56,8 +56,8 @@ class SetupData
     byte get_reversedirection();
     byte get_stepsizeenabled();
     byte get_tempmode();
-    byte get_lcdupdateonmove();
-    byte get_lcdpagetime();
+    byte get_oledupdateonmove();
+    byte get_oledpagetime();
     byte get_tempcompenabled();
     byte get_tcdirection();
     byte get_motorspeed();
@@ -101,8 +101,8 @@ class SetupData
     void set_reversedirection(byte);
     void set_stepsizeenabled(byte);
     void set_tempmode(byte);
-    void set_lcdupdateonmove(byte);
-    void set_lcdpagetime(byte);
+    void set_oledupdateonmove(byte);
+    void set_oledpagetime(byte);
     void set_tempcompenabled(byte);
     void set_tcdirection(byte);
     void set_motorspeed(byte);
@@ -224,8 +224,8 @@ class SetupData
     byte reversedirection;          // if 1, motor direction is reversed
     byte stepsizeenabled;           // if 1, controller returns step size
     byte tempmode;                  // temperature display mode, Celcius=1, Fahrenheit=0
-    byte lcdupdateonmove;           // update position on lcd when moving
-    byte lcdpagetime;               // length of time a display page is shown for
+    byte oledupdateonmove;          // update position on oled when moving
+    byte oledpagetime;              // length of time a display page is shown for
     byte tempcompenabled;           // indicates if temperature compensation is enabled
     byte tcdirection;               // direction in which to apply temperature compensation
     byte motorspeed;                // speed of motor, slow, medium or fast

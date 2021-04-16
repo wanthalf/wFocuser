@@ -76,9 +76,9 @@ class OLED_TEXT : public SSD1306AsciiWire, public OLED_NON
     void display_on(void);
     void display_off(void);
   private:
-    void displaylcdpage0(void);      // displaylcd screen
-    void displaylcdpage1(void);
-    void displaylcdpage2(void);
+    void displayoledpage0(void);      // displaylcd screen
+    void displayoledpage1(void);
+    void displayoledpage2(void);
     void Update_OledText(void);
     void UpdatePositionOledText(void);
     void display_oledtext_page0(void);

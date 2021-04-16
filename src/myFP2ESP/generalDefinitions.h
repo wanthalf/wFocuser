@@ -57,10 +57,10 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define MAXASCOMPAGESIZE      2200          // largest = /setuppage = 2042
 
 // DISPLAY
-#define LCDPAGETIMEMIN        2             // 2s minimum lcd page display time
-#define LCDPAGETIMEMAX        10            // 10s maximum lcd page display time
+#define OLEDPAGETIMEMIN        2            // 2s minimum oled page display time
+#define OLEDPAGETIMEMAX        10           // 10s maximum oled page display time
 #define OLEDPGOPTIONALL       "111"         // oled page enable, ALL pages
-#define LCDUPDATEONMOVE       15            // defines how many steps before refreshing position when moving if lcdupdateonmove is 1
+#define OLEDUPDATEONMOVE       15           // defines how many steps before refreshing position when moving if oledupdateonmove is 1
 #define MINOLEDPAGETIME       2000L
 #define MAXOLEDPAGETIME       10000L
 

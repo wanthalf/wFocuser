@@ -117,13 +117,13 @@
 // The following controller modes are MUTUALLY EXCLUSIVE and cannot be combined
 
 // to work as an access point, define accesspoint - cannot use DUCKDNS
-//#define CONTROLLERMODE  ACCESSPOINT
+#define CONTROLLERMODE  ACCESSPOINT
 
 // to work as a station accessing a AP, define stationmode
 //#define CONTROLLERMODE  STATIONMODE
 
 // to work only via USB cable as Serial port, uncomment the next line
-#define CONTROLLERMODE  LOCALSERIAL
+//#define CONTROLLERMODE  LOCALSERIAL
 
 // to enable Bluetooth mode, uncomment the next line [ESP32 only]
 //#define CONTROLLERMODE  BLUETOOTHMODE
@@ -140,7 +140,7 @@
 //#define MDNSSERVER 	8
 
 // Management Server Control Interface [Port 6060] - DO NOT CHANGE
-//#define MANAGEMENT 	9
+#define MANAGEMENT 	9
 
 // Cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
 // To enable DUCKDNS [STATIONMODE only]

@@ -273,7 +273,7 @@ void OLED_TEXT::oledtextmsg(String str, int val, boolean clrscr, boolean nl)
   //  display();
 }
 
-void OLED_TEXT::displaylcdpage0(void)      // displaylcd screen
+void OLED_TEXT::displayoledpage0(void)      // display screen
 {
   char tempString[20];
 
@@ -309,7 +309,7 @@ void OLED_TEXT::displaylcdpage0(void)      // displaylcd screen
   //  display();
 }
 
-void OLED_TEXT::displaylcdpage1(void)
+void OLED_TEXT::displayoledpage1(void)
 {
   setCursor(0, 0);
   // temperature compensation
@@ -336,7 +336,7 @@ void OLED_TEXT::displaylcdpage1(void)
   //  display();
 }
 
-void OLED_TEXT::displaylcdpage2(void)
+void OLED_TEXT::displayoledpage2(void)
 {
 #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
   setCursor(0, 0);
@@ -399,7 +399,7 @@ void OLED_TEXT::update_oledtextdisplay(void)
   static byte displaypage = 0;
 
   currentMillis = millis();                       // see if the display needs updating
-  if (((currentMillis - olddisplaytimestampNotMoving) > ((int)mySetupData->get_lcdpagetime() * 1000)) || (currentMillis < olddisplaytimestampNotMoving))
+  if (((currentMillis - olddisplaytimestampNotMoving) > ((int)mySetupData->get_oledpagetime() * 1000)) || (currentMillis < olddisplaytimestampNotMoving))
   {
     olddisplaytimestampNotMoving = currentMillis; // update the timestamp
     clear();                              // clrscr OLED
@@ -485,7 +485,7 @@ OLED_TEXT::OLED_TEXT(void)
   }    
 }
 
-void OLED_TEXT::display_oledtext_page0(void)           // displaylcd screen
+void OLED_TEXT::display_oledtext_page0(void)           // display screen
 {
   char tempString[20];
 

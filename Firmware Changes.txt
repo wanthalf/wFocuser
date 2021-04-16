@@ -5,6 +5,12 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 ==============================================================
 
 
+215
+[As reported/suggested by Nightfly1704]
+Rename all cases of lcd to be oled for consistency
+Fix setting of oled page time
+Fix for saving board_config
+
 214
 Add download boardconfig.jsn to comms case 69
 Add coil power timeout setting to management server (get and set) and comms cases 58 and 59

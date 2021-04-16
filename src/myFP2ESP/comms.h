@@ -380,15 +380,15 @@ void ESP_Communication()
     case 33: // get stepsize
       SendPaket('T', mySetupData->get_stepsize(), 3);       // ????????????? check format
       break;
-    case 34: // get the time that an LCD screen is displayed for
-      SendPaket('X', mySetupData->get_lcdpagetime());
+    case 34: // get the time that an oled screen is displayed for
+      SendPaket('X', mySetupData->get_oledpagetime());
       break;
-    case 35: // set length of time an LCD page is displayed for in seconds
+    case 35: // set length of time an oledpage is displayed for in seconds
       WorkString = receiveString.substring(3, receiveString.length() - 1);
       paramval = WorkString.toInt();
-      paramval = (paramval < LCDPAGETIMEMIN ) ? LCDPAGETIMEMIN : paramval;
-      paramval = (paramval > LCDPAGETIMEMAX ) ? LCDPAGETIMEMAX : paramval;
-      mySetupData->set_lcdpagetime((byte)paramval);
+      paramval = (paramval < OLEDPAGETIMEMIN ) ? OLEDPAGETIMEMIN : paramval;
+      paramval = (paramval > OLEDPAGETIMEMAX ) ? OLEDPAGETIMEMAX : paramval;
+      mySetupData->set_oledpagetime((byte)paramval);
       break;
     case 36:
       // :360#    None    Disable Display
@@ -485,11 +485,11 @@ void ESP_Communication()
         mySetupData->set_brdmsdelay(newdelay);
       }
       break;
-    case 61: // set update of position on lcd when moving (0=disable, 1=enable)
-      mySetupData->set_lcdupdateonmove((byte) (receiveString[3] - '0'));
+    case 61: // set update of position on oled when moving (0=disable, 1=enable)
+      mySetupData->set_oledupdateonmove((byte) (receiveString[3] - '0'));
       break;
-    case 62: // get update of position on lcd when moving (00=disable, 01=enable)
-      SendPaket('L', mySetupData->get_lcdupdateonmove());
+    case 62: // get update of position on oled when moving (00=disable, 01=enable)
+      SendPaket('L', mySetupData->get_oledupdateonmove());
       break;
     case 63: // get status of home position switch (hpsw pin 1=open, 0=closed)
       if ( mySetupData->get_hpswitchenable() == 1)

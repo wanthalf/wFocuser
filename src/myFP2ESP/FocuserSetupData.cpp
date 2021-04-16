@@ -29,7 +29,7 @@ extern int DefaultBoardNumber;
 // ======================================================================
 // Defines
 // ======================================================================
-#define DEFAULTSAVETIME       30000 
+#define DEFAULTSAVETIME       30000
 
 // ======================================================================
 // SetupData Class
@@ -107,8 +107,8 @@ byte SetupData::LoadConfiguration()
       this->reversedirection      = doc_per["rdirection"];
       this->stepsizeenabled       = doc_per["stepsizestate"];             // if 1, controller returns step size
       this->tempmode              = doc_per["tempmode"];                  // temperature display mode, Celcius=1, Fahrenheit=0
-      this->lcdupdateonmove       = doc_per["lcdupdateonmove"];           // update position on lcd when moving
-      this->lcdpagetime           = doc_per["lcdpagetime"];
+      this->oledupdateonmove      = doc_per["oledupdateonmove"];          // update position on oled when moving
+      this->oledpagetime          = doc_per["oledpagetime"];
       this->tempcompenabled       = doc_per["tempcompstate"];             // indicates if temperature compensation is enabled
       this->tcdirection           = doc_per["tcdir"];
       this->displayenabled        = doc_per["displaystate"];
@@ -318,6 +318,7 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
 
   if ((SnapShotMillis + DEFAULTSAVETIME) < x || SnapShotMillis > x)    // 30s after snapshot
   {
+    // save persistent data - focus controller data
     if (this->ReqSaveData_per == true)
     {
       if (SavePersitantConfiguration() == false)
@@ -333,6 +334,7 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
       this->ReqSaveData_per = false;
     }
 
+    // save variable data - position and direction
     if (this->ReqSaveData_var == true)
     {
       if (SaveVariableConfiguration() == false)
@@ -347,6 +349,22 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
       cstatus = true;
       this->ReqSaveData_var = false;
     }
+  }
+
+  // save board_config data
+  if (this->ReqSaveBoard_var == true)
+  {
+    if (SaveBoardConfiguration() == false)
+    {
+      SetupData_DebugPrintln("Error saving board_config");
+    }
+    else
+    {
+      delay(10);
+      SetupData_DebugPrintln("++ board_config saved");
+    }
+    cstatus = true;
+    this->ReqSaveBoard_var = false;
   }
   return cstatus;
 }
@@ -435,8 +453,8 @@ void SetupData::LoadDefaultPersistantData()
   this->tcdirection           = DEFAULTOFF;           // temperature compensation direction 1
   this->tempmode              = DEFAULTCELSIUS;       // default is celsius
   this->tempcompenabled       = DEFAULTOFF;           // temperature compensation disabled
-  this->lcdupdateonmove       = DEFAULTON;
-  this->lcdpagetime           = LCDPAGETIMEMIN;       // 2, 3 -- 10
+  this->oledupdateonmove      = DEFAULTON;
+  this->oledpagetime          = OLEDPAGETIMEMIN;       // 2, 3 -- 10
   this->motorspeed            = FAST;
   this->displayenabled        = DEFAULTON;
   for (int i = 0; i < 10; i++)
@@ -459,7 +477,7 @@ void SetupData::LoadDefaultPersistantData()
   this->inoutledstate         = DEFAULTOFF;           // this should be default OFF - if HW not fitted could crash
   this->showhpswmessages      = DEFAULTOFF;           // this should be default OFF
   this->forcedownload         = DEFAULTOFF;           // this should be default OFF, MANAGEMENT Server only
-  this->oledpageoption        = OLEDPGOPTIONALL;    
+  this->oledpageoption        = OLEDPGOPTIONALL;
   this->hpswitchenable        = DEFAULTOFF;           // this should be default OFF
   this->pbenable              = DEFAULTOFF;           // this should be default OFF
   this->indi                  = DEFAULTOFF;           // this should be default OFF
@@ -514,8 +532,8 @@ byte SetupData::SavePersitantConfiguration()
   doc["rdirection"]         = this->reversedirection;
   doc["stepsizestate"]      = this->stepsizeenabled;            // if 1, controller returns step size
   doc["tempmode"]           = this->tempmode;                   // temperature display mode, Celcius=1, Fahrenheit=0
-  doc["lcdupdateonmove"]    = this->lcdupdateonmove;            // update position on lcd when moving
-  doc["lcdpagetime"]        = this->lcdpagetime;                // *100 to give interval between lcd pages display time
+  doc["oledupdateonmove"]   = this->oledupdateonmove;           // update position on oled when moving
+  doc["oledpagetime"]       = this->oledpagetime;               // *100 to give interval between oled pages display time
   doc["tempcompstate"]      = this->tempcompenabled;            // indicates if temperature compensation is enabled
   doc["tcdir"]              = this->tcdirection;
   doc["motorspeed"]         = this->motorspeed;
@@ -646,14 +664,14 @@ byte SetupData::get_tempmode()
   return this->tempmode;              // temperature display mode, Celcius=1, Fahrenheit=0
 }
 
-byte SetupData::get_lcdupdateonmove()
+byte SetupData::get_oledupdateonmove()
 {
-  return this->lcdupdateonmove;       // update position on lcd when moving
+  return this->oledupdateonmove;      // update position on oled when moving
 }
 
-byte SetupData::get_lcdpagetime()
+byte SetupData::get_oledpagetime()
 {
-  return this->lcdpagetime;           // the length of time the page is displayed for
+  return this->oledpagetime;          // the length of time the page is displayed for
 }
 
 byte SetupData::get_tempcompenabled()
@@ -864,14 +882,14 @@ void SetupData::set_tempmode(byte tempmode)
   this->StartDelayedUpdate(this->tempmode, tempmode); // temperature display mode, Celcius=1, Fahrenheit=0
 }
 
-void SetupData::set_lcdupdateonmove(byte lcdupdateonmove)
+void SetupData::set_oledupdateonmove(byte oledupdateonmove)
 {
-  this->StartDelayedUpdate(this->lcdupdateonmove, lcdupdateonmove); // update position on lcd when moving
+  this->StartDelayedUpdate(this->oledupdateonmove, oledupdateonmove); // update position on oled when moving
 }
 
-void SetupData::set_lcdpagetime(byte lcdpagetime)
+void SetupData::set_oledpagetime(byte oledpagetime)
 {
-  this->StartDelayedUpdate(this->lcdpagetime, lcdpagetime);
+  this->StartDelayedUpdate(this->oledpagetime, oledpagetime);
 }
 
 void SetupData::set_tempcompenabled(byte tempcompenabled)
@@ -1592,7 +1610,7 @@ void SetupData::ListDir(const char * dirname, uint8_t levels)
   File root = SPIFFS.open(dirname);
   delay(10);
   DebugPrint("Listing directory: {");
-  
+
   if (!root)
   {
     DebugPrintln(" - failed to open directory");

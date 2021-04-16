@@ -1664,8 +1664,8 @@ void MANAGEMENT_buildadminpg1(void)
     MSpg.replace("%PGO%", oled );
 
     // page display time
-    MSpg.replace("%PT%", String(mySetupData->get_lcdpagetime()) );
-    oled = "<form action=\"/\" method=\"post\"><input type=\"text\" name=\"pt\" size=\"12\" value=" + String(mySetupData->get_lcdpagetime()) + "> <input type=\"submit\" name=\"setpt\" value=\"Set\"></form>";
+    MSpg.replace("%PT%", String(mySetupData->get_oledpagetime()) );
+    oled = "<form action=\"/\" method=\"post\"><input type=\"text\" name=\"pt\" size=\"12\" value=" + String(mySetupData->get_oledpagetime()) + "> <input type=\"submit\" name=\"setpt\" value=\"Set\"></form>";
     MSpg.replace("%PGT%", oled );
 
     // startscreen %SS%
@@ -1863,13 +1863,13 @@ void MANAGEMENT_handleadminpg1(void)
   }
 
   // if oled page time update
-  msg = mserver.arg("settm");
+  msg = mserver.arg("setpt");
   if ( msg != "" )
   {
     String tp = mserver.arg("pt");
     if ( tp != "" )
     {
-      unsigned long pgtime = tp.toInt();
+      long pgtime = tp.toInt();
       if ( pgtime < MINOLEDPAGETIME )
       {
         pgtime = MINOLEDPAGETIME;                       // at least 2s
@@ -1880,7 +1880,7 @@ void MANAGEMENT_handleadminpg1(void)
       }
       MSrvr_DebugPrint(SETPGTIMESTR);
       MSrvr_DebugPrintln(msg);
-      mySetupData->set_lcdpagetime(pgtime);
+      mySetupData->set_oledpagetime(pgtime);
     }
     else
     {
