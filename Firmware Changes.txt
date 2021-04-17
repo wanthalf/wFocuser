@@ -4,6 +4,9 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 © Copyright Holger M, 2019-2021. All Rights Reserved.
 ==============================================================
 
+217 
+// Fix for saveboardconfiguration
+
 216
 // Move defines for STEPMODE and SPEED into boarddefs.h
 // Fix for stepmode not being remembered correctly or not set physically
