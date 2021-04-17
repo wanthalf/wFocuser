@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include "boarddefs.h"
+#include "generalDefinitions.h"
 
 #ifndef focuserconfig_h
 #define focuserconfig_h
@@ -154,6 +155,7 @@
 // ======================================================================
 // DO NOT CHANGE:
 // ======================================================================
+
 
 // ======================================================================
 // CHECK BOARD AND HW OPTIONS

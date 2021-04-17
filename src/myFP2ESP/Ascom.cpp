@@ -8,6 +8,7 @@
 // INCLUDES:
 // ======================================================================
 #include "generalDefinitions.h"
+#include "boarddefs.h"
 #include "FocuserSetupData.h"               // needed for mySetupData class
 #include "myBoards.h"                       // needed for driverboard class
 #include "temp.h"                           // needed for temperature class
@@ -632,8 +633,14 @@ void ASCOM_handle_focuser_setup()
     }
   }
 
+  // ======================================================================
+  // Basic rule for setting stepmode in this order
+  // 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
+  // 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
+  // ======================================================================
   // if update stepmode
   // (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32, 64=1/64, 128=1/128, 256=1/256)
+    
   String fsm_str = ascomserver->arg("sm");
   if ( fsm_str != "" )
   {
@@ -649,7 +656,10 @@ void ASCOM_handle_focuser_setup()
     {
       temp1 = STEP256;
     }
+    // this sets data value but does not set pins
     mySetupData->set_brdstepmode(temp1);
+    // must also call boards.cpp to apply physical pins
+    driverboard->setstepmode(temp1);
   }
 
   Ascom_DebugPrintln("build homepage");

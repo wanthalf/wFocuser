@@ -1469,7 +1469,8 @@ void SetupData::set_brdmaxstepmode(int newval)
 
 void SetupData::set_brdstepmode(int newval)
 {
-  this->StartBoardDelayedUpdate(this->stepmode, newval);
+  // this saves new stepmode value
+  this->StartBoardDelayedUpdate(this->stepmode, newval); 
 }
 
 void SetupData::set_brdsda(int pinnum)

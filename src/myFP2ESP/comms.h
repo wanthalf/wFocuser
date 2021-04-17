@@ -7,7 +7,8 @@
 #ifndef comms_h
 #define comms_h
 
-#include "focuserconfig.h"
+#include "generalDefinitions.h"
+#include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
 
 // ======================================================================
 // EXTERNS
@@ -326,22 +327,32 @@ void ESP_Communication()
     case 29: // get stepmode
       SendPaket('S', mySetupData->get_brdstepmode());
       break;
-    case 30: // set step mode
+      
+  // ======================================================================
+  // Basic rule for setting stepmode in this order
+  // 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
+  // 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
+  // ======================================================================
+  case 30: // set step mode
       WorkString = receiveString.substring(3, receiveString.length() - 1);
       paramval = WorkString.toInt();
-      if (drvbrd.equals("PRO2EULN2003") || drvbrd.equals("PRO2EL298N") || drvbrd.equals("PRO2EL293DMINI") || drvbrd.equals("PRO2EL9110S"))
+      if (DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N || DRVBRD == PRO2EL293DMINI || DRVBRD == PRO2EL9110S)
+      {
+        paramval = (byte)(paramval & 3);      // STEP1 - STEP2
+        // this sets data value but does not set pins
+        mySetupData->set_brdstepmode(paramval);
+        // must also call boards.cpp to apply physical pins
+        driverboard->setstepmode(paramval);
+      }
+      else if (DRVBRD == PRO2ESP32ULN2003 || DRVBRD == PRO2ESP32L298N || DRVBRD == PRO2ESP32L293DMINI || DRVBRD == PRO2ESP32L9110S)
       {
         paramval = (byte)(paramval & 3);      // STEP1 - STEP2
       }
-      if (drvbrd.equals("PRO2ESP32ULN2003") || drvbrd.equals("PRO2ESP32L298N") || drvbrd.equals("PRO2ESP32L293DMINI") || drvbrd.equals("PRO2ESP32L9110S"))
-      {
-        paramval = (byte)(paramval & 3);      // STEP1 - STEP2
-      }
-      if (drvbrd.equals("WEMOSDRV8825") || drvbrd.equals("PRO2EDRV8825") || drvbrd.equals("PRO2EDRV8825BIG"))
+      else if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG)
       {
         paramval = mySetupData->get_brdfixedstepmode();            // stepmopde set by jumpers
       }
-      if (drvbrd.equals("PRO2ESP32DRV8825") || drvbrd.equals("PRO2ESP32R3WEMOS"))
+      else if (DRVBRD == PRO2ESP32DRV8825 || DRVBRD == PRO2ESP32R3WEMOS)
       {
         if ( paramval < STEP1 )
         {
@@ -352,12 +363,22 @@ void ESP_Communication()
           paramval = STEP32;
         }
       }
-      if (drvbrd.equals("PRO2EL293DNEMA") || drvbrd.equals("PRO2EL293D28BYJ48"))
+      else if (DRVBRD == PRO2EL293DNEMA || DRVBRD == PRO2EL293D28BYJ48)
       {
         paramval = STEP1;
         {
           mySetupData->set_brdstepmode(paramval);
         }
+      }
+      else if (DRVBRD == PRO2ESPTMC2225 || DRVBRD == PRO2ESPTMC2209 )
+      {
+        mySetupData->set_brdstepmode(paramval);
+        DebugPrintln("Not yet implemented");
+      }
+      else
+      {
+        DebugPrint("unknown DRVBRD: ");
+        DebugPrintln(DRVBRD);
       }
       break;
     case 31: // set focuser position

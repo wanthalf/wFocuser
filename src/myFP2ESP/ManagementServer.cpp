@@ -2195,8 +2195,8 @@ void MANAGEMENT_handleset(void)
   String jsonstr;
   String value;
   String drvbrd = mySetupData->get_brdname();
-  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode, indi, coilpowertimeout.
-  // boardconfig, dataconfig
+  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode, indi, 
+  // coilpowertimeout, boardconfig, dataconfig
 
   // ascom remote server
   value = mserver.arg("ascom");

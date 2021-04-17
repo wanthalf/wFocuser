@@ -5,9 +5,8 @@
 // ======================================================================
 
 #include <Arduino.h>
-#include "boarddefs.h"
+#include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
 #include "generalDefinitions.h"
-#include "focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 
@@ -279,6 +278,11 @@ DriverBoard::~DriverBoard()
   }
 }
 
+// ======================================================================
+// Basic rule for setting stepmode in this order
+// 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
+// 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
+// ======================================================================
 void DriverBoard::setstepmode(int smode)
 {
   do {
