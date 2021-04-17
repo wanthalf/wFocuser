@@ -274,32 +274,7 @@ void SetupData::SetFocuserDefaults(void)
   }
 }
 
-// Saves Board configuration
-boolean SetupData::SaveBoardConfiguration()
-{
-  byte cstatus = false;
-  unsigned long x = millis();
-  if ((BoardSnapShotMillis + DEFAULTSAVETIME) < x || BoardSnapShotMillis > x)    // 30s after snapshot
-  {
-    if (this->ReqSaveBoard_var == true)
-    {
-      if (this->WriteBoardConfiguration() == false)
-      {
-        SetupData_DebugPrintln("Error save board_config");
-      }
-      else
-      {
-        delay(10);
-        SetupData_DebugPrintln("board_config saved");
-      }
-      cstatus = true;
-      this->ReqSaveBoard_var = false;
-    }
-  }
-  return cstatus;
-}
-
-// Saves the configuration to a file
+// Saves the configurations to files
 boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTravel)
 {
   SetupData_DebugPrintln("SaveConfiguration:");
@@ -349,22 +324,22 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
       cstatus = true;
       this->ReqSaveData_var = false;
     }
-  }
 
-  // save board_config data
-  if (this->ReqSaveBoard_var == true)
-  {
-    if (SaveBoardConfiguration() == false)
+    // save board_config data
+    if (this->ReqSaveBoard_var == true)
     {
-      SetupData_DebugPrintln("Error saving board_config");
+      if (SaveBoardConfiguration() == false)
+      {
+        SetupData_DebugPrintln("Error saving board_config");
+      }
+      else
+      {
+        delay(10);
+        SetupData_DebugPrintln("++ board_config saved");
+      }
+      cstatus = true;
+      this->ReqSaveBoard_var = false;
     }
-    else
-    {
-      delay(10);
-      SetupData_DebugPrintln("++ board_config saved");
-    }
-    cstatus = true;
-    this->ReqSaveBoard_var = false;
   }
   return cstatus;
 }
@@ -1160,7 +1135,7 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
         this->boardpins[i] = doc_brd["brdpins"][i];
       }
       this->msdelay        = doc_brd["msdelay"];      // motor speed delay - do not confuse with motorspeed
-      WriteBoardConfiguration();
+      SaveBoardConfiguration();
       return true;
     }
   }
@@ -1236,10 +1211,10 @@ void SetupData::LoadDefaultBoardData()
     }
     this->msdelay        = 8000;
   }
-  WriteBoardConfiguration();
+  SaveBoardConfiguration();
 }
 
-boolean SetupData::WriteBoardConfiguration()
+boolean SetupData::SaveBoardConfiguration()
 {
   delay(10);
   if ( SPIFFS.exists(filename_boardconfig))
@@ -1328,7 +1303,7 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
       "dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,
       "stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
     */
-    DebugPrintln("Deserializa board : OK");
+    DebugPrintln("Deserialize board : OK");
     this->board         = doc_brd["board"].as<char*>();
     this->maxstepmode   = doc_brd["maxstepmode"];
     this->stepmode      = doc_brd["stepmode"];
@@ -1470,7 +1445,7 @@ void SetupData::set_brdmaxstepmode(int newval)
 void SetupData::set_brdstepmode(int newval)
 {
   // this saves new stepmode value
-  this->StartBoardDelayedUpdate(this->stepmode, newval); 
+  this->StartBoardDelayedUpdate(this->stepmode, newval);
 }
 
 void SetupData::set_brdsda(int pinnum)
