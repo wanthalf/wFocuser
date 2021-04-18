@@ -18,13 +18,15 @@
 #include "boarddefs.h"
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"
+#include "myBoards.h"                   // to be able to reference driverboard
 
 // ======================================================================
 // Extern Data
-// ======================================================================extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+// ======================================================================
+extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
 extern int brdfixedstepmode;            // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
 extern int brdstepsperrev;
-extern int DefaultBoardNumber;
+extern DriverBoard* driverboard;
 
 // ======================================================================
 // Defines
@@ -1442,10 +1444,16 @@ void SetupData::set_brdmaxstepmode(int newval)
   this->StartBoardDelayedUpdate(this->maxstepmode, newval);
 }
 
+// ======================================================================
+// Basic rule for setting stepmode in this order
+// 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
+// 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
+// ======================================================================
 void SetupData::set_brdstepmode(int newval)
 {
   // this saves new stepmode value
   this->StartBoardDelayedUpdate(this->stepmode, newval);
+  driverboard->setstepmode(newval);
 }
 
 void SetupData::set_brdsda(int pinnum)

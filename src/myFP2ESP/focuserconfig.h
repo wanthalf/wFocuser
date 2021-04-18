@@ -33,11 +33,14 @@
 //#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
 //#define DRVBRD 	PRO2ESP32DRV8825
-#define DRVBRD 	PRO2ESP32ULN2003
+//#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
 //#define DRVBRD 	PRO2ESP32L9110S
 //#define DRVBRD 	PRO2ESP32R3WEMOS
+//#define DRVBRD  PRO2ESP32TMC2225
+//#define DRVBRD  PRO2ESP32TMC2209
+#define DRVBRD    PRO2ESP32TMC2209P                 // this is for Paul using TMC2209 - 58.jsn
 //#define DRVBRD 	CUSTOMBRD
 
 // On bootup following a controller firmware update, a default driver board file 

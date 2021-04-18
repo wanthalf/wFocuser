@@ -67,8 +67,9 @@
 #define PRO2ESP32L9110S       48          // uses PCB layout for ULN2003
 #define PRO2ESP32R3WEMOS      49          // https://www.ebay.com/itm/R3-Wemos-UNO-D1-R32-ESP32-
 #define WEMOSDRV8825H         50          // this is for Holger
-#define PRO2ESPTMC2225        56
-#define PRO2ESPTMC2209        57
+#define PRO2ESP32TMC2225      56
+#define PRO2ESP32TMC2209      57
+#define PRO2ESP32TMC2209P     58          // This is board for Paul using TMC2209 for testing
 
 // myFP2M boards
 #define PRO2MDRV8825          52

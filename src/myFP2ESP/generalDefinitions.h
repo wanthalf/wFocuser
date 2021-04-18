@@ -242,6 +242,7 @@ extern const char* WRITEFILESUCCESSSTR;
 //#define SETUPDATA_DEBUG   1                                   // for debugging FocuserSetupData
 //#define TEMP_DEBUG        1                                   // for debugging temp probe
 //#define WEBSERVER_DEBUG   1                                   // for debugging webserver
+//#define HPSW_Debug        1                                   // for debugging hpsw
 
 #ifdef  DEBUG                                                   // Macros are usually in all capital letters.
 #define DebugPrint(...)   Serial.print(__VA_ARGS__)             // DPRINT is a macro, debug print
@@ -313,6 +314,13 @@ extern const char* WRITEFILESUCCESSSTR;
 #else
 #define WebS_DebugPrint(...)                                    // now defines a blank line
 #define WebS_DebugPrintln(...)                                  // now defines a blank line
+#endif
+#ifdef  HPSW_Debug
+#define HPSW_DebugPrint(...)   Serial.print(__VA_ARGS__)  
+#define HPSW_DebugPrintln(...) Serial.println(__VA_ARGS__) 
+#else
+#define HPSW_DebugPrint(...)  
+#define HPSW_DebugPrintln(...) 
 #endif
 
 // ======================================================================
