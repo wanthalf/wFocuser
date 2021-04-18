@@ -2,6 +2,7 @@
 myFP2ESP Focus Controller [ESP8266/ESP32]
 © Copyright Robert Brown 2014-2021. All Rights Reserved.
 © Copyright Holger M, 2019-2021. All Rights Reserved.
+© Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
 218

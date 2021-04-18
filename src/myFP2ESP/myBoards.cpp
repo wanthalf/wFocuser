@@ -2,6 +2,7 @@
 // myBoards.cpp : myFP2ESP DRIVER BOARD CODE
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
+// (c) Copyright Paul P, 2021. All Rights Reserved. TMC22xx code
 // ======================================================================
 
 #include <Arduino.h>

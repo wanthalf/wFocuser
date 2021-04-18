@@ -13,7 +13,7 @@
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
-
+// (c) Copyright Paul P, 2021. All Rights Reserved. TMC22xx code
 // ======================================================================
 // SPECIAL LICENSE
 // ======================================================================
