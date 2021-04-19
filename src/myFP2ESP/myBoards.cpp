@@ -756,6 +756,7 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   // Set alarm to call onTimer function every second (value in microseconds).
   // Repeat the alarm (third parameter)
   unsigned long curspd = mySetupData->get_brdmsdelay();
+  // handle different speeds
   switch ( mySetupData->get_motorspeed() )
   {
     case 0: // slow, 1/3rd the speed
@@ -764,6 +765,44 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
     case 1: // med, 1/2 the speed
       curspd *= 2;
       break;
+  }
+
+  // handle TMC22xx steppers differently
+  if ( this->boardnum == PRO2ESP32TMC2225 || this->boardnum == PRO2ESP32TMC2209 || this->boardnum == PRO2ESP32TMC2209P)
+  {
+    switch ( mySetupData->get_brdstepmode() )
+    {
+      case STEP1:
+        curspd = curspd;
+        break;
+      case STEP2:
+        curspd = curspd / 2;
+        break;
+      case STEP4:
+        curspd = curspd / 4;
+        break;
+      case STEP8:
+        curspd = curspd / 8;
+        break;
+      case STEP16:
+        curspd = curspd / 16;
+        break;
+      case STEP32:
+        curspd = curspd / 32;
+        break;
+      case STEP64:
+        curspd = curspd / 64;
+        break;
+      case STEP128:
+        curspd = curspd / 128;
+        break;
+      case STEP256:
+        curspd = curspd / 256;
+        break;
+      default:
+        curspd = curspd / 4;
+        break;
+    }
   }
   timerAlarmWrite(myfp2timer, curspd, true);   // timer for ISR
   timerAlarmEnable(myfp2timer);                // start timer alarm

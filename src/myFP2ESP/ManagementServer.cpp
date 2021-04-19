@@ -2103,6 +2103,11 @@ void MANAGEMENT_handleget(void)
     jsonstr = "{ \"motorspeed\":" + String(mySetupData->get_motorspeed()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
+  else if ( mserver.argName(0) == "motorspeeddelay" )
+  {
+    jsonstr = "{ \"motorspeeddelay\":" + String(mySetupData->get_brdmsdelay()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
   else if ( mserver.argName(0) == "coilpower" )
   {
     jsonstr = "{ \"coilpower\":" + String(mySetupData->get_coilpower()) + " }";
@@ -2433,6 +2438,17 @@ void MANAGEMENT_handleset(void)
     jsonstr = "{ \"motorspeed\":\"" + String(tmp) + " }";
   }
 
+  // motorspeeddelay value
+  value = mserver.arg("motorspeeddelay");
+  if ( value != "" )
+  {
+    unsigned long tmp = value.toInt();
+    MSrvr_DebugPrint("Motorspeeddelay: ");
+    MSrvr_DebugPrintln(tmp);
+    mySetupData->set_brdmsdelay(tmp);
+    jsonstr = "{ \"motorspeeddelay\":\"" + String(tmp) + " }";
+  }
+  
   // coilpower
   value = mserver.arg("coilpower");
   if ( value != "" )

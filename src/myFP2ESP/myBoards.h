@@ -43,7 +43,7 @@ class DriverBoard
 
     // getter
     unsigned long getposition(void);
-
+    
     // setter
     void enablemotor(void);
     void setposition(unsigned long);
