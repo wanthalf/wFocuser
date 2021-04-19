@@ -936,7 +936,7 @@ void stop_tcpipserver()
 
 void setup()
 {
-  //Serial.begin(SERIALPORTSPEED);
+  Serial.begin(SERIALPORTSPEED);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
   Serial.begin(SERIALPORTSPEED);

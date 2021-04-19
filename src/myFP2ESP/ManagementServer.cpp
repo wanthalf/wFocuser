@@ -2060,7 +2060,7 @@ void MANAGEMENT_sendjson(String str)
 void MANAGEMENT_handleget(void)
 {
   // return json string of state, on or off or value
-  // ascom, leds, temp, webserver, position, ismoving, display, motorspeed, coilpower, reverse, fixedstepmode, indi
+  // ascom, leds, temp, webserver, position, ismoving, display, motorspeed, coilpower, reverse, fixedstepmode, indi, stepmode
   String jsonstr;
 
   if ( mserver.argName(0) == "ascom" )
@@ -2122,6 +2122,11 @@ void MANAGEMENT_handleget(void)
   else if ( mserver.argName(0) == "hpsw" )
   {
     jsonstr = "{ \"hpsw\":" + String(mySetupData->get_hpswitchenable()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "stepmode" )
+  {
+    jsonstr = "{ \"stepmode\":" + String(mySetupData->get_brdstepmode()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
   else if ( mserver.argName(0) == "fixedstepmode" )
@@ -2195,7 +2200,7 @@ void MANAGEMENT_handleset(void)
   String jsonstr;
   String value;
   String drvbrd = mySetupData->get_brdname();
-  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode, indi, 
+  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, stepmode, fixedstepmode, indi, 
   // coilpowertimeout, boardconfig, dataconfig
 
   // ascom remote server
@@ -2494,6 +2499,18 @@ void MANAGEMENT_handleset(void)
     }
   }
 
+  // stepmode
+  value = mserver.arg("stepmode");
+  if ( value != "" )
+  {
+    int temp = value.toInt();
+    MSrvr_DebugPrint("stepmode: ");
+    MSrvr_DebugPrintln(temp);
+    driverboard->setstepmode(temp);                     // write to pins and update mySetupData
+    temp = mySetupData->get_brdstepmode();              // read actual stepmode set by driverboard
+    jsonstr = "{ \"stepmode\"" + String(temp) + " }";
+  }
+  
   // fixedstepmode for esp8266 boards
   value = mserver.arg("fixedstepmode");
   if ( value != "" )

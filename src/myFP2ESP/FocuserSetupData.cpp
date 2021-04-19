@@ -56,7 +56,8 @@ SetupData::SetupData(void)
   else
   {
     SetupData_DebugPrintln("FS mounted");
-    this->ListDir("/", 0);
+    //still has issues? esp8266? 
+    //this->ListDir("/", 0);
   }
   this->LoadConfiguration();
 };
@@ -244,7 +245,8 @@ byte SetupData::LoadConfiguration()
       this->focuserdirection = doc_var["fdir"];     // keeps track of last focuser move direction
 
       // round position to fullstep motor position
-      this->fposition = (this->fposition + this->stepmode / 2) / this->stepmode * this->stepmode;
+      // holgers code?
+      // this->fposition = (this->fposition + this->stepmode / 2) / this->stepmode * this->stepmode;
       retval = 3;
     }
   }
@@ -1444,16 +1446,9 @@ void SetupData::set_brdmaxstepmode(int newval)
   this->StartBoardDelayedUpdate(this->maxstepmode, newval);
 }
 
-// ======================================================================
-// Basic rule for setting stepmode in this order
-// 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
-// 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
-// ======================================================================
 void SetupData::set_brdstepmode(int newval)
 {
-  // this saves new stepmode value
   this->StartBoardDelayedUpdate(this->stepmode, newval);
-  driverboard->setstepmode(newval);
 }
 
 void SetupData::set_brdsda(int pinnum)

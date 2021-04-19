@@ -634,9 +634,8 @@ void ASCOM_handle_focuser_setup()
   }
 
   // ======================================================================
-  // Basic rule for setting stepmode in this order
-  // 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
-  // 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
+  // Basic rule for setting stepmode
+  // Set driverboard->setstepmode(xx);                 // this sets the physical pins and saves new step mode
   // ======================================================================
   // if update stepmode
   // (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32, 64=1/64, 128=1/128, 256=1/256)
@@ -644,22 +643,20 @@ void ASCOM_handle_focuser_setup()
   String fsm_str = ascomserver->arg("sm");
   if ( fsm_str != "" )
   {
-    int temp1 = 0;
+    int temp = 0;
     Ascom_DebugPrint("root() -stepmode:");
     Ascom_DebugPrintln(fsm_str);
-    temp1 = fsm_str.toInt();
-    if ( temp1 < STEP1 )
+    temp = fsm_str.toInt();
+    if ( temp < STEP1 )
     {
-      temp1 = STEP1;
+      temp = STEP1;
     }
-    if ( temp1 > STEP256 )
+    if ( temp > STEP256 )
     {
-      temp1 = STEP256;
+      temp = STEP256;
     }
-    // this sets data value but does not set pins
-    mySetupData->set_brdstepmode(temp1);
-    // must also call boards.cpp to apply physical pins
-    driverboard->setstepmode(temp1);
+    // call boards.cpp to apply physical pins and save new stepmode
+    driverboard->setstepmode(temp);
   }
 
   Ascom_DebugPrintln("build homepage");

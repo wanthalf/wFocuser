@@ -417,7 +417,7 @@ void DriverBoard::init_tmc2225(void)
   int sm = mySetupData->get_brdstepmode();
   // handle full steps
   sm = (sm == STEP1) ? 0 : sm;
-  mytmcstepper->microsteps(sm);                       // step mode = 1/4 - default specified in boardfile.jsn  
+  mytmcstepper->microsteps(sm);                       // step mode = 1/4 - default specified in boardfile.jsn
 #endif // #if (DRVBRD == PRO2ESP32TMC2225)
 }
 
@@ -446,7 +446,8 @@ void DriverBoard::setstepmode(int smode)
     if (boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H)
     {
       // for PRO2EDRV8825 stepmode is set in hardware jumpers, cannot set by software
-      mySetupData->set_brdstepmode(mySetupData->get_brdfixedstepmode());
+      // mySetupData->set_brdstepmode(mySetupData->get_brdfixedstepmode());
+      // ignore request
     }
     else if (boardnum == PRO2ESP32DRV8825 )
     {
@@ -489,9 +490,10 @@ void DriverBoard::setstepmode(int smode)
           smode = STEP1;
           break;
       }
+      // update boardconfig.jsn
       mySetupData->set_brdstepmode(smode);
     }
-    else if (boardnum == PRO2EULN2003      || boardnum == PRO2ESP32ULN2003 \
+    else if (boardnum    == PRO2EULN2003   || boardnum == PRO2ESP32ULN2003 \
              || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N  \
              || boardnum == PRO2EL9110S    || boardnum == PRO2ESP32L9110S  \
              || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI )
@@ -505,13 +507,16 @@ void DriverBoard::setstepmode(int smode)
           myhstepper->SetSteppingMode(SteppingMode::HALF);
           break;
         default:
+          smode = STEP1;
           myhstepper->SetSteppingMode(SteppingMode::FULL);
           break;
       }
-      mySetupData->set_brdstepmode(1);
+      // update boardconfig.jsn
+      mySetupData->set_brdstepmode(smode);
     }
     else if (boardnum == PRO2EL293DNEMA || boardnum == PRO2EL293D28BYJ48 )
     {
+      // update boardconfig.jsn
       mySetupData->set_brdstepmode(STEP1);
     }
     else if ( boardnum == PRO2ESP32TMC2225 || boardnum == PRO2ESP32TMC2209 || boardnum == PRO2ESP32TMC2209P )
@@ -522,7 +527,12 @@ void DriverBoard::setstepmode(int smode)
       // handle full stepmode
       smode = (smode == STEP1) ? 0 : smode;
       mytmcstepper->microsteps(smode);
-      mySetupData->set_brdstepmode(smode);
+      // update boardconfig.jsn
+      if (smode == 0)
+      {
+        smode = STEP1;
+      }
+      mySetupData->set_brdstepmode( smode );
       //Serial.print("sMode= "); Serial.println(driver.microsteps());
 #endif // #if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
     }

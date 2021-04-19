@@ -328,9 +328,8 @@ void ESP_Communication()
       SendPaket('S', mySetupData->get_brdstepmode());
       break;
     // ======================================================================
-    // Basic rule for setting stepmode in this order
-    // 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
-    // 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
+    // Basic rule for setting stepmode
+    // Set driverboard->setstepmode(xx);                 // this sets the physical pins and saves new stepmode
     // ======================================================================
     case 30: // set step mode
       WorkString = receiveString.substring(3, receiveString.length() - 1);
@@ -366,9 +365,6 @@ void ESP_Communication()
         DebugPrint("unknown DRVBRD: ");
         DebugPrintln(DRVBRD);
       }
-      // this sets data value but does not set pins
-      mySetupData->set_brdstepmode((int)paramval);
-      // must also call boards.cpp to apply physical pins
       driverboard->setstepmode((int)paramval);
       break;
     case 31: // set focuser position
