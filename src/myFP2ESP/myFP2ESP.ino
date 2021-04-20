@@ -292,7 +292,7 @@ extern void start_webserver(void);
 bool HPS_alert()
 {
   // check tmc2209 stall guard )
-  if( DefaultBoardNumber == PRO2ESP32TMC2209 )
+if( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
   {
     return driverboard->checkStall();
   }
@@ -940,7 +940,7 @@ void stop_tcpipserver()
 
 void setup()
 {
-  Serial.begin(SERIALPORTSPEED);
+  //Serial.begin(SERIALPORTSPEED);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
   Serial.begin(SERIALPORTSPEED);
