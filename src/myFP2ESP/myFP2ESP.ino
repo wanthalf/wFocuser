@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 218-4
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 218-5
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -292,7 +292,7 @@ extern void start_webserver(void);
 bool HPS_alert()
 {
   // check tmc2209 stall guard )
-if( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
+  if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
   {
     return driverboard->checkStall();
   }
@@ -1782,6 +1782,7 @@ void loop()
           DebugPrintln("go DelayAfterMove");
           MainStateMachine = State_DelayAfterMove;
         } // if ( halt_alert )
+        
         if (HPS_alert() )                                 // check if home position sensor activated?
         {
           if (driverboard->getposition() > 0)
@@ -1795,7 +1796,6 @@ void loop()
           ftargetPosition = 0;
           driverboard->setposition(0);
           mySetupData->set_fposition(0);
-
           if ( mySetupData->get_showhpswmsg() == 1)     // check if display home position messages is enabled
           {
             if (mySetupData->get_displayenabled() == 1)
@@ -1803,9 +1803,19 @@ void loop()
               myoled->oledtextmsg("HP Sw=1, Pos=0", -1, true, true);
             }
           }
-          // we should jump to
-          DebugPrintln("go SetHomePosition");
-          MainStateMachine = State_SetHomePosition;
+          if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
+          {
+            // stall guard in effect - there is no need to find and set position. there is no real backlash
+            // finally,.... the rock has come..... home.
+            DebugPrintln("Stall Guard: Pos = 0");
+            MainStateMachine = State_DelayAfterMove;
+          }
+          else
+          {
+            // we should jump to
+            DebugPrintln("go SetHomePosition");
+            MainStateMachine = State_SetHomePosition;
+          }
         } // if (HPS_alert() )
 
         // if the update position on display when moving is enabled, then update the display
