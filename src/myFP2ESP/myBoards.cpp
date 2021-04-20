@@ -421,7 +421,8 @@ void DriverBoard::init_tmc2225(void)
 #endif // #if (DRVBRD == PRO2ESP32TMC2225)
 }
 
-bool DriverBoard::checkStall(byte stepdir)
+// tmc2209 stall guard check code - return true if stall guard detected on DIAG pin
+bool DriverBoard::checkStall(void)
 {
   // avoid using debug statements becase this is called for every step
   if ((digitalRead(mySetupData->get_brdboardpins(2)) == true) && (stepdir == moving_in))

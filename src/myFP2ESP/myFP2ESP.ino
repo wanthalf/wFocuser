@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 218-3
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 218-4
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -291,7 +291,11 @@ extern void start_webserver(void);
 // if hpsw is closed = low, !() closed means return high, return false if open
 bool HPS_alert()
 {
-  // Basic assumption rule: If associated pin is -1 then cannot set enable
+  // check tmc2209 stall guard )
+  if( DefaultBoardNumber == PRO2ESP32TMC2209 )
+  {
+    return driverboard->checkStall();
+  }
   if ( mySetupData->get_hpswitchenable() == 1)
   {
     return !((bool)digitalRead(mySetupData->get_brdhpswpin()));

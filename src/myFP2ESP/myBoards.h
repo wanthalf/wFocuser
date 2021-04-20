@@ -39,7 +39,7 @@ class DriverBoard
     void halt(void);
     void init_tmc2209(void);
     void init_tmc2225(void);
-    bool checkStall(byte);
+    bool checkStall(void);
 
     // getter
     unsigned long getposition(void);
