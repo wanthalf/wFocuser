@@ -83,6 +83,12 @@ https://github.com/me-no-dev/arduino-esp32fs-plugin/releases/
 ESP8266 Sketch Data uploader
 https://github.com/esp8266/arduino-esp8266fs-plugin 
 
+TMC2225 requires Library TMC2208Stepper 
+https://github.com/bigtreetech/BIGTREETECH-TMC2225-V1.0
+
+TMC2209 requires library TMCStepper
+https://github.com/bigtreetech/BIGTREETECH-TMC2209-V1.2
+
 After downloading the zip files, you then need to install these into the Arduino IDE environment. To do that, start the Arduino IDE, select Sketch, Include Library, Add .Zip library, then navigate to where the ZIP files are stored and select them (you can only load 1 zip file at a time so please repeat this for all ZIP files).
 
 The Sketch Data uploaders require a different method for installing. The install instructions are found in their respective download pages and require copying the files into a special folder of the Arduino program installation.

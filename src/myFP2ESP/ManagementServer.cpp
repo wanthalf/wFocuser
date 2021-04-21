@@ -2508,7 +2508,7 @@ void MANAGEMENT_handleset(void)
     MSrvr_DebugPrintln(temp);
     driverboard->setstepmode(temp);                     // write to pins and update mySetupData
     temp = mySetupData->get_brdstepmode();              // read actual stepmode set by driverboard
-    jsonstr = "{ \"stepmode\"" + String(temp) + " }";
+    jsonstr = "{ \"stepmode\":" + String(temp) + " }";
   }
 
   // temperature probe
