@@ -7,6 +7,9 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 
 218
 // Trinamic 2225 and 2209 support
+// Add stall guard support for TMC2209
+// Add get?commands= to show a list of get/set commands in Management Server
+// Fixes for comms.h to be more compatible with INDI driver
 
 217 
 // Fix for saveboardconfiguration

@@ -2060,7 +2060,8 @@ void MANAGEMENT_sendjson(String str)
 void MANAGEMENT_handleget(void)
 {
   // return json string of state, on or off or value
-  // ascom, leds, temp, webserver, position, ismoving, display, motorspeed, coilpower, reverse, fixedstepmode, indi, stepmode
+  // ascom, boardconfig, coilpower, coilpowertimeout, dataconfig, display, fixedstepmode, hpsw, indi, ismoving,
+  // leds, motorspeed, motorspeeddelay, position, reverse, rssi, tempprobe, webserver
   String jsonstr;
 
   if ( mserver.argName(0) == "ascom" )
@@ -2082,9 +2083,9 @@ void MANAGEMENT_handleget(void)
     {
       delay(10);
       // Reading board_config.jsn
-      jsonstr = bfile.readString();                                // read content of the text file
+      jsonstr = bfile.readString();                          	// read content of the text file
       MSrvr_DebugPrint("LoadConfiguration(): Board_data= ");
-      MSrvr_DebugPrintln(jsonstr);                             // ... and print on serial
+      MSrvr_DebugPrintln(jsonstr);                             	// ... and print on serial
       bfile.close();
     }
     MANAGEMENT_sendjson(jsonstr);
@@ -2113,9 +2114,9 @@ void MANAGEMENT_handleget(void)
     {
       delay(10);
       // Reading data_per.jsn
-      jsonstr = bfile.readString();                                // read content of the text file
+      jsonstr = bfile.readString();                          	// read content of the text file
       MSrvr_DebugPrint("LoadConfiguration(): Board_data= ");
-      MSrvr_DebugPrintln(jsonstr);                             // ... and print on serial
+      MSrvr_DebugPrintln(jsonstr);                             	// ... and print on serial
       bfile.close();
     }
     MANAGEMENT_sendjson(jsonstr);
@@ -2191,6 +2192,23 @@ void MANAGEMENT_handleget(void)
     jsonstr = "{\"webserver\":" + String(mySetupData->get_webserverstate()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
+  else if ( mserver.argName(0) == "commands" )
+  {
+    // read file mscommands.html and send it
+    // Filesystem was started earlier when server was started so assume it has started
+    if ( SPIFFS.exists("/mscommands.html"))               // constructs admin page 3 of management server
+    {
+      File file = SPIFFS.open("/mscommands.html", "r");   // open file for read
+      jsonstr = file.readString();                        // read contents into string
+      file.close();
+      //Serial.println(jsonstr);
+    }
+    else
+    {
+      jsonstr = "{ \"Error\":\"Could not read command list\" }";
+    }
+    MANAGEMENT_sendjson(jsonstr);
+  }
   else
   {
     jsonstr = "{ \"error\":\"unknown-command\" }";
@@ -2205,8 +2223,8 @@ void MANAGEMENT_handleset(void)
   String jsonstr;
   String value;
   String drvbrd = mySetupData->get_brdname();
-  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, stepmode, fixedstepmode, indi, 
-  // coilpowertimeout, boardconfig, dataconfig
+  // ascom, coilpower, coilpowertimeout, display, fixedstepmode, hpsw, indi, leds, motorspeed, motorspeeddelay,
+  // move, position, reverse, stepmode, tempprobe, webserver,
 
   // ascom remote server
   value = mserver.arg("ascom");
@@ -2438,7 +2456,7 @@ void MANAGEMENT_handleset(void)
     mySetupData->set_brdmsdelay(tmp);
     jsonstr = "{ \"motorspeeddelay\":\"" + String(tmp) + " }";
   }
-  
+
   // move - moves focuser position
   value = mserver.arg("move");
   if ( value != "" )
@@ -2448,7 +2466,7 @@ void MANAGEMENT_handleset(void)
     MSrvr_DebugPrintln(temp);
     ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
     jsonstr = "{ \"move\":" + String(ftargetPosition) + " }";
-  }  
+  }
 
   // position - does not move focuser
   value = mserver.arg("position");
