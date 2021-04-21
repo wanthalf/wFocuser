@@ -83,7 +83,8 @@ class SetupData
     byte get_hpswitchenable();
     byte get_pbenable();
     byte get_indi();
-
+    byte get_stallguard();
+    
     //__setter data_per
     void set_fposition(unsigned long);
     void set_focuserdirection(byte);
@@ -129,6 +130,7 @@ class SetupData
     void set_pbenable(byte);
     void set_irremoteenable(byte);
     void set_indi(byte);
+    void set_stallguard(byte);
 
     //__getter boardconfig
     String get_brdname(void);
@@ -252,6 +254,7 @@ class SetupData
     byte    pbenable;
     byte    inoutledenable;
     byte    indi;
+    byte    stallguard;                // value for STALL_GUARD, tmc2209
 
     // dataset board configuration
     String board;

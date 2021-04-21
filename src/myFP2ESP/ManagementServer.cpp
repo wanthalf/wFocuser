@@ -2182,6 +2182,11 @@ void MANAGEMENT_handleget(void)
     jsonstr = "{ \"stepmode\":" + String(mySetupData->get_brdstepmode()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
+  else if ( mserver.argName(0) == "stallguard" )
+  {
+    jsonstr = "{ \"stallguard\":" + String(mySetupData->get_stallguard()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
   else if ( mserver.argName(0) == "tempprobe" )
   {
     jsonstr = "{\"tempprobe\":" + String(mySetupData->get_temperatureprobestate()) + " }";
@@ -2499,6 +2504,18 @@ void MANAGEMENT_handleset(void)
     }
   }
 
+  // stall guard
+  value = mserver.arg("stallguard");
+  if ( value != "" )
+  {
+    int temp = value.toInt();
+    MSrvr_DebugPrint("stallguard: ");
+    MSrvr_DebugPrintln(temp);
+    mySetupData->set_stallguard((byte) temp);
+    temp = mySetupData->get_stallguard();  
+    jsonstr = "{ \"stepmode\":" + String(temp) + " }";
+  }
+  
   // stepmode
   value = mserver.arg("stepmode");
   if ( value != "" )

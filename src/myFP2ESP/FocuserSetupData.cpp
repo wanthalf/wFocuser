@@ -56,7 +56,7 @@ SetupData::SetupData(void)
   else
   {
     SetupData_DebugPrintln("FS mounted");
-    //still has issues? esp8266? 
+    //still has issues? esp8266?
     //this->ListDir("/", 0);
   }
   this->LoadConfiguration();
@@ -140,6 +140,7 @@ byte SetupData::LoadConfiguration()
       this->hpswitchenable        = doc_per["hpswen"];
       this->pbenable              = doc_per["pbenable"];
       this->indi                  = doc_per["indi"];
+      this->stallguard            = doc_per["stallguard"];
     }
     SetupData_DebugPrintln("data_per loaded");
   }
@@ -460,6 +461,7 @@ void SetupData::LoadDefaultPersistantData()
   this->hpswitchenable        = DEFAULTOFF;           // this should be default OFF
   this->pbenable              = DEFAULTOFF;           // this should be default OFF
   this->indi                  = DEFAULTOFF;           // this should be default OFF
+  this->stallguard            = STALL_VALUE;
 
   this->SavePersitantConfiguration();                 // write default values to SPIFFS
 }
@@ -542,6 +544,7 @@ byte SetupData::SavePersitantConfiguration()
   doc["hpswen"]             = this->hpswitchenable;
   doc["pbenable"]           = this->pbenable;
   doc["indi"]               = this->indi;
+  doc["stallguard"]         = this->stallguard;
 
   // Serialize JSON to file
   SetupData_DebugPrintln("Writing to file");
@@ -779,6 +782,11 @@ byte SetupData::get_indi()
   return this->indi;
 }
 
+byte SetupData::get_stallguard()
+{
+  return this->stallguard;
+}
+
 //__Setter
 
 void SetupData::set_fposition(unsigned long fposition)
@@ -995,6 +1003,12 @@ void SetupData::set_indi(byte newval)
 {
   this->StartDelayedUpdate(this->indi, newval);
 }
+
+void SetupData::set_stallguard(byte newval)
+{
+  this->StartDelayedUpdate(this->stallguard, newval);
+}
+
 
 void SetupData::StartDelayedUpdate(int & org_data, int new_data)
 {

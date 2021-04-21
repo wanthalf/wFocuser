@@ -5,6 +5,10 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 © Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+219
+// Add stall guard value to management interface get/set
+// Add stall guard value to data_per.jsn
+
 218
 // Trinamic 2225 and 2209 support
 // Add stall guard support for TMC2209

@@ -8,8 +8,24 @@
 #ifndef boarddefs_h
 #define boarddefs_h
 
+// ======================================================================
+// TMCxxxx DEFINES
+// ======================================================================
+#define STALL_VALUE         100           // [0... 255]
+#define TMC2209CURRENT      600           // 600mA for 8HS15-0604S NEMA8 stepper motor
+#define TMC2225CURRENT      300           // 300mA for recommended stepper NEMA motor - you can change this 
+#define TMC2225SPEED        57600
+#define TMC2209SPEED        57600
+#define TOFF_VALUE          4             // [1... 15]
+#define DRIVER_ADDRESS      0b00          // TMC2209 Driver address according to MS1 and MS2
+#define R_SENSE             0.11f         // Match to your driver
+// SilentStepStick series use 0.11
+// UltiMachine Einsy and Archim2 boards use 0.2
+// Panucatt BSD2660 uses 0.1
+// Watterott TMC5160 uses 0.075
+
 // ---------------------------------------------------------------------------
-// 1: BOARD DEFINES
+// BOARD TYPE DEFINES
 // ---------------------------------------------------------------------------      
 
 // myFP2 Boards
