@@ -228,7 +228,8 @@ void ESP_Communication()
       SendPaket('O', mySetupData->get_coilpower());
       break;
     case 12: // set coil power
-      paramval = (byte) (receiveString[3] - '0');
+      WorkString = receiveString.substring(3, receiveString.length() - 1);
+      paramval = (byte) WorkString.toInt();
       ( paramval == 1 ) ? driverboard->enablemotor()    : driverboard->releasemotor();
       ( paramval == 1 ) ? mySetupData->set_coilpower(1) : mySetupData->set_coilpower(0);
       break;
@@ -238,7 +239,8 @@ void ESP_Communication()
     case 14: // set reverse direction
       if ( isMoving == 0 )
       {
-        paramval = (byte) (receiveString[3] - '0');
+        WorkString = receiveString.substring(3, receiveString.length() - 1);
+        paramval = (byte) WorkString.toInt();
         ( paramval == 1 ) ? mySetupData->set_reversedirection(1) : mySetupData->set_reversedirection(0);
       }
       break;
@@ -256,7 +258,9 @@ void ESP_Communication()
     case 18:
       // :180#    None    set the return of user specified stepsize to be OFF - default
       // :181#    None    set the return of user specified stepsize to be ON - reports what user specified as stepsize
-      mySetupData->set_stepsizeenabled((byte) (receiveString[3] - '0'));
+      WorkString = receiveString.substring(3, receiveString.length() - 1);
+      paramval = (byte)WorkString.toInt();
+      mySetupData->set_stepsizeenabled((byte) (paramval));
       break;
     case 19: // :19xxxx#  None   set the step size value - double type, eg 2.1
       {
@@ -299,7 +303,9 @@ void ESP_Communication()
     case 23: // set the temperature compensation ON (1) or OFF (0)
       if ( mySetupData->get_temperatureprobestate() == 1)
       {
-        mySetupData->set_tempcompenabled((byte) (receiveString[3] - '0'));
+        WorkString = receiveString.substring(3, receiveString.length() - 1);
+        paramval = (byte)WorkString.toInt();
+        mySetupData->set_tempcompenabled((byte) (paramval));
       }
       break;
     case 24: // get status of temperature compensation (enabled | disabled)
@@ -327,59 +333,45 @@ void ESP_Communication()
     case 29: // get stepmode
       SendPaket('S', mySetupData->get_brdstepmode());
       break;
-      
-  // ======================================================================
-  // Basic rule for setting stepmode in this order
-  // 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
-  // 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
-  // ======================================================================
-  case 30: // set step mode
+    // ======================================================================
+    // Basic rule for setting stepmode
+    // Set driverboard->setstepmode(xx);                 // this sets the physical pins and saves new stepmode
+    // ======================================================================
+    case 30: // set step mode
       WorkString = receiveString.substring(3, receiveString.length() - 1);
       paramval = WorkString.toInt();
       if (DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N || DRVBRD == PRO2EL293DMINI || DRVBRD == PRO2EL9110S)
       {
-        paramval = (byte)(paramval & 3);      // STEP1 - STEP2
-        // this sets data value but does not set pins
-        mySetupData->set_brdstepmode(paramval);
-        // must also call boards.cpp to apply physical pins
-        driverboard->setstepmode(paramval);
+        paramval = (int)(paramval & 3);      // STEP1 - STEP2
       }
       else if (DRVBRD == PRO2ESP32ULN2003 || DRVBRD == PRO2ESP32L298N || DRVBRD == PRO2ESP32L293DMINI || DRVBRD == PRO2ESP32L9110S)
       {
-        paramval = (byte)(paramval & 3);      // STEP1 - STEP2
+        paramval = (int)(paramval & 3);      // STEP1 - STEP2
       }
       else if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG)
       {
-        paramval = mySetupData->get_brdfixedstepmode();            // stepmopde set by jumpers
+        paramval = (int) mySetupData->get_brdfixedstepmode();            // stepmopde set by jumpers
       }
       else if (DRVBRD == PRO2ESP32DRV8825 || DRVBRD == PRO2ESP32R3WEMOS)
       {
-        if ( paramval < STEP1 )
-        {
-          paramval = STEP1;
-        }
-        else if ( paramval > STEP32 )
-        {
-          paramval = STEP32;
-        }
+        paramval = (paramval < STEP1 ) ? STEP1 : paramval;
+        paramval = (paramval > STEP32) ? STEP32 : paramval;
       }
       else if (DRVBRD == PRO2EL293DNEMA || DRVBRD == PRO2EL293D28BYJ48)
       {
         paramval = STEP1;
-        {
-          mySetupData->set_brdstepmode(paramval);
-        }
       }
-      else if (DRVBRD == PRO2ESPTMC2225 || DRVBRD == PRO2ESPTMC2209 )
+      else if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 )
       {
-        mySetupData->set_brdstepmode(paramval);
-        DebugPrintln("Not yet implemented");
+        paramval = (paramval < STEP1 )  ? STEP1   : paramval;
+        paramval = (paramval > STEP256) ? STEP256 : paramval;
       }
       else
       {
         DebugPrint("unknown DRVBRD: ");
         DebugPrintln(DRVBRD);
       }
+      driverboard->setstepmode((int)paramval);
       break;
     case 31: // set focuser position
       if ( isMoving == 0 )
@@ -416,7 +408,9 @@ void ESP_Communication()
       // :361#    None    Enable Display
       if ( displaystate == true )
       {
-        mySetupData->set_displayenabled((byte) (receiveString[3] - '0'));
+        WorkString = receiveString.substring(3, receiveString.length() - 1);
+        paramval = (byte) WorkString.toInt();
+        mySetupData->set_displayenabled((byte) (paramval));
         if (mySetupData->get_displayenabled() == 1)
         {
           if ( displayfound == true )
@@ -507,7 +501,9 @@ void ESP_Communication()
       }
       break;
     case 61: // set update of position on oled when moving (0=disable, 1=enable)
-      mySetupData->set_oledupdateonmove((byte) (receiveString[3] - '0'));
+      WorkString = receiveString.substring(3, receiveString.length() - 1);
+      paramval = (byte)WorkString.toInt();
+      mySetupData->set_oledupdateonmove((byte) (paramval));
       break;
     case 62: // get update of position on oled when moving (00=disable, 01=enable)
       SendPaket('L', mySetupData->get_oledupdateonmove());
@@ -539,13 +535,17 @@ void ESP_Communication()
       SendPaket('3', mySetupData->get_DelayAfterMove());
       break;
     case 73: // Disable/enable backlash IN (going to lower focuser position)
-      mySetupData->set_backlash_in_enabled((byte) (receiveString[3] - '0'));
+      WorkString = receiveString.substring(3, receiveString.length() - 1);
+      paramval = (byte)WorkString.toInt();
+      mySetupData->set_backlash_in_enabled((byte) (paramval));
       break;
     case 74: // get backlash in enabled status
       SendPaket('4', mySetupData->get_backlash_in_enabled());
       break;
     case 75: // Disable/enable backlash OUT (going to lower focuser position)
-      mySetupData->set_backlash_out_enabled((byte) (receiveString[3] - '0'));
+      WorkString = receiveString.substring(3, receiveString.length() - 1);
+      paramval = (byte)WorkString.toInt();
+      mySetupData->set_backlash_out_enabled((byte) (paramval));
       break;
     case 76: // get backlash OUT enabled status
       SendPaket('5', mySetupData->get_backlash_out_enabled());
@@ -574,7 +574,9 @@ void ESP_Communication()
       SendPaket('k', mySetupData->get_tcdirection());
       break;
     case 88: // set tc direction
-      mySetupData->set_tcdirection((byte) (receiveString[3] - '0'));
+      WorkString = receiveString.substring(3, receiveString.length() - 1);
+      paramval = (byte)WorkString.toInt();
+      mySetupData->set_tcdirection((byte) (paramval));
       break;
     case 89:  // Get stepper power (reads from A7) - only valid if circuit is added (1=stepperpower ON)
       SendPaket('9', 1);
@@ -584,13 +586,15 @@ void ESP_Communication()
         byte preset = (byte) (receiveString[3] - '0');
         preset = (preset > 9) ? 9 : preset;
         WorkString = receiveString.substring(4, receiveString.length() - 1);
-        unsigned long tmppos = (unsigned long)WorkString.toInt();
+        unsigned long tmppos = (unsigned long) WorkString.toInt();
         mySetupData->set_focuserpreset( preset, tmppos );
       }
       break;
     case 91: // get focuserpreset [0-9]
       {
-        byte preset = (byte) (receiveString[3] - '0');
+        WorkString = receiveString.substring(3, receiveString.length() - 1);
+        paramval = (byte)WorkString.toInt();
+        byte preset = (byte) (paramval);
         preset = (preset > 9) ? 9 : preset;
         SendPaket('h', mySetupData->get_focuserpreset(preset));
       }

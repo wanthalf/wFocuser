@@ -1052,9 +1052,8 @@ void WEBSERVER_handleroot()
   }
 
   // ======================================================================
-  // Basic rule for setting stepmode in this order
-  // 1. Set mySetupData->set_brdstepmode(xx);             // this saves config setting
-  // 2. Set driverboard->setstepmode(xx);                 // this sets the physical pins
+  // Basic rule for setting stepmode
+  // Set driverboard->setstepmode(xx);                 // this sets the physical pins and saves new stepmode
   // ======================================================================
   // if update stepmode
   // (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32, 64=1/64, 128=1/128)
@@ -1073,9 +1072,6 @@ void WEBSERVER_handleroot()
     {
       temp1 = STEP32;
     }
-    // this sets data value but does not set pins
-    mySetupData->set_brdstepmode(temp1);
-    // must also call boards.cpp to apply physical pins
     driverboard->setstepmode(temp1);
   }
 

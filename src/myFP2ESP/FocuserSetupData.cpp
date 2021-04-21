@@ -18,13 +18,15 @@
 #include "boarddefs.h"
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"
+#include "myBoards.h"                   // to be able to reference driverboard
 
 // ======================================================================
 // Extern Data
-// ======================================================================extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+// ======================================================================
+extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
 extern int brdfixedstepmode;            // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
 extern int brdstepsperrev;
-extern int DefaultBoardNumber;
+extern DriverBoard* driverboard;
 
 // ======================================================================
 // Defines
@@ -54,7 +56,8 @@ SetupData::SetupData(void)
   else
   {
     SetupData_DebugPrintln("FS mounted");
-    this->ListDir("/", 0);
+    //still has issues? esp8266? 
+    //this->ListDir("/", 0);
   }
   this->LoadConfiguration();
 };
@@ -242,7 +245,8 @@ byte SetupData::LoadConfiguration()
       this->focuserdirection = doc_var["fdir"];     // keeps track of last focuser move direction
 
       // round position to fullstep motor position
-      this->fposition = (this->fposition + this->stepmode / 2) / this->stepmode * this->stepmode;
+      // holgers code?
+      // this->fposition = (this->fposition + this->stepmode / 2) / this->stepmode * this->stepmode;
       retval = 3;
     }
   }
@@ -1444,7 +1448,6 @@ void SetupData::set_brdmaxstepmode(int newval)
 
 void SetupData::set_brdstepmode(int newval)
 {
-  // this saves new stepmode value
   this->StartBoardDelayedUpdate(this->stepmode, newval);
 }
 

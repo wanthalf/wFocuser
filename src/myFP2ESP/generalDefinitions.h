@@ -71,7 +71,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define MSSERVERPORT          6060          // Management interface - cannot be changed
 #define MSREBOOTPAGEDELAY     20000         // management service reboot page, time (s) between next page refresh
 #define MAXMANAGEMENTPAGESIZE 3700          // largest = /msindex2 = 3568
-#define MAXCUSTOMBRDJSONSIZE   300
+#define MAXCUSTOMBRDJSONSIZE  300
 
 // MDNS SERVICE
 #define MDNSSERVERPORT        7070          // mDNS service
@@ -79,7 +79,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 // SERIAL PORT
 #define SERIALPORTSPEED       57600         // 9600, 14400, 19200, 28800, 38400, 57600, 115200
 
-// TCPIP SERVICE
+// TCP/IP SERVICE
 #define SERVERPORT            2020          // TCPIP port for myFP2ESP
 
 // TEMPERATURE PROBE
@@ -97,21 +97,21 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define MAXWEBPAGESIZE        4100          // largest = / = 3943
 
 // defines for ASCOMSERVER, MDNSSERVER, WEBSERVER
-#define ASCOMREMOTESTR            "ASCOM Remote: "
-#define WEBSERVERSTR              "Webserver: "
-#define NORMALWEBPAGE             200
-#define FILEUPLOADSUCCESS         300
-#define BADREQUESTWEBPAGE         400
-#define NOTFOUNDWEBPAGE           404
-#define INTERNALSERVERERROR       500
-#define TEXTPAGETYPE              "text/html"
-#define PLAINTEXTPAGETYPE         "text/plain"
-#define JSONTEXTPAGETYPE          "text/json"
-#define JSONPAGETYPE              "application/json"
-#define FILENOTFOUNDSTR           "Not found"
-#define FILEFOUNDSTR              "Found"
-#define NOTDEFINEDSTR             "Not defined"
-#define MDNSSTARTFAILSTR          "Err starting MDNS responder"
+#define ASCOMREMOTESTR        "ASCOM Remote: "
+#define WEBSERVERSTR          "Webserver: "
+#define NORMALWEBPAGE         200
+#define FILEUPLOADSUCCESS     300
+#define BADREQUESTWEBPAGE     400
+#define NOTFOUNDWEBPAGE       404
+#define INTERNALSERVERERROR   500
+#define TEXTPAGETYPE          "text/html"
+#define PLAINTEXTPAGETYPE     "text/plain"
+#define JSONTEXTPAGETYPE      "text/json"
+#define JSONPAGETYPE          "application/json"
+#define FILENOTFOUNDSTR       "Not found"
+#define FILEFOUNDSTR          "Found"
+#define NOTDEFINEDSTR         "Not defined"
+#define MDNSSTARTFAILSTR      "Err starting MDNS responder"
 #define MDNSSTARTEDSTR            "mDNS responder started"
 
 // ======================================================================
@@ -242,6 +242,7 @@ extern const char* WRITEFILESUCCESSSTR;
 //#define SETUPDATA_DEBUG   1                                   // for debugging FocuserSetupData
 //#define TEMP_DEBUG        1                                   // for debugging temp probe
 //#define WEBSERVER_DEBUG   1                                   // for debugging webserver
+//#define HPSW_Debug        1                                   // for debugging hpsw
 
 #ifdef  DEBUG                                                   // Macros are usually in all capital letters.
 #define DebugPrint(...)   Serial.print(__VA_ARGS__)             // DPRINT is a macro, debug print
@@ -313,6 +314,13 @@ extern const char* WRITEFILESUCCESSSTR;
 #else
 #define WebS_DebugPrint(...)                                    // now defines a blank line
 #define WebS_DebugPrintln(...)                                  // now defines a blank line
+#endif
+#ifdef  HPSW_Debug
+#define HPSW_DebugPrint(...)   Serial.print(__VA_ARGS__)  
+#define HPSW_DebugPrintln(...) Serial.println(__VA_ARGS__) 
+#else
+#define HPSW_DebugPrint(...)  
+#define HPSW_DebugPrintln(...) 
 #endif
 
 // ======================================================================

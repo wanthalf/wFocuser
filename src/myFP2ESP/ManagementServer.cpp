@@ -2060,83 +2060,13 @@ void MANAGEMENT_sendjson(String str)
 void MANAGEMENT_handleget(void)
 {
   // return json string of state, on or off or value
-  // ascom, leds, temp, webserver, position, ismoving, display, motorspeed, coilpower, reverse, fixedstepmode, indi
+  // ascom, boardconfig, coilpower, coilpowertimeout, dataconfig, display, fixedstepmode, hpsw, indi, ismoving,
+  // leds, motorspeed, motorspeeddelay, position, reverse, rssi, tempprobe, webserver
   String jsonstr;
 
   if ( mserver.argName(0) == "ascom" )
   {
     jsonstr = "{\"ascomserver\":" + String(mySetupData->get_ascomserverstate()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "leds" )
-  {
-    jsonstr = "{\"ledstate\":" + String(mySetupData->get_inoutledstate()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "tempprobe" )
-  {
-    jsonstr = "{\"tempprobe\":" + String(mySetupData->get_temperatureprobestate()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "webserver" )
-  {
-    jsonstr = "{\"webserver\":" + String(mySetupData->get_webserverstate()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "position" )
-  {
-    jsonstr = "{ \"position\":" + String(mySetupData->get_fposition()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "ismoving" )
-  {
-    jsonstr = "{ \"ismoving\":" + String(isMoving) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "display" )
-  {
-    jsonstr = "{ \"display\":" + String(mySetupData->get_displayenabled()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "motorspeed" )
-  {
-    jsonstr = "{ \"motorspeed\":" + String(mySetupData->get_motorspeed()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "coilpower" )
-  {
-    jsonstr = "{ \"coilpower\":" + String(mySetupData->get_coilpower()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "reverse" )
-  {
-    jsonstr = "{ \"reverse\":" + String(mySetupData->get_reversedirection()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "rssi" )
-  {
-    long rssi = getrssi();
-    jsonstr = "{ \"rssi\":" + String(rssi) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "hpsw" )
-  {
-    jsonstr = "{ \"hpsw\":" + String(mySetupData->get_hpswitchenable()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "fixedstepmode" )
-  {
-    jsonstr = "{ \"fixedstepmode\":" + String(mySetupData->get_brdfixedstepmode()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "indi" )
-  {
-    jsonstr = "{ \"indi\":" + String(mySetupData->get_indi()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "coilpowertimeout" )
-  {
-    jsonstr = "{ \"coilpowertimeout\":" + String(mySetupData->get_coilpower_timeout()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
   else if ( mserver.argName(0) == "boardconfig" )
@@ -2153,11 +2083,21 @@ void MANAGEMENT_handleget(void)
     {
       delay(10);
       // Reading board_config.jsn
-      jsonstr = bfile.readString();                                // read content of the text file
+      jsonstr = bfile.readString();                          	// read content of the text file
       MSrvr_DebugPrint("LoadConfiguration(): Board_data= ");
-      MSrvr_DebugPrintln(jsonstr);                             // ... and print on serial
+      MSrvr_DebugPrintln(jsonstr);                             	// ... and print on serial
       bfile.close();
     }
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "coilpower" )
+  {
+    jsonstr = "{ \"coilpower\":" + String(mySetupData->get_coilpower()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "coilpowertimeout" )
+  {
+    jsonstr = "{ \"coilpowertimeout\":" + String(mySetupData->get_coilpower_timeout()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
   else if ( mserver.argName(0) == "dataconfig" )
@@ -2174,10 +2114,98 @@ void MANAGEMENT_handleget(void)
     {
       delay(10);
       // Reading data_per.jsn
-      jsonstr = bfile.readString();                                // read content of the text file
+      jsonstr = bfile.readString();                          	// read content of the text file
       MSrvr_DebugPrint("LoadConfiguration(): Board_data= ");
-      MSrvr_DebugPrintln(jsonstr);                             // ... and print on serial
+      MSrvr_DebugPrintln(jsonstr);                             	// ... and print on serial
       bfile.close();
+    }
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "display" )
+  {
+    jsonstr = "{ \"display\":" + String(mySetupData->get_displayenabled()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "fixedstepmode" )
+  {
+    jsonstr = "{ \"fixedstepmode\":" + String(mySetupData->get_brdfixedstepmode()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "hpsw" )
+  {
+    jsonstr = "{ \"hpsw\":" + String(mySetupData->get_hpswitchenable()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "indi" )
+  {
+    jsonstr = "{ \"indi\":" + String(mySetupData->get_indi()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "ismoving" )
+  {
+    jsonstr = "{ \"ismoving\":" + String(isMoving) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "leds" )
+  {
+    jsonstr = "{\"ledstate\":" + String(mySetupData->get_inoutledstate()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "motorspeed" )
+  {
+    jsonstr = "{ \"motorspeed\":" + String(mySetupData->get_motorspeed()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "motorspeeddelay" )
+  {
+    jsonstr = "{ \"motorspeeddelay\":" + String(mySetupData->get_brdmsdelay()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "position" )
+  {
+    jsonstr = "{ \"position\":" + String(mySetupData->get_fposition()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "reverse" )
+  {
+    jsonstr = "{ \"reverse\":" + String(mySetupData->get_reversedirection()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "rssi" )
+  {
+    long rssi = getrssi();
+    jsonstr = "{ \"rssi\":" + String(rssi) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "stepmode" )
+  {
+    jsonstr = "{ \"stepmode\":" + String(mySetupData->get_brdstepmode()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "tempprobe" )
+  {
+    jsonstr = "{\"tempprobe\":" + String(mySetupData->get_temperatureprobestate()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "webserver" )
+  {
+    jsonstr = "{\"webserver\":" + String(mySetupData->get_webserverstate()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "commands" )
+  {
+    // read file mscommands.html and send it
+    // Filesystem was started earlier when server was started so assume it has started
+    if ( SPIFFS.exists("/mscommands.html"))               // constructs admin page 3 of management server
+    {
+      File file = SPIFFS.open("/mscommands.html", "r");   // open file for read
+      jsonstr = file.readString();                        // read contents into string
+      file.close();
+      //Serial.println(jsonstr);
+    }
+    else
+    {
+      jsonstr = "{ \"Error\":\"Could not read command list\" }";
     }
     MANAGEMENT_sendjson(jsonstr);
   }
@@ -2195,8 +2223,8 @@ void MANAGEMENT_handleset(void)
   String jsonstr;
   String value;
   String drvbrd = mySetupData->get_brdname();
-  // ascom, leds, tempprobe, webserver, position, move, display, motorspeed, coilpower, reverse, fixedstepmode, indi, 
-  // coilpowertimeout, boardconfig, dataconfig
+  // ascom, coilpower, coilpowertimeout, display, fixedstepmode, hpsw, indi, leds, motorspeed, motorspeeddelay,
+  // move, position, reverse, stepmode, tempprobe, webserver,
 
   // ascom remote server
   value = mserver.arg("ascom");
@@ -2234,7 +2262,126 @@ void MANAGEMENT_handleset(void)
     }
   }
 
-  // in out leds
+  // coilpower
+  value = mserver.arg("coilpower");
+  if ( value != "" )
+  {
+    MSrvr_DebugPrint("coilpower:");
+    MSrvr_DebugPrintln(value);
+    if ( value == "on" )
+    {
+      mySetupData->set_coilpower(1);
+      driverboard->enablemotor();
+      jsonstr = "{ \"coilpower\":\"on\" }";
+    }
+    else if ( value == "off" )
+    {
+      mySetupData->set_coilpower(0);
+      driverboard->releasemotor();
+      jsonstr = "{ \"coilpower\":\"off\" }";
+    }
+  }
+
+  // CoilPowerTimeout
+  value = mserver.arg("coilpowertimeout");
+  if ( value != "" )
+  {
+    MSrvr_DebugPrint("coilpowertimeout:");
+    MSrvr_DebugPrintln(value);
+    unsigned long temp = value.toInt();
+    mySetupData->set_coilpower_timeout(temp);
+    jsonstr = "{ \"coilpowertimeout\":" + String(temp) + " }";
+  }
+
+  // display
+  if ( displaystate == true )
+  {
+    value = mserver.arg("display");
+    if ( value != "" )
+    {
+      if ( value == "on" )
+      {
+        MSrvr_DebugPrintln("display: ON");
+        mySetupData->set_displayenabled(1);
+        myoled->display_on();
+        jsonstr = "{ \"display\":\"on\" }";
+      }
+      else if ( value == "off" )
+      {
+        MSrvr_DebugPrintln("display: OFF");
+        if ( mySetupData->get_displayenabled() == 1)
+        {
+          mySetupData->set_displayenabled(0);
+          myoled->display_off();
+        }
+        else
+        {
+          // already off
+        }
+        jsonstr = "{ \"display\":\"off\" }";
+      }
+    }
+  }
+
+  // fixedstepmode for esp8266 boards
+  value = mserver.arg("fixedstepmode");
+  if ( value != "" )
+  {
+    int temp = value.toInt();
+    MSrvr_DebugPrint("Fixedstepmode: ");
+    MSrvr_DebugPrintln(temp);
+
+    mySetupData->set_brdfixedstepmode(temp);
+    jsonstr = "{ \"fixedstepmode\"" + String(temp) + " }";
+  }
+
+  // home position switch enable
+  value = mserver.arg("hpsw");
+  if ( value != "" )
+  {
+    MSrvr_DebugPrint("hpsw:");
+    MSrvr_DebugPrintln(value);
+    if ( mySetupData->get_brdhpswpin() == -1 )
+    {
+      MSrvr_DebugPrintln("hpsw pin is -1. Cannot enable hpsw");
+      mySetupData->set_hpswitchenable(0);
+      jsonstr = "{ \"err\":\"off\" }";
+    }
+    else
+    {
+      if ( value == "on" )
+      {
+        mySetupData->set_hpswitchenable(1);
+        init_homepositionswitch();
+        jsonstr = "{ \"hpsw\":\"on\" }";
+      }
+      else if ( value == "off" )
+      {
+        mySetupData->set_hpswitchenable(0);
+        jsonstr = "{ \"hpsw\":\"off\" }";
+      }
+    }
+  }
+
+  // INDI
+  value = mserver.arg("indi");
+  if ( value != "" )
+  {
+    MSrvr_DebugPrint("indi:");
+    MSrvr_DebugPrintln(value);
+    if ( value == "on" )
+    {
+      mySetupData->set_indi(1);
+      jsonstr = "{ \"indi\":\"on\" }";
+    }
+    else if ( value == "off" )
+    {
+      mySetupData->set_indi(0);
+      jsonstr = "{ \"indi\":\"off\" }";
+    }
+  }
+
+  // leds in out enable
   value = mserver.arg("leds");
   if ( value != "" )
   {
@@ -2278,6 +2425,90 @@ void MANAGEMENT_handleset(void)
       }
       jsonstr = "{ \"leds\":\"off\" }";
     }
+  }
+
+  // motorspeed
+  value = mserver.arg("motorspeed");
+  if ( value != "" )
+  {
+    int tmp = value.toInt();
+    MSrvr_DebugPrint("Motorspeed: ");
+    MSrvr_DebugPrintln(tmp);
+    if ( tmp < SLOW )
+    {
+      tmp = SLOW;
+    }
+    if ( tmp > FAST )
+    {
+      tmp = FAST;
+    }
+    mySetupData->set_motorspeed(tmp);
+    jsonstr = "{ \"motorspeed\":\"" + String(tmp) + " }";
+  }
+
+  // motorspeeddelay value
+  value = mserver.arg("motorspeeddelay");
+  if ( value != "" )
+  {
+    unsigned long tmp = value.toInt();
+    MSrvr_DebugPrint("Motorspeeddelay: ");
+    MSrvr_DebugPrintln(tmp);
+    mySetupData->set_brdmsdelay(tmp);
+    jsonstr = "{ \"motorspeeddelay\":\"" + String(tmp) + " }";
+  }
+
+  // move - moves focuser position
+  value = mserver.arg("move");
+  if ( value != "" )
+  {
+    unsigned long temp = value.toInt();
+    MSrvr_DebugPrint("Move to position: ");
+    MSrvr_DebugPrintln(temp);
+    ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
+    jsonstr = "{ \"move\":" + String(ftargetPosition) + " }";
+  }
+
+  // position - does not move focuser
+  value = mserver.arg("position");
+  if ( value != "" )
+  {
+    unsigned long temp = value.toInt();
+    MSrvr_DebugPrint("Set position: ");
+    MSrvr_DebugPrintln(temp);
+    ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
+    mySetupData->set_fposition(ftargetPosition);      // current position in SPIFFS
+    driverboard->setposition(ftargetPosition);        // current position in driver board
+    jsonstr = "{ \"position\":" + String(ftargetPosition) + " }";
+  }
+
+  // reversedirection
+  value = mserver.arg("reverse");
+  if ( value != "" )
+  {
+    MSrvr_DebugPrint("reverse:");
+    MSrvr_DebugPrintln(value);
+    if ( value == "on" )
+    {
+      mySetupData->set_reversedirection(1);
+      jsonstr = "{ \"reverse\":\"on\" }";
+    }
+    else if ( value == "off" )
+    {
+      mySetupData->set_reversedirection(0);
+      jsonstr = "{ \"reverse\":\"off\" }";
+    }
+  }
+
+  // stepmode
+  value = mserver.arg("stepmode");
+  if ( value != "" )
+  {
+    int temp = value.toInt();
+    MSrvr_DebugPrint("stepmode: ");
+    MSrvr_DebugPrintln(temp);
+    driverboard->setstepmode(temp);                     // write to pins and update mySetupData
+    temp = mySetupData->get_brdstepmode();              // read actual stepmode set by driverboard
+    jsonstr = "{ \"stepmode\"" + String(temp) + " }";
   }
 
   // temperature probe
@@ -2353,186 +2584,6 @@ void MANAGEMENT_handleset(void)
       }
       jsonstr = "{ \"webserver\":\"off\" }";
     }
-  }
-
-  // position - does not move focuser
-  value = mserver.arg("position");
-  if ( value != "" )
-  {
-    unsigned long temp = value.toInt();
-    MSrvr_DebugPrint("Set position: ");
-    MSrvr_DebugPrintln(temp);
-    ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
-    mySetupData->set_fposition(ftargetPosition);      // current position in SPIFFS
-    driverboard->setposition(ftargetPosition);        // current position in driver board
-    jsonstr = "{ \"position\":" + String(ftargetPosition) + " }";
-  }
-
-  // move - moves focuser position
-  value = mserver.arg("move");
-  if ( value != "" )
-  {
-    unsigned long temp = value.toInt();
-    MSrvr_DebugPrint("Move to position: ");
-    MSrvr_DebugPrintln(temp);
-    ftargetPosition = ( temp > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : temp;
-    jsonstr = "{ \"move\":" + String(ftargetPosition) + " }";
-  }
-
-  if ( displaystate == true )
-  {
-    // display
-    value = mserver.arg("display");
-    if ( value != "" )
-    {
-      if ( value == "on" )
-      {
-        MSrvr_DebugPrintln("display: ON");
-        mySetupData->set_displayenabled(1);
-        myoled->display_on();
-        jsonstr = "{ \"display\":\"on\" }";
-      }
-      else if ( value == "off" )
-      {
-        MSrvr_DebugPrintln("display: OFF");
-        if ( mySetupData->get_displayenabled() == 1)
-        {
-          mySetupData->set_displayenabled(0);
-          myoled->display_off();
-        }
-        else
-        {
-          // already off
-        }
-        jsonstr = "{ \"display\":\"off\" }";
-      }
-    }
-  }
-
-  // motorspeed
-  value = mserver.arg("motorspeed");
-  if ( value != "" )
-  {
-    int tmp = value.toInt();
-    MSrvr_DebugPrint("Motorspeed: ");
-    MSrvr_DebugPrintln(tmp);
-    if ( tmp < SLOW )
-    {
-      tmp = SLOW;
-    }
-    if ( tmp > FAST )
-    {
-      tmp = FAST;
-    }
-    mySetupData->set_motorspeed(tmp);
-    jsonstr = "{ \"motorspeed\":\"" + String(tmp) + " }";
-  }
-
-  // coilpower
-  value = mserver.arg("coilpower");
-  if ( value != "" )
-  {
-    MSrvr_DebugPrint("coilpower:");
-    MSrvr_DebugPrintln(value);
-    if ( value == "on" )
-    {
-      mySetupData->set_coilpower(1);
-      driverboard->enablemotor();
-      jsonstr = "{ \"coilpower\":\"on\" }";
-    }
-    else if ( value == "off" )
-    {
-      mySetupData->set_coilpower(0);
-      driverboard->releasemotor();
-      jsonstr = "{ \"coilpower\":\"off\" }";
-    }
-  }
-
-  // if reversedirection
-  value = mserver.arg("reverse");
-  if ( value != "" )
-  {
-    MSrvr_DebugPrint("reverse:");
-    MSrvr_DebugPrintln(value);
-    if ( value == "on" )
-    {
-      mySetupData->set_reversedirection(1);
-      jsonstr = "{ \"reverse\":\"on\" }";
-    }
-    else if ( value == "off" )
-    {
-      mySetupData->set_reversedirection(0);
-      jsonstr = "{ \"reverse\":\"off\" }";
-    }
-  }
-
-  // home position switch
-  value = mserver.arg("hpsw");
-  if ( value != "" )
-  {
-    MSrvr_DebugPrint("hpsw:");
-    MSrvr_DebugPrintln(value);
-    if ( mySetupData->get_brdhpswpin() == -1 )
-    {
-      MSrvr_DebugPrintln("hpsw pin is -1. Cannot enable hpsw");
-      mySetupData->set_hpswitchenable(0);
-      jsonstr = "{ \"err\":\"off\" }";
-    }
-    else
-    {
-      if ( value == "on" )
-      {
-        mySetupData->set_hpswitchenable(1);
-        init_homepositionswitch();
-        jsonstr = "{ \"hpsw\":\"on\" }";
-      }
-      else if ( value == "off" )
-      {
-        mySetupData->set_hpswitchenable(0);
-        jsonstr = "{ \"hpsw\":\"off\" }";
-      }
-    }
-  }
-
-  // fixedstepmode for esp8266 boards
-  value = mserver.arg("fixedstepmode");
-  if ( value != "" )
-  {
-    int temp = value.toInt();
-    MSrvr_DebugPrint("Fixedstepmode: ");
-    MSrvr_DebugPrintln(temp);
-
-    mySetupData->set_brdfixedstepmode(temp);
-    jsonstr = "{ \"fixedstepmode\"" + String(temp) + " }";
-  }
-
-  // INDI
-  value = mserver.arg("indi");
-  if ( value != "" )
-  {
-    MSrvr_DebugPrint("indi:");
-    MSrvr_DebugPrintln(value);
-    if ( value == "on" )
-    {
-      mySetupData->set_indi(1);
-      jsonstr = "{ \"indi\":\"on\" }";
-    }
-    else if ( value == "off" )
-    {
-      mySetupData->set_indi(0);
-      jsonstr = "{ \"indi\":\"off\" }";
-    }
-  }
-
-  // CoilPowerTimeout
-  value = mserver.arg("coilpowertimeout");
-  if ( value != "" )
-  {
-    MSrvr_DebugPrint("coilpowertimeout:");
-    MSrvr_DebugPrintln(value);
-    unsigned long temp = value.toInt();
-    mySetupData->set_coilpower_timeout(temp);
-    jsonstr = "{ \"coilpowertimeout\":" + String(temp) + " }";
   }
 
   if ( jsonstr != "" )
