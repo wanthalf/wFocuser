@@ -361,7 +361,7 @@ void ESP_Communication()
       {
         paramval = STEP1;
       }
-      else if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 )
+      else if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
       {
         paramval = (paramval < STEP1 )  ? STEP1   : paramval;
         paramval = (paramval > STEP256) ? STEP256 : paramval;

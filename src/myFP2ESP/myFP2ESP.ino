@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 219-0
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 219-2
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
@@ -18,7 +18,7 @@
 // SPECIAL LICENSE
 // ======================================================================
 // This code is released under license. If you copy or write new code based
-// on the code in these files. you MUST include to link to these files AND
+// on the code in these files, you MUST include a link to these files AND
 // you MUST include references to the authors of this code.
 
 // ======================================================================
@@ -940,7 +940,7 @@ void stop_tcpipserver()
 
 void setup()
 {
-  Serial.begin(SERIALPORTSPEED);
+  Serial.begin(115200);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
   Serial.begin(SERIALPORTSPEED);
@@ -1073,10 +1073,10 @@ void setup()
   Setup_DebugPrintln(mySetupData->get_stepsizeenabled());
   Setup_DebugPrint("tempmode=");
   Setup_DebugPrintln(mySetupData->get_tempmode());
-  Setup_DebugPrint("lcdupdateonmove=");
-  Setup_DebugPrintln(mySetupData->get_lcdupdateonmove());
-  Setup_DebugPrint("lcdpagedisplaytime=");
-  Setup_DebugPrintln(mySetupData->get_lcdpagetime());
+  Setup_DebugPrint("oledupdateonmove=");
+  Setup_DebugPrintln(mySetupData->get_oledupdateonmove());
+  Setup_DebugPrint("oledpagedisplaytime=");
+  Setup_DebugPrintln(mySetupData->get_oledpagetime());
   Setup_DebugPrint("tempcompenabled=");
   Setup_DebugPrintln(mySetupData->get_tempcompenabled());
   Setup_DebugPrint("tcdirection=");

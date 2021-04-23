@@ -2511,9 +2511,9 @@ void MANAGEMENT_handleset(void)
     int temp = value.toInt();
     MSrvr_DebugPrint("stallguard: ");
     MSrvr_DebugPrintln(temp);
-    mySetupData->set_stallguard((byte) temp);
+    driverboard->setstallguard((byte) temp);            // write to registers and update mySetupData
     temp = mySetupData->get_stallguard();  
-    jsonstr = "{ \"stepmode\":" + String(temp) + " }";
+    jsonstr = "{ \"stallguard\":" + String(temp) + " }";
   }
   
   // stepmode

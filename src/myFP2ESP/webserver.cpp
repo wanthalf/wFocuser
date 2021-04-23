@@ -7,7 +7,7 @@
 // ======================================================================
 // Includes
 // ======================================================================
-#include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
+#include "focuserconfig.h"                      // boarddefs.h included as part of focuserconfig.h"
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"
 #include "myBoards.h"
@@ -1056,7 +1056,7 @@ void WEBSERVER_handleroot()
   // Set driverboard->setstepmode(xx);                 // this sets the physical pins and saves new stepmode
   // ======================================================================
   // if update stepmode
-  // (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32, 64=1/64, 128=1/128)
+  // (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32, 64=1/64, 128=1/128, 256=1/256)
   String fsm_str = webserver->arg("sm");
   if ( fsm_str != "" )
   {
@@ -1068,9 +1068,9 @@ void WEBSERVER_handleroot()
     {
       temp1 = STEP1;
     }
-    if ( temp1 > STEP32 )
+    if ( temp1 > mySetupData->get_brdmaxstepmode() )
     {
-      temp1 = STEP32;
+      temp1 = mySetupData->get_brdmaxstepmode();
     }
     driverboard->setstepmode(temp1);
   }

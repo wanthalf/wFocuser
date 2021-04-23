@@ -8,6 +8,10 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 219
 // Add stall guard value to management interface get/set
 // Add stall guard value to data_per.jsn
+// Fix for update stepmode in webserver.cpp not obeying mySetupData->get_brdmaxstepmode()
+// Fix for updatestepmode in ASCOM.cpp not obeying mySetupData->get_brdmaxstepmode()
+// Fix for set?stallguard in ManagementServer.cpp displaying wrong value
+// Fix for stallguard not updating when value is changed in Management server
 
 218
 // Trinamic 2225 and 2209 support
@@ -15,6 +19,8 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 // Add get?commands= to show a list of get/set commands in Management Server
 // Fixes for comms.h to be more compatible with INDI driver
 // Fix for set?stepmode= in management server
+// Fix for set stepmode in comms.h not being set for DRVBRD == PRO2ESP32TMC2209P
+
 
 217 
 // Fix for saveboardconfiguration

@@ -651,9 +651,9 @@ void ASCOM_handle_focuser_setup()
     {
       temp = STEP1;
     }
-    if ( temp > STEP256 )
+    if ( temp > mySetupData->get_brdmaxstepmode() )
     {
-      temp = STEP256;
+      temp = mySetupData->get_brdmaxstepmode();
     }
     // call boards.cpp to apply physical pins and save new stepmode
     driverboard->setstepmode(temp);

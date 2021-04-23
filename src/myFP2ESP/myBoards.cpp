@@ -5,6 +5,27 @@
 // (c) Copyright Paul P, 2021. All Rights Reserved. TMC22xx code
 // ======================================================================
 
+// ======================================================================
+// Rules
+// ======================================================================
+// setstepmode()
+// Write
+// to change a stepmode, code must call driverboard->setstepmode(smval)
+// which also updates mySetupData->set_brdstepmode(smval);
+// Read
+// code calls mySetupData->get_brdstepmode();
+
+// setstallguard()
+// Write
+// to change a stall-guard value, code must call driverboard->setstallguard(sgval)
+// which also updates mySetypData->set_stallguard(smgval);
+// Read
+// code calls mySetupData->get_brdstepmode();
+
+
+// ======================================================================
+// Includes
+// ======================================================================
 #include <Arduino.h>
 #include "focuserconfig.h"                // boarddefs.h included as part of focuserconfig.h"
 #include "generalDefinitions.h"
@@ -709,16 +730,11 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   Board_DebugPrint(steps);
   Board_DebugPrint(" ");
 
-  //DebugPrint("initmove: ");
-  //DebugPrint(dir);
-  //DebugPrint(" : ");
-  //DebugPrint(steps);
-  //DebugPrint(" : ");
-  //DebugPrint(motorspeed);
-  //DebugPrint(" : ");
-  //DebugPrintln(leds);
+  //DebugPrint("initmove: "); DebugPrint(dir); DebugPrint(" : "); DebugPrint(steps); DebugPrint(" : "); DebugPrint(motorspeed); DebugPrint(" : "); DebugPrintln(leds);
+
 #if defined(ESP8266)
-  unsigned long curspd = mySetupData->get_brdmsdelay();
+  // ESP8266
+  unsigned long curspd = mySetupData->get_brdmsdelay();     // get current board speed delay value
   switch ( mySetupData->get_motorspeed() )
   {
     case 0: // slow, 1/3rd the speed
@@ -733,26 +749,16 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
     Board_DebugPrintln("Can't set myfp2Timer correctly. Select another freq. or interval");
   }
 #else
+  // ESP32
   // Use 1st timer of 4 (counted from zero).
   // Set 80 divider for prescaler (see ESP32 Technical Reference Manual)
   myfp2timer = timerBegin(0, 80, true);
-  timerAttachInterrupt(myfp2timer, &onTimer, true);  // Attach onTimer function to our timer.
-
+  timerAttachInterrupt(myfp2timer, &onTimer, true);         // Attach onTimer function to our timer.
   // Set alarm to call onTimer function every second (value in microseconds).
   // Repeat the alarm (third parameter)
-  unsigned long curspd = mySetupData->get_brdmsdelay();
-  // handle different speeds
-  switch ( mySetupData->get_motorspeed() )
-  {
-    case 0: // slow, 1/3rd the speed
-      curspd *= 3;
-      break;
-    case 1: // med, 1/2 the speed
-      curspd *= 2;
-      break;
-  }
+  unsigned long curspd = mySetupData->get_brdmsdelay();     // get current board speed delay value
 
-  // handle TMC22xx steppers differently
+  // handle the board step delays for TMC22xx steppers differently
   if ( this->boardnum == PRO2ESP32TMC2225 || this->boardnum == PRO2ESP32TMC2209 || this->boardnum == PRO2ESP32TMC2209P)
   {
     switch ( mySetupData->get_brdstepmode() )
@@ -789,6 +795,38 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
         break;
     }
   }
+
+  //Serial.print("cursp: ");
+  //Serial.println(curspd);
+  
+  // for TMC2209 stall guard setting varies with speed seeting so we need to adjust for best results
+  // handle different speeds
+  byte sgval = mySetupData->get_stallguard();
+  //Serial.print("stallguard: ");
+  //Serial.println(sgval);  
+  //Serial.print("motorspeed: ");
+  //Serial.println(mySetupData->get_motorspeed()); 
+    
+  switch ( mySetupData->get_motorspeed() )
+  {
+    case 0: // slow, 1/3rd the speed
+      curspd *= 3;
+      // no need to change stall guard
+      break;
+    case 1: // med, 1/2 the speed
+      curspd *= 2;
+      sgval = sgval / 2;
+      break;
+    case 2: // fast, 1/1 the speed
+      //curspd *= 1;               // obviously not needed
+      sgval = sgval / 6;
+      break;
+  }
+  // Serial.print("SG value to write: ");
+  // Serial.println(sgval);
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+      mytmcstepper->SGTHRS(sgval);
+#endif 
   timerAlarmWrite(myfp2timer, curspd, true);   // timer for ISR
   timerAlarmEnable(myfp2timer);                // start timer alarm
 #endif
@@ -802,4 +840,12 @@ unsigned long DriverBoard::getposition(void)
 void DriverBoard::setposition(unsigned long pos)
 {
   this->focuserposition = pos;
+}
+
+void DriverBoard::setstallguard(byte newval)
+{
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  mytmcstepper->SGTHRS(newval);
+#endif
+  mySetupData->set_stallguard(newval);
 }

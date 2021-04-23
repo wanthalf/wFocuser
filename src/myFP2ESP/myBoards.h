@@ -49,6 +49,7 @@ class DriverBoard
     void setposition(unsigned long);
     void releasemotor(void);
     void setstepmode(int);
+    void setstallguard(byte);
 
   private:
     HalfStepper*  myhstepper;
