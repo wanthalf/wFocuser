@@ -23,9 +23,10 @@
 // ======================================================================
 // Extern Data
 // ======================================================================
-extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
-extern int brdfixedstepmode;            // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
-extern int brdstepsperrev;
+extern int  DefaultBoardNumber;         // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+extern int  brdfixedstepmode;           // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+extern int  brdstepsperrev;
+extern byte isMoving;
 extern DriverBoard* driverboard;
 
 // ======================================================================
@@ -298,6 +299,13 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
   byte cstatus = false;
   unsigned long x = millis();
 
+  if( isMoving )
+  {
+    // do not save to SPIFFS if focuser is moving
+    cstatus = false;
+    return cstatus;
+  }
+  
   if ((SnapShotMillis + DEFAULTSAVETIME) < x || SnapShotMillis > x)    // 30s after snapshot
   {
     // save persistent data - focus controller data

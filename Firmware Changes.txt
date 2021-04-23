@@ -13,10 +13,11 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 // Add mutex semaphores for halt_alert, stepcount, timerSemaphore
 // Fix for update stepmode in webserver.cpp not obeying mySetupData->get_brdmaxstepmode()
 // Fix for updatestepmode in ASCOM.cpp not obeying mySetupData->get_brdmaxstepmode()
-// Fix for set?stallguard in ManagementServer.cpp displaying wrong value
+// Fix for set?stallguard in ManagementServer.cpp displaying wrong text
 // Fix for stallguard not updating when value is changed in Management server
 // Fix for tmc2209current reference in myBoards.cpp
 // Fix for interrupt timer not disposed once move is complete
+// Fix for saving data files to SPIFFS - delayed if focuser is moving
 
 218
 // Trinamic 2225 and 2209 support
