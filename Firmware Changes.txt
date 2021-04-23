@@ -16,6 +16,7 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 // Fix for set?stallguard in ManagementServer.cpp displaying wrong value
 // Fix for stallguard not updating when value is changed in Management server
 // Fix for tmc2209current reference in myBoards.cpp
+// Fix for interrupt timer not disposed once move is complete
 
 218
 // Trinamic 2225 and 2209 support

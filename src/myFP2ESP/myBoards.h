@@ -38,9 +38,11 @@ class DriverBoard
     void init_tmc2209(void);
     void init_tmc2225(void);
     bool checkStall(void);
+    void end_move(void);
     
     // getter
     unsigned long getposition(void);
+    byte getstallguard(void);    
     
     // setter
     void enablemotor(void);

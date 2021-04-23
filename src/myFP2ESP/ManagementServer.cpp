@@ -2183,7 +2183,9 @@ void MANAGEMENT_handleget(void)
   }
   else if ( mserver.argName(0) == "stallguard" )
   {
-    jsonstr = "{ \"stallguard\":" + String(mySetupData->get_stallguard()) + " }";
+    byte sgval = STALL_VALUE;                     // we must set it to something in case the next lines are not enabled
+    sgval = driverboard->getstallguard();
+    jsonstr = "{ \"stallguard\":" + String(mySetupData->get_stallguard()) + ", \"tmc2209sg\":" + String(sgval) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
   else if ( mserver.argName(0) == "tempprobe" )
@@ -2520,11 +2522,11 @@ void MANAGEMENT_handleset(void)
     int temp = value.toInt();
     MSrvr_DebugPrint("stallguard: ");
     MSrvr_DebugPrintln(temp);
-    driverboard->setstallguard((byte) temp);            // write to registers and update mySetupData
-    temp = mySetupData->get_stallguard();  
-    jsonstr = "{ \"stallguard\":" + String(temp) + " }";
+    driverboard->setstallguard((byte) temp);      // write to registers and update mySetupData
+    temp = mySetupData->get_stallguard();
+    jsonstr = "{ \"stallguard\":" + String(temp) + ",  }";
   }
-  
+
   // stepmode
   value = mserver.arg("stepmode");
   if ( value != "" )
@@ -2587,10 +2589,10 @@ void MANAGEMENT_handleset(void)
     int temp = value.toInt();
     MSrvr_DebugPrint("tmc2209current: ");
     MSrvr_DebugPrintln(temp);
-    driverboard->settmc2209current(temp);   // write current value to tmc22xx, call mySetupData->set_tmc2209current(temp); 
+    driverboard->settmc2209current(temp);   // write current value to tmc22xx, call mySetupData->set_tmc2209current(temp);
     jsonstr = "{ \"tmc2209current\":" + String(temp) + " }";
   }
-  
+
   // tmc2225current
   value = mserver.arg("tmc2225current");
   if ( value != "" )
@@ -2598,10 +2600,10 @@ void MANAGEMENT_handleset(void)
     int temp = value.toInt();
     MSrvr_DebugPrint("tmc2225current: ");
     MSrvr_DebugPrintln(temp);
-    driverboard->settmc2225current(temp);   // write current value to tmc22xx, call mySetupData->set_tmc2225current(temp); 
+    driverboard->settmc2225current(temp);   // write current value to tmc22xx, call mySetupData->set_tmc2225current(temp);
     jsonstr = "{ \"tmc2225current\":" + String(temp) + " }";
-  }   
-  
+  }
+
   else if ( mserver.argName(0) == "tmc2209current" )
   {
     jsonstr = "{\"tmc2209current\":" + String(mySetupData->get_tmc2209current()) + " }";
@@ -2613,14 +2615,13 @@ void MANAGEMENT_handleset(void)
     MANAGEMENT_sendjson(jsonstr);
   }
 
-  
   // web server
   value = mserver.arg("webserver");
   if ( value != "" )
   {
     if ( value == "on" )
     {
-      MSrvr_DebugPrintln("weberver: ON");
+      MSrvr_DebugPrintln("webserver: ON");
       if ( mySetupData->get_webserverstate() == 0)
       {
         start_webserver();

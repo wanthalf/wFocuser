@@ -735,7 +735,8 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
   }
 }
 
-void DriverBoard::halt(void)
+// when a move has completed [or halted], we need to detach/disable the interrupt timers
+void DriverBoard::end_move(void)
 {
 #if defined(ESP8266)
   myfp2Timer.detachInterrupt();
@@ -874,6 +875,15 @@ unsigned long DriverBoard::getposition(void)
 void DriverBoard::setposition(unsigned long pos)
 {
   this->focuserposition = pos;
+}
+
+byte DriverBoard::getstallguard(void)
+{
+  byte sgval = STALL_VALUE;                     // we must set it to something in case the next lines are not enabled
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  sgval = mytmcstepper->SGTHRS();
+#endif
+  return sgval;
 }
 
 void DriverBoard::setstallguard(byte newval)

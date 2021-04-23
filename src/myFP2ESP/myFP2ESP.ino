@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 219-4
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 219-5
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D, TMC2209, TMC2225
@@ -985,7 +985,7 @@ void setup()
   portENTER_CRITICAL(&halt_alertMux);
   halt_alert = false;
   portEXIT_CRITICAL(&halt_alertMux);
-  
+
   // Setup controller values
   heapmsg();
   Setup_DebugPrintln("setup(): mySetupData()");
@@ -1715,6 +1715,7 @@ void loop()
       {
         // move has completed, the driverboard keeps track of focuser position
         DebugPrintln("Move completed");
+        driverboard->end_move();                          // disable interrupt timer that moves motor
         DebugPrintln("go DelayAfterMove");
         MainStateMachine = State_DelayAfterMove;
       }
@@ -1727,7 +1728,7 @@ void loop()
           portENTER_CRITICAL(&halt_alertMux);
           halt_alert = false;                             // reset alert flag
           portEXIT_CRITICAL(&halt_alertMux);
-          driverboard->halt();                            // disable interrupt timer that moves motor
+          driverboard->end_move();                        // disable interrupt timer that moves motor
           ftargetPosition = driverboard->getposition();
           mySetupData->set_fposition(driverboard->getposition());
           // we no longer need to keep track of steps here or halt because driverboard updates position on every move
@@ -1737,6 +1738,7 @@ void loop()
 
         if (HPS_alert() )                                 // and we need to check if home position sensor activated?
         {
+          driverboard->end_move();                        // disable interrupt timer that moves motor
           if (driverboard->getposition() > 0)
           {
             DebugPrintln("HP Sw=1, Pos not 0");
@@ -1846,6 +1848,7 @@ void loop()
           }
         }
       } //  if( mySetupData->get_homepositionswitch() == 1)
+      
       MainStateMachine = State_DelayAfterMove;
       TimeStampDelayAfterMove = millis();
       DebugPrintln("go DelayAfterMove");
