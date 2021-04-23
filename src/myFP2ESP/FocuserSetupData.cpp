@@ -141,6 +141,8 @@ byte SetupData::LoadConfiguration()
       this->pbenable              = doc_per["pbenable"];
       this->indi                  = doc_per["indi"];
       this->stallguard            = doc_per["stallguard"];
+      this->tmc2225current        = doc_per["tmc2225mA"];
+      this->tmc2209current        = doc_per["tmc2209mA"];
     }
     SetupData_DebugPrintln("data_per loaded");
   }
@@ -164,7 +166,7 @@ byte SetupData::LoadConfiguration()
     // Reading board_config.jsn
     String board_data = bfile.readString();               // read content of the text file
     SetupData_DebugPrint("LoadConfiguration(): board_config= ");
-    SetupData_DebugPrintln(board_data);                             // ... and print on serial
+    SetupData_DebugPrintln(board_data);                   // ... and print on serial
     bfile.close();
 
     // Allocate a temporary JsonDocument
@@ -462,7 +464,8 @@ void SetupData::LoadDefaultPersistantData()
   this->pbenable              = DEFAULTOFF;           // this should be default OFF
   this->indi                  = DEFAULTOFF;           // this should be default OFF
   this->stallguard            = STALL_VALUE;
-
+  this->tmc2225current        = TMC2225CURRENT;
+  this->tmc2209current        = TMC2209CURRENT;
   this->SavePersitantConfiguration();                 // write default values to SPIFFS
 }
 
@@ -545,6 +548,8 @@ byte SetupData::SavePersitantConfiguration()
   doc["pbenable"]           = this->pbenable;
   doc["indi"]               = this->indi;
   doc["stallguard"]         = this->stallguard;
+  doc["tmc2225mA"]          = this->tmc2225current;
+  doc["tmc2209mA"]          = this->tmc2209current;
 
   // Serialize JSON to file
   SetupData_DebugPrintln("Writing to file");
@@ -787,6 +792,16 @@ byte SetupData::get_stallguard()
   return this->stallguard;
 }
 
+int SetupData::get_tmc2225current()
+{
+  return this->tmc2225current;
+}
+
+int SetupData::get_tmc2209current()
+{
+  return this->tmc2209current;
+}
+
 //__Setter
 
 void SetupData::set_fposition(unsigned long fposition)
@@ -1009,6 +1024,15 @@ void SetupData::set_stallguard(byte newval)
   this->StartDelayedUpdate(this->stallguard, newval);
 }
 
+void SetupData::set_tmc2225current(int newval)
+{
+  this->StartDelayedUpdate(this->tmc2225current, newval);
+}
+
+void SetupData::set_tmc2209current(int newval)
+{
+  this->StartDelayedUpdate(this->tmc2209current, newval);
+}
 
 void SetupData::StartDelayedUpdate(int & org_data, int new_data)
 {

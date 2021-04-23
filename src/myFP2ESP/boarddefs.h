@@ -12,8 +12,8 @@
 // TMCxxxx DEFINES
 // ======================================================================
 #define STALL_VALUE         100           // [0... 255]
-#define TMC2209CURRENT      600           // 600mA for 8HS15-0604S NEMA8 stepper motor
-#define TMC2225CURRENT      300           // 300mA for recommended stepper NEMA motor - you can change this 
+#define TMC2209CURRENT      600           // 600mA for 8HS15-0604S NEMA8 stepper motor with tmc2209
+#define TMC2225CURRENT      300           // 300mA for recommended stepper NEMA motor - you can change this - with tmc2225
 #define TMC2225SPEED        57600
 #define TMC2209SPEED        57600
 #define TOFF_VALUE          4             // [1... 15]

@@ -79,7 +79,6 @@
 //#define STEPSPERREVOLUTION 	1036        // NEMA14HS13-0804S-PG5
 //#define STEPSPERREVOLUTION 	1036        // NEMA16HS13-0604S-PG5
 
-
 // ======================================================================
 // 4: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
 // ======================================================================
@@ -97,7 +96,6 @@
 // For the OLED 128x64 1.3" display using the SSH1106 driver, uncomment the following line
 //#define USE_SSH1106   2
 
-
 // ======================================================================
 // 5: SPECIFY HARDWARE OPTIONS
 // ======================================================================
@@ -110,7 +108,6 @@
 
 // To enable the Infrared remote controller [ESP32 only], uncomment the next line
 //#define INFRAREDREMOTE
-
 
 // ======================================================================
 // 6: CONTROLLER MODE
@@ -131,7 +128,6 @@
 
 // to enable Bluetooth mode, uncomment the next line [ESP32 only]
 //#define CONTROLLERMODE  BLUETOOTHMODE
-
 
 // ======================================================================
 // 7: SPECIFY CONTROLLER OPTIONS
@@ -154,11 +150,9 @@
 // from SPIFFS file wificonfig at boot time, uncomment the following file
 //#define READWIFICONFIG 	1
 
-
 // ======================================================================
 // DO NOT CHANGE:
 // ======================================================================
-
 
 // ======================================================================
 // CHECK BOARD AND HW OPTIONS

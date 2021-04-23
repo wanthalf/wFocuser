@@ -14,6 +14,9 @@
 // EXTERNS
 // ======================================================================
 
+extern volatile bool halt_alert;
+extern portMUX_TYPE  halt_alertMux;
+
 extern OLED_NON *myoled;
 
 extern byte          isMoving;
@@ -23,7 +26,6 @@ extern float         lasttemp;
 extern char          mySSID[64];
 extern const char*   programVersion;
 extern unsigned long ftargetPosition;          // target position
-extern volatile bool halt_alert;
 extern bool          displaystate;
 extern SetupData     *mySetupData;
 extern DriverBoard*  driverboard;
@@ -325,7 +327,9 @@ void ESP_Communication()
       SendPaket('B', mySetupData->get_tempcoefficient());
       break;
     case 27: // stop a move - like a Halt
+      portENTER_CRITICAL(&halt_alertMux);
       halt_alert = true;
+      portEXIT_CRITICAL(&halt_alertMux);
       break;
     case 28: // home the motor to position 0
       ftargetPosition = 0; // if this is a home then set target to 0

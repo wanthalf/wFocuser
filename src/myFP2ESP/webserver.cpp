@@ -29,25 +29,27 @@
 // ======================================================================
 // EXTERNS
 // ======================================================================
-extern unsigned long ftargetPosition;           // target position
 extern volatile bool halt_alert;
-extern char         ipStr[16];                  // shared between BT mode and other modes
-extern byte         isMoving;                   // is the motor currently moving
-extern bool         webserverstate;
-extern bool         reboot;
-extern int          tprobe1;
-extern float        lasttemp;
-extern bool         displaystate;
+extern portMUX_TYPE  halt_alertMux;
 
-extern TempProbe    *myTempProbe;
-extern SetupData    *mySetupData;
-extern DriverBoard* driverboard;
-extern OLED_NON     *myoled;
-extern void         heapmsg(void);
+extern unsigned long ftargetPosition;           // target position
+extern char          ipStr[16];                 // shared between BT mode and other modes
+extern byte          isMoving;                  // is the motor currently moving
+extern bool          webserverstate;
+extern bool          reboot;
+extern int           tprobe1;
+extern float         lasttemp;
+extern bool          displaystate;
 
+extern TempProbe     *myTempProbe;
+extern SetupData     *mySetupData;
+extern DriverBoard*  driverboard;
+extern OLED_NON      *myoled;
+extern void          heapmsg(void);
+
+// forward declarations
 void WEBSERVER_sendpresets(void);
 void WEBSERVER_sendroot(void);
-
 
 // ======================================================================
 // WEBSERVER Data
@@ -194,8 +196,10 @@ void WEBSERVER_handlepresets(void)
   {
     TRACE();
     WebS_DebugPrintln(halt_str);
+    portENTER_CRITICAL(&halt_alertMux);
     halt_alert = true;
-    //ftargetPosition = fcurrentPosition;
+    portEXIT_CRITICAL(&halt_alertMux);
+    // ftargetPosition = fcurrentPosition;
   }
 
   // if set focuser preset 0
@@ -693,7 +697,9 @@ void WEBSERVER_handlemove()
   {
     TRACE();
     WebS_DebugPrintln(halt_str);
+    portENTER_CRITICAL(&halt_alertMux);
     halt_alert = true;
+    portEXIT_CRITICAL(&halt_alertMux);
     //ftargetPosition = fcurrentPosition;
   }
 
@@ -934,7 +940,9 @@ void WEBSERVER_handleroot()
   {
     WebS_DebugPrint("root() -halt:");
     WebS_DebugPrintln(halt_str);
-    halt_alert = true;;
+    portENTER_CRITICAL(&halt_alertMux);
+    halt_alert = true;
+    portEXIT_CRITICAL(&halt_alertMux);
     //ftargetPosition = fcurrentPosition;
   }
 
