@@ -50,7 +50,12 @@ extern WebServer mserver;
 #endif
 
 extern volatile bool halt_alert;
+#if defined(ESP8266)
+// in esp8266, volatile data_type varname is all that is needed
+#else
+// in esp32, we should use a Mutex for access
 extern portMUX_TYPE  halt_alertMux;
+#endif
 
 extern SetupData      *mySetupData;
 extern DriverBoard*   driverboard;
@@ -966,9 +971,9 @@ void  ASCOM_handlehaltput()
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
   ASCOM_getURLParameters();
-  portENTER_CRITICAL(&halt_alertMux);
+  varENTER_CRITICAL(&halt_alertMux);
   halt_alert = true;
-  portEXIT_CRITICAL(&halt_alertMux);
+  varEXIT_CRITICAL(&halt_alertMux);
 
   //ftargetPosition = fcurrentPosition;
   // addclientinfo adds clientid, clienttransactionid, servtransactionid, errornumber, errormessage and terminating }

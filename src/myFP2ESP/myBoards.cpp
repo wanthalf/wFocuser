@@ -55,9 +55,14 @@ extern int  DefaultBoardNumber;
 extern bool HPS_alert(void);
 
 extern volatile bool timerSemaphore;
-extern portMUX_TYPE timerSemaphoreMux;
 extern volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
+#if defined(ESP8266)
+// in esp8266, volatile data_type varname is all that is needed
+#else
+// in esp32, we should use a Mutex for access
+extern portMUX_TYPE timerSemaphoreMux;
 extern portMUX_TYPE  stepcountMux;
+#endif
 
 
 // ======================================================================
@@ -151,22 +156,22 @@ ICACHE_RAM_ATTR void onTimer()
   if (stepcount  && !(HPS_alert() && stepdir == moving_in))
   {
     driverboard->movemotor(stepdir, true);
-    portENTER_CRITICAL(&stepcountMux);
+    varENTER_CRITICAL(&stepcountMux);
     stepcount--;
-    portEXIT_CRITICAL(&stepcountMux);
+    varEXIT_CRITICAL(&stepcountMux);
     mjob = true;                  // mark a running job
   }
   else
   {
     if (mjob == true)
     {
-      portENTER_CRITICAL(&stepcountMux);
+      varENTER_CRITICAL(&stepcountMux);
       stepcount = 0;              // just in case HPS_alert was fired up
-      portEXIT_CRITICAL(&stepcountMux);
+      varEXIT_CRITICAL(&stepcountMux);
       mjob = false;               // wait, and do nothing
-      portENTER_CRITICAL(&timerSemaphoreMux);
+      varENTER_CRITICAL(&timerSemaphoreMux);
       timerSemaphore = true;      // signal move complere
-      portEXIT_CRITICAL(&timerSemaphoreMux);
+      varEXIT_CRITICAL(&timerSemaphoreMux);
     }
   }
 }
@@ -177,22 +182,22 @@ void IRAM_ATTR onTimer()
   if (stepcount  && !(HPS_alert() && stepdir == moving_in))
   {
     driverboard->movemotor(stepdir, true);
-    portENTER_CRITICAL(&stepcountMux);
+    varENTER_CRITICAL(&stepcountMux);
     stepcount--;
-    portEXIT_CRITICAL(&stepcountMux);
+    varEXIT_CRITICAL(&stepcountMux);
     mjob = true;                  // mark a running job
   }
   else
   {
     if (mjob == true)
     {
-      portENTER_CRITICAL(&stepcountMux);
+      varENTER_CRITICAL(&stepcountMux);
       stepcount = 0;              // just in case HPS_alert was fired up
-      portEXIT_CRITICAL(&stepcountMux);
+      varEXIT_CRITICAL(&stepcountMux);
       mjob = false;               // wait, and do nothing
-      portENTER_CRITICAL(&timerSemaphoreMux);
+      varENTER_CRITICAL(&timerSemaphoreMux);
       timerSemaphore = true;
-      portEXIT_CRITICAL(&timerSemaphoreMux);
+      varEXIT_CRITICAL(&timerSemaphoreMux);
     }
   }
 }
@@ -213,12 +218,12 @@ DriverBoard::DriverBoard(unsigned long startposition)
     //DebugPrintln(clock_frequency);
 #endif
 
-    portENTER_CRITICAL(&timerSemaphoreMux);   // make sure timersemaphore is false when driverboard created
+    varENTER_CRITICAL(&timerSemaphoreMux);   // make sure timersemaphore is false when driverboard created
     timerSemaphore = false;
-    portEXIT_CRITICAL(&timerSemaphoreMux);
-    portENTER_CRITICAL(&stepcountMux);        // make sure stepcount is 0 when driverboard created
+    varEXIT_CRITICAL(&timerSemaphoreMux);
+    varENTER_CRITICAL(&stepcountMux);        // make sure stepcount is 0 when driverboard created
     stepcount = 0;
-    portEXIT_CRITICAL(&stepcountMux);
+    varEXIT_CRITICAL(&stepcountMux);
 
     boardnum = DefaultBoardNumber;
 
@@ -751,14 +756,14 @@ void DriverBoard::end_move(void)
 
 void DriverBoard::initmove(bool mdir, unsigned long steps)
 {
-  portENTER_CRITICAL(&stepcountMux);        // make sure stepcount is 0 when driverboard created
+  varENTER_CRITICAL(&stepcountMux);        // make sure stepcount is 0 when driverboard created
   stepcount = steps;
-  portEXIT_CRITICAL(&stepcountMux);
+  varEXIT_CRITICAL(&stepcountMux);
   stepdir = mdir;
   DriverBoard::enablemotor();
-  portENTER_CRITICAL(&timerSemaphoreMux);
+  varENTER_CRITICAL(&timerSemaphoreMux);
   timerSemaphore = false;
-  portEXIT_CRITICAL(&timerSemaphoreMux);
+  varEXIT_CRITICAL(&timerSemaphoreMux);
 
   Board_DebugPrint(">initmove ");
   Board_DebugPrint(mdir);

@@ -5,6 +5,9 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 © Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+220
+// Fix for compilation errors on ESP8266
+
 219
 // Add stall guard value to data_per.jsn
 // Add tmc2209current and tmc2225current to data_per.jsn

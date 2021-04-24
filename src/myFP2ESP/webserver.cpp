@@ -30,7 +30,12 @@
 // EXTERNS
 // ======================================================================
 extern volatile bool halt_alert;
+#if defined(ESP8266)
+// in esp8266, volatile data_type varname is all that is needed
+#else
+// in esp32, we should use a Mutex for access
 extern portMUX_TYPE  halt_alertMux;
+#endif
 
 extern unsigned long ftargetPosition;           // target position
 extern char          ipStr[16];                 // shared between BT mode and other modes
@@ -196,9 +201,9 @@ void WEBSERVER_handlepresets(void)
   {
     TRACE();
     WebS_DebugPrintln(halt_str);
-    portENTER_CRITICAL(&halt_alertMux);
+    varENTER_CRITICAL(&halt_alertMux);
     halt_alert = true;
-    portEXIT_CRITICAL(&halt_alertMux);
+    varEXIT_CRITICAL(&halt_alertMux);
     // ftargetPosition = fcurrentPosition;
   }
 
@@ -697,9 +702,9 @@ void WEBSERVER_handlemove()
   {
     TRACE();
     WebS_DebugPrintln(halt_str);
-    portENTER_CRITICAL(&halt_alertMux);
+    varENTER_CRITICAL(&halt_alertMux);
     halt_alert = true;
-    portEXIT_CRITICAL(&halt_alertMux);
+    varEXIT_CRITICAL(&halt_alertMux);
     //ftargetPosition = fcurrentPosition;
   }
 
@@ -940,9 +945,9 @@ void WEBSERVER_handleroot()
   {
     WebS_DebugPrint("root() -halt:");
     WebS_DebugPrintln(halt_str);
-    portENTER_CRITICAL(&halt_alertMux);
+    varENTER_CRITICAL(&halt_alertMux);
     halt_alert = true;
-    portEXIT_CRITICAL(&halt_alertMux);
+    varEXIT_CRITICAL(&halt_alertMux);
     //ftargetPosition = fcurrentPosition;
   }
 

@@ -158,7 +158,7 @@ extern const char* WRITEFILEFAILSTR;
 extern const char* WRITEFILESUCCESSSTR;
 
 // ======================================================================
-// 2: DO NOT CHANGE
+// 3: DO NOT CHANGE
 // ======================================================================
 // DO NOT CHANGE ANY OF THESE
 // DO NOT CHANGE ANY OF THESE
@@ -215,7 +215,23 @@ extern const char* WRITEFILESUCCESSSTR;
 #define STARTFMDLOFFSTR           "<form action=\"/\" method=\"post\"><b>MS Forcedownload: </b><input type=\"hidden\" name=\"fd\" value=\"fdon\"><input type=\"submit\" value=\"Enable\"></form>"
 
 // ======================================================================
-// 4. HEAP DEBUGGING - DO NOT CHANGE / DO NOT ENABLE
+// 4. MACRO FOR MUTEX: DO NOT CHANGE / DO NOT ENABLE
+// ======================================================================
+// This is a bit of sneaky code to only use Mutex on ESP32
+
+#if defined(ESP8266)
+// in esp8266, volatile data_type varname is all that is needed
+#define varENTER_CRITICAL(...)            // blank line
+#define varEXIT_CRITICAL(...)             // blank line
+#else
+// in esp32, we should use a Mutex for access
+#define varENTER_CRITICAL(...)  portENTER_CRITICAL(__VA_ARGS__);
+#define varEXIT_CRITICAL(...)   portEXIT_CRITICAL(__VA_ARGS__); 
+#endif
+
+
+// ======================================================================
+// 5. HEAP DEBUGGING - DO NOT CHANGE / DO NOT ENABLE
 // ======================================================================
 //#define HEAPDEBUG     1
 
@@ -229,8 +245,9 @@ extern const char* WRITEFILESUCCESSSTR;
 #define HDebugPrintf(...)
 #endif
 
+
 // ======================================================================
-// 5. DEBUGGING -- DO NOT CHANGE
+// 6. DEBUGGING -- DO NOT CHANGE
 // ======================================================================
 //#define DEBUG 1
 
@@ -323,8 +340,9 @@ extern const char* WRITEFILESUCCESSSTR;
 #define HPSW_DebugPrintln(...) 
 #endif
 
+
 // ======================================================================
-// 6. TRACING -- DO NOT CHANGE
+// 7. TRACING -- DO NOT CHANGE
 // ======================================================================
 // ArduinoTrace - github.com/bblanchon/ArduinoTrace
 // Copyright Benoit Blanchon 2018-2019
@@ -337,9 +355,10 @@ extern const char* WRITEFILESUCCESSSTR;
   DebugPrint(__LINE__); \
   DebugPrint(": "); \
   DebugPrintln(__PRETTY_FUNCTION__);
+
   
 // ======================================================================
-// 7. TIMING TESTS - DO NOT CHANGE / DO NOT ENABLE
+// 8. TIMING TESTS - DO NOT CHANGE / DO NOT ENABLE
 // ======================================================================
 //#define TIMEDTESTS 1
 
