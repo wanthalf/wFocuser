@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 219-6
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 220-0
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D, TMC2209, TMC2225
@@ -243,11 +243,16 @@ int brdfixedstepmode    = FIXEDSTEPMODE;    // only used by boards WEMOSDRV8825H
 int brdstepsperrev      = STEPSPERREVOLUTION;
 
 volatile bool timerSemaphore = false;       // move completed=true, still moving or not moving = false;
-portMUX_TYPE  timerSemaphoreMux = portMUX_INITIALIZER_UNLOCKED; // shared vars in interrupt routines must control access via mutex
 volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
-portMUX_TYPE  stepcountMux = portMUX_INITIALIZER_UNLOCKED;
 volatile bool halt_alert;
+#if defined(ESP8266)
+// in esp8266, volatile data_type varname is all that is needed
+#else
+// in esp32, we should use a Mutex for access
+portMUX_TYPE  timerSemaphoreMux = portMUX_INITIALIZER_UNLOCKED; // shared vars in interrupt routines must control access via mutex
+portMUX_TYPE  stepcountMux = portMUX_INITIALIZER_UNLOCKED;
 portMUX_TYPE  halt_alertMux = portMUX_INITIALIZER_UNLOCKED;
+#endif
 
 DriverBoard*  driverboard;
 unsigned long ftargetPosition;              // target position
@@ -343,9 +348,9 @@ void update_irremote()
     }
     if ( (isMoving == 1) && (lastcode == IR_HALT))
     {
-      portENTER_CRITICAL(&halt_alertMux);
+      varENTER_CRITICAL(&halt_alertMux);
       halt_alert = true;
-      portEXIT_CRITICAL(&halt_alertMux);
+      varEXIT_CRITICAL(&halt_alertMux);
     }
     else
     {
@@ -982,9 +987,9 @@ void setup()
 
   reboot = true;                                // booting up
 
-  portENTER_CRITICAL(&halt_alertMux);
+  varENTER_CRITICAL(&halt_alertMux);
   halt_alert = false;
-  portEXIT_CRITICAL(&halt_alertMux);
+  varEXIT_CRITICAL(&halt_alertMux);
 
   // Setup controller values
   heapmsg();
@@ -1681,9 +1686,9 @@ void loop()
         if (HPS_alert() )                                         // check if home position sensor activated?
         {
           DebugPrintln("HPS_alert() during backlash move");
-          portENTER_CRITICAL(&timerSemaphoreMux);
+          varENTER_CRITICAL(&timerSemaphoreMux);
           timerSemaphore = false;                                 // move finished
-          portEXIT_CRITICAL(&timerSemaphoreMux);
+          varEXIT_CRITICAL(&timerSemaphoreMux);
 
           backlash_count = 0;                                     // drop out of while loop
           MainStateMachine = State_Moving;                        // change state to State_Moving and handle HPSW
@@ -1708,9 +1713,9 @@ void loop()
 
     case State_Moving:
       //DebugPrintln("S_M");
-      portENTER_CRITICAL(&timerSemaphoreMux);
+      varENTER_CRITICAL(&timerSemaphoreMux);
       tms = timerSemaphore;
-      portEXIT_CRITICAL(&timerSemaphoreMux);
+      varEXIT_CRITICAL(&timerSemaphoreMux);
       if ( tms == true )
       {
         // move has completed, the driverboard keeps track of focuser position
@@ -1725,9 +1730,9 @@ void loop()
         if ( halt_alert )                                 // halt_alert set by comms.h webserver.cpp
         {
           DebugPrintln("halt_alert");
-          portENTER_CRITICAL(&halt_alertMux);
+          varENTER_CRITICAL(&halt_alertMux);
           halt_alert = false;                             // reset alert flag
-          portEXIT_CRITICAL(&halt_alertMux);
+          varEXIT_CRITICAL(&halt_alertMux);
           driverboard->end_move();                        // disable interrupt timer that moves motor
           ftargetPosition = driverboard->getposition();
           mySetupData->set_fposition(driverboard->getposition());

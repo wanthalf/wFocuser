@@ -15,7 +15,12 @@
 // ======================================================================
 
 extern volatile bool halt_alert;
+#if defined(ESP8266)
+// in esp8266, volatile data_type varname is all that is needed
+#else
+// in esp32, we should use a Mutex for access
 extern portMUX_TYPE  halt_alertMux;
+#endif
 
 extern OLED_NON *myoled;
 
@@ -327,9 +332,9 @@ void ESP_Communication()
       SendPaket('B', mySetupData->get_tempcoefficient());
       break;
     case 27: // stop a move - like a Halt
-      portENTER_CRITICAL(&halt_alertMux);
+      varENTER_CRITICAL(&halt_alertMux);
       halt_alert = true;
-      portEXIT_CRITICAL(&halt_alertMux);
+      varEXIT_CRITICAL(&halt_alertMux);
       break;
     case 28: // home the motor to position 0
       ftargetPosition = 0; // if this is a home then set target to 0
