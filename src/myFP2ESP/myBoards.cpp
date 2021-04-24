@@ -5,27 +5,46 @@
 // (c) Copyright Paul P, 2021. All Rights Reserved. TMC22xx code
 // ======================================================================
 
+// ======================================================================
+// Rules
+// ======================================================================
+// setstepmode()
+// Write
+// to change a stepmode, code must call driverboard->setstepmode(smval)
+// which also updates mySetupData->set_brdstepmode(smval);
+// Read
+// code calls mySetupData->get_brdstepmode();
+
+// setstallguard()
+// Write
+// to change a stall-guard value, code must call driverboard->setstallguard(sgval)
+// which also updates mySetypData->set_stallguard(smgval);
+// Read
+// code calls mySetupData->get_brdstepmode();
+
+// settmc2209current()
+// Write
+// to change tmc2209 current mA value, code must call driverboard->settmc2209current(val)
+// which also updates mySetupData->set_tmc2209current(val);
+// Read
+// code calls mySetupData->get_tmc2209current();
+
+// settmc2225current()
+// Write
+// to change tmc2225 current mA value, code must call driverboard->settmc2225current(val)
+// which also updates mySetupData->set_tmc2225current(val);
+// Read
+// code calls mySetupData->get_tmc2225current();
+
+// ======================================================================
+// Includes
+// ======================================================================
 #include <Arduino.h>
 #include "focuserconfig.h"                // boarddefs.h included as part of focuserconfig.h"
 #include "generalDefinitions.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 
-// ======================================================================
-// Defines for TMCxxxx
-// ======================================================================
-#define STALL_VALUE         100           // [0... 255]
-#define TMC2209CURRENT      600           // 600mA for 8HS15-0604S NEMA8 stepper motor
-#define TMC2225CURRENT      300           // 300mA for recommended stepper NEMA motor - you can change this 
-#define TMC2225SPEED        57600
-#define TMC2209SPEED        57600
-#define TOFF_VALUE          4             // [1... 15]
-#define DRIVER_ADDRESS      0b00          // TMC2209 Driver address according to MS1 and MS2
-#define R_SENSE             0.11f         // Match to your driver
-// SilentStepStick series use 0.11
-// UltiMachine Einsy and Archim2 boards use 0.2
-// Panucatt BSD2660 uses 0.1
-// Watterott TMC5160 uses 0.075
 
 // ======================================================================
 // Externs
@@ -35,12 +54,17 @@ extern DriverBoard *driverboard;
 extern int  DefaultBoardNumber;
 extern bool HPS_alert(void);
 
+extern volatile bool timerSemaphore;
+extern portMUX_TYPE timerSemaphoreMux;
+extern volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
+extern portMUX_TYPE  stepcountMux;
+
+
 // ======================================================================
 // Data
 // ======================================================================
-volatile bool     timerSemaphore = false;
-volatile uint32_t stepcount = 0;
 bool stepdir;
+
 
 // ======================================================================
 // timer Interrupt
@@ -127,16 +151,22 @@ ICACHE_RAM_ATTR void onTimer()
   if (stepcount  && !(HPS_alert() && stepdir == moving_in))
   {
     driverboard->movemotor(stepdir, true);
+    portENTER_CRITICAL(&stepcountMux);
     stepcount--;
+    portEXIT_CRITICAL(&stepcountMux);
     mjob = true;                  // mark a running job
   }
   else
   {
     if (mjob == true)
     {
+      portENTER_CRITICAL(&stepcountMux);
       stepcount = 0;              // just in case HPS_alert was fired up
+      portEXIT_CRITICAL(&stepcountMux);
       mjob = false;               // wait, and do nothing
-      timerSemaphore = true;
+      portENTER_CRITICAL(&timerSemaphoreMux);
+      timerSemaphore = true;      // signal move complere
+      portEXIT_CRITICAL(&timerSemaphoreMux);
     }
   }
 }
@@ -147,16 +177,22 @@ void IRAM_ATTR onTimer()
   if (stepcount  && !(HPS_alert() && stepdir == moving_in))
   {
     driverboard->movemotor(stepdir, true);
+    portENTER_CRITICAL(&stepcountMux);
     stepcount--;
+    portEXIT_CRITICAL(&stepcountMux);
     mjob = true;                  // mark a running job
   }
   else
   {
     if (mjob == true)
     {
+      portENTER_CRITICAL(&stepcountMux);
       stepcount = 0;              // just in case HPS_alert was fired up
+      portEXIT_CRITICAL(&stepcountMux);
       mjob = false;               // wait, and do nothing
+      portENTER_CRITICAL(&timerSemaphoreMux);
       timerSemaphore = true;
+      portEXIT_CRITICAL(&timerSemaphoreMux);
     }
   }
 }
@@ -176,6 +212,14 @@ DriverBoard::DriverBoard(unsigned long startposition)
     //DebugPrint("Clock Freq: ");
     //DebugPrintln(clock_frequency);
 #endif
+
+    portENTER_CRITICAL(&timerSemaphoreMux);   // make sure timersemaphore is false when driverboard created
+    timerSemaphore = false;
+    portEXIT_CRITICAL(&timerSemaphoreMux);
+    portENTER_CRITICAL(&stepcountMux);        // make sure stepcount is 0 when driverboard created
+    stepcount = 0;
+    portEXIT_CRITICAL(&stepcountMux);
+
     boardnum = DefaultBoardNumber;
 
     // THESE NEED TO BE CREATED AT RUNTIME
@@ -354,26 +398,22 @@ DriverBoard::~DriverBoard()
 void DriverBoard::init_tmc2209(void)
 {
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
-  // Specify the serial2 interface to the tmc2225
-  mytmcstepper = new TMC2209Stepper(&SERIAL_PORT2, R_SENSE, DRIVER_ADDRESS);     // Specify the serial interface to the tmc2225
+  mytmcstepper = new TMC2209Stepper(&SERIAL_PORT2, R_SENSE, DRIVER_ADDRESS);     // Specify the serial3 interface to the tmc2225
   Serial2.begin(TMC2209SPEED);
   mytmcstepper->begin();
-  mytmcstepper->pdn_disable(1);         // Use PDN/UART pin for communication
-  mytmcstepper->mstep_reg_select(1);    // Adjust stepMode from the registers
-  mytmcstepper->I_scale_analog(0);      // Adjust current from the registers
-  mytmcstepper->toff(TOFF_VALUE);       // Use TMC22xx Calculations sheet to get these.
+  mytmcstepper->pdn_disable(1);                                   // Use PDN/UART pin for communication
+  mytmcstepper->mstep_reg_select(1);                              // Adjust stepMode from the registers
+  mytmcstepper->I_scale_analog(0);                                // Adjust current from the registers
+  mytmcstepper->toff(TOFF_VALUE);                                 // Use TMC22xx Calculations sheet to get these.
   mytmcstepper->blank_time(24);
-  mytmcstepper->rms_current(700);       // Set driver current mA
-
-  // the stepmode should be set according to mySetupData->get_brdstepmode(void);
-  int sm = mySetupData->get_brdstepmode();
-  // handle full steps
-  sm = (sm == STEP1) ? 0 : sm;
-  mytmcstepper->microsteps(sm);         // step mode = 1/4 - default specified in boardfile.jsn
+  mytmcstepper->rms_current(mySetupData->get_tmc2209current());   // Set driver current mA
+  int sm = mySetupData->get_brdstepmode();                        // stepmode set according to mySetupData->get_brdstepmode()
+  sm = (sm == STEP1) ? 0 : sm;                                    // handle full steps
+  mytmcstepper->microsteps(sm);                                   // step mode = 1/4 - default specified in boardfile.jsn
   // Lower threshold velocity for switching on smart energy CoolStep and StallGuard to DIAG output
-  mytmcstepper->TCOOLTHRS(0xFFFFF);     // 20bit max
+  mytmcstepper->TCOOLTHRS(0xFFFFF);                               // 20bit max
   mytmcstepper->ihold(15);
-  mytmcstepper->irun(31);               // irun = CS (current scale setting) on the sheet
+  mytmcstepper->irun(31);                                         // irun = CS (current scale setting) on the sheet
   // CoolStep lower threshold [0... 15].
   // If SG_RESULT goes below this threshold, CoolStep increases the current to both coils.
   // 0: disable CoolStep
@@ -390,7 +430,7 @@ void DriverBoard::init_tmc2209(void)
   // sensitivity. A higher value makes StallGuard4 more sensitive and requires less torque to
   // indicate a stall. The double of this value is compared to SG_RESULT.
   // The stall output becomes active if SG_RESULT falls below this value.
-  mytmcstepper->SGTHRS(STALL_VALUE);
+  mytmcstepper->SGTHRS(mySetupData->get_stallguard());
   //Serial.print("TMC2209 Status: "); Serial.println( driver.test_connection() == 0 ? "OK" : "NOT OK" );
   //Serial.print("Motor is "); Serial.println(digitalRead(mySetupData->get_brdenablepin()) ? "DISABLED" : "ENABLED");
   //Serial.print("stepMode is "); Serial.println(driver.microsteps());
@@ -403,21 +443,17 @@ void DriverBoard::init_tmc2209(void)
 void DriverBoard::init_tmc2225(void)
 {
 #if (DRVBRD == PRO2ESP32TMC2225)
-  // need to get btrx use mySetupData->get_brdboardpins(2) and bttx = mySetupData->get_brdboardpins(3)
-  // specify the serial interface to the tmc2225
-  mytmcstepper = new TMC2208Stepper(&SERIAL_PORT2);
+  mytmcstepper = new TMC2208Stepper(&SERIAL_PORT2);               // specify the serial2 interface to the tmc2225
   Serial2.begin(TMC2225SPEED);
   mytmcstepper.begin();
-  mytmcstepper->pdn_disable(1);                      // Use PDN/UART pin for communication
+  mytmcstepper->pdn_disable(1);                                   // Use PDN/UART pin for communication
   mytmcstepper->mstep_reg_select(true);
-  mytmcstepper->I_scale_analog(0);                   // Adjust current from the registers
-  mytmcstepper->rms_current(TMC2225CURRENT);         // Set driver current [recommended NEMA = 400mA, set to 300mA]
-  mytmcstepper->toff(0x2);                           // Enable driver
-  // the stepmode should be set according to mySetupData->get_brdstepmode(void);
-  int sm = mySetupData->get_brdstepmode();
-  // handle full steps
-  sm = (sm == STEP1) ? 0 : sm;
-  mytmcstepper->microsteps(sm);                       // step mode = 1/4 - default specified in boardfile.jsn
+  mytmcstepper->I_scale_analog(0);                                // Adjust current from the registers
+  mytmcstepper->rms_current(mySetupData->get_tmc2225current());   // Set driver current [recommended NEMA = 400mA, set to 300mA]
+  mytmcstepper->toff(0x2);                                        // Enable driver
+  int sm = mySetupData->get_brdstepmode();                        // stepmode set according to mySetupData->get_brdstepmode();
+  sm = (sm == STEP1) ? 0 : sm;                                    // handle full steps
+  mytmcstepper->microsteps(sm);                                   // step mode = 1/4 - default specified in boardfile.jsn
 #endif // #if (DRVBRD == PRO2ESP32TMC2225)
 }
 
@@ -699,7 +735,8 @@ void DriverBoard::movemotor(byte dir, bool updatefpos)
   }
 }
 
-void DriverBoard::halt(void)
+// when a move has completed [or halted], we need to detach/disable the interrupt timers
+void DriverBoard::end_move(void)
 {
 #if defined(ESP8266)
   myfp2Timer.detachInterrupt();
@@ -708,16 +745,20 @@ void DriverBoard::halt(void)
   timerDetachInterrupt(myfp2timer);   // detach interrupt
   timerEnd(myfp2timer);               // end timer
 #endif
-  Board_DebugPrintln(">halt_alert ");
+  Board_DebugPrintln("halt:");
   delay(10);
 }
 
 void DriverBoard::initmove(bool mdir, unsigned long steps)
 {
+  portENTER_CRITICAL(&stepcountMux);        // make sure stepcount is 0 when driverboard created
   stepcount = steps;
+  portEXIT_CRITICAL(&stepcountMux);
   stepdir = mdir;
   DriverBoard::enablemotor();
+  portENTER_CRITICAL(&timerSemaphoreMux);
   timerSemaphore = false;
+  portEXIT_CRITICAL(&timerSemaphoreMux);
 
   Board_DebugPrint(">initmove ");
   Board_DebugPrint(mdir);
@@ -725,16 +766,11 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   Board_DebugPrint(steps);
   Board_DebugPrint(" ");
 
-  //DebugPrint("initmove: ");
-  //DebugPrint(dir);
-  //DebugPrint(" : ");
-  //DebugPrint(steps);
-  //DebugPrint(" : ");
-  //DebugPrint(motorspeed);
-  //DebugPrint(" : ");
-  //DebugPrintln(leds);
+  //DebugPrint("initmove: "); DebugPrint(dir); DebugPrint(" : "); DebugPrint(steps); DebugPrint(" : "); DebugPrint(motorspeed); DebugPrint(" : "); DebugPrintln(leds);
+
 #if defined(ESP8266)
-  unsigned long curspd = mySetupData->get_brdmsdelay();
+  // ESP8266
+  unsigned long curspd = mySetupData->get_brdmsdelay();     // get current board speed delay value
   switch ( mySetupData->get_motorspeed() )
   {
     case 0: // slow, 1/3rd the speed
@@ -749,26 +785,14 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
     Board_DebugPrintln("Can't set myfp2Timer correctly. Select another freq. or interval");
   }
 #else
+  // ESP32
   // Use 1st timer of 4 (counted from zero).
   // Set 80 divider for prescaler (see ESP32 Technical Reference Manual)
-  myfp2timer = timerBegin(0, 80, true);
-  timerAttachInterrupt(myfp2timer, &onTimer, true);  // Attach onTimer function to our timer.
+  myfp2timer = timerBegin(0, 80, true);                     // timer-number, prescaler, count up (true) or down (false)
+  timerAttachInterrupt(myfp2timer, &onTimer, true);         // our handler name, address of function int handler, edge=true
 
-  // Set alarm to call onTimer function every second (value in microseconds).
-  // Repeat the alarm (third parameter)
-  unsigned long curspd = mySetupData->get_brdmsdelay();
-  // handle different speeds
-  switch ( mySetupData->get_motorspeed() )
-  {
-    case 0: // slow, 1/3rd the speed
-      curspd *= 3;
-      break;
-    case 1: // med, 1/2 the speed
-      curspd *= 2;
-      break;
-  }
-
-  // handle TMC22xx steppers differently
+  unsigned long curspd = mySetupData->get_brdmsdelay();     // get current board speed delay value
+  // handle the board step delays for TMC22xx steppers differently
   if ( this->boardnum == PRO2ESP32TMC2225 || this->boardnum == PRO2ESP32TMC2209 || this->boardnum == PRO2ESP32TMC2209P)
   {
     switch ( mySetupData->get_brdstepmode() )
@@ -805,7 +829,40 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
         break;
     }
   }
-  timerAlarmWrite(myfp2timer, curspd, true);   // timer for ISR
+
+  //Serial.print("cursp: ");
+  //Serial.println(curspd);
+
+  // for TMC2209 stall guard setting varies with speed seeting so we need to adjust for best results
+  // handle different speeds
+  byte sgval = mySetupData->get_stallguard();
+  //Serial.print("stallguard: ");
+  //Serial.println(sgval);
+  //Serial.print("motorspeed: ");
+  //Serial.println(mySetupData->get_motorspeed());
+  switch ( mySetupData->get_motorspeed() )
+  {
+    case 0: // slow, 1/3rd the speed
+      curspd *= 3;
+      // no need to change stall guard
+      break;
+    case 1: // med, 1/2 the speed
+      curspd *= 2;
+      sgval = sgval / 2;
+      break;
+    case 2: // fast, 1/1 the speed
+      //curspd *= 1;               // obviously not needed
+      sgval = sgval / 6;
+      break;
+  }
+  // Serial.print("SG value to write: ");
+  // Serial.println(sgval);
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  mytmcstepper->SGTHRS(sgval);
+#endif
+  // Set alarm to call onTimer function every interval value curspd (value in microseconds).
+  // Repeat the alarm (third parameter)
+  timerAlarmWrite(myfp2timer, curspd, true);   // timer for ISR, interval time, reload=true
   timerAlarmEnable(myfp2timer);                // start timer alarm
 #endif
 }
@@ -818,4 +875,41 @@ unsigned long DriverBoard::getposition(void)
 void DriverBoard::setposition(unsigned long pos)
 {
   this->focuserposition = pos;
+}
+
+byte DriverBoard::getstallguard(void)
+{
+  byte sgval = STALL_VALUE;                     // we must set it to something in case the next lines are not enabled
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  sgval = mytmcstepper->SGTHRS();
+#endif
+  return sgval;
+}
+
+void DriverBoard::setstallguard(byte newval)
+{
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  mytmcstepper->SGTHRS(newval);
+#endif
+  mySetupData->set_stallguard(newval);
+}
+
+void DriverBoard::settmc2209current(int newval)
+{
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  //mytmcstepper->I_scale_analog(0);                                // Adjust current from the registers
+  mytmcstepper->rms_current(mySetupData->get_tmc2209current());     // Set driver current
+  //mytmcstepper->toff(0x2);                                        // Enable driver
+#endif
+  mySetupData->set_tmc2209current(newval);
+}
+
+void DriverBoard::settmc2225current(int newval)
+{
+#if (DRVBRD == PRO2ESP32TMC2225)
+  //mytmcstepper->I_scale_analog(0);                                // Adjust current from the registers
+  mytmcstepper->rms_current(mySetupData->get_tmc2225current());     // Set driver current
+  //mytmcstepper->toff(0x2);                                        // Enable driver
+#endif
+  mySetupData->set_tmc2225current(newval);
 }

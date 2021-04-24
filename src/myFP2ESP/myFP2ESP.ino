@@ -1,8 +1,8 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 218-7
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 219-6
 // ======================================================================
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
-// Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D
+// Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D, TMC2209, TMC2225
 // ESP8266  OLED display, Temperature Probe
 // ESP32    OLED display, Temperature Probe, Push Buttons, In/Out LED's,
 //          Infrared Remote, Bluetooth
@@ -18,7 +18,7 @@
 // SPECIAL LICENSE
 // ======================================================================
 // This code is released under license. If you copy or write new code based
-// on the code in these files. you MUST include to link to these files AND
+// on the code in these files, you MUST include a link to these files AND
 // you MUST include references to the authors of this code.
 
 // ======================================================================
@@ -189,6 +189,7 @@ const char* duckdnsdomain = "myfp2erobert.duckdns.org";
 const char* duckdnstoken = "0a0379d5-3979-44ae-b1e2-6c371a4fe9bf";
 #endif // #ifdef USEDUCKDNS
 
+
 // ======================================================================
 // FIRMWARE CODE START - INCLUDES AND LIBRARIES
 // ======================================================================
@@ -224,6 +225,7 @@ TempProbe *myTempProbe;
 #include "displays.h"
 OLED_NON *myoled;
 
+
 // ======================================================================
 // GLOBAL DATA -- DO NOT CHANGE
 // ======================================================================
@@ -240,10 +242,15 @@ int DefaultBoardNumber  = DRVBRD;           // use this to create a default boar
 int brdfixedstepmode    = FIXEDSTEPMODE;    // only used by boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
 int brdstepsperrev      = STEPSPERREVOLUTION;
 
+volatile bool timerSemaphore = false;       // move completed=true, still moving or not moving = false;
+portMUX_TYPE  timerSemaphoreMux = portMUX_INITIALIZER_UNLOCKED; // shared vars in interrupt routines must control access via mutex
+volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
+portMUX_TYPE  stepcountMux = portMUX_INITIALIZER_UNLOCKED;
+volatile bool halt_alert;
+portMUX_TYPE  halt_alertMux = portMUX_INITIALIZER_UNLOCKED;
+
 DriverBoard*  driverboard;
 unsigned long ftargetPosition;              // target position
-volatile bool halt_alert;
-
 bool    displayfound;
 byte    isMoving;                           // is the motor currently moving
 char    ipStr[16] = "000.000.000.000";      // shared between BT mode and other modes
@@ -336,7 +343,9 @@ void update_irremote()
     }
     if ( (isMoving == 1) && (lastcode == IR_HALT))
     {
+      portENTER_CRITICAL(&halt_alertMux);
       halt_alert = true;
+      portEXIT_CRITICAL(&halt_alertMux);
     }
     else
     {
@@ -866,7 +875,7 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
   {
     String data = f.readString();                       // read content of the text file
     Setup_DebugPrint("Config data: ");
-    Setup_DebugPrintln(data);                                 // ... and print on serial
+    Setup_DebugPrintln(data);                           // ... and print on serial
     f.close();
 
     // DynamicJsonDocument doc( (const size_t) (JSON_OBJECT_SIZE(1) + JSON_ARRAY_SIZE(2) + 120));  // allocate json buffer
@@ -940,7 +949,7 @@ void stop_tcpipserver()
 
 void setup()
 {
-  Serial.begin(SERIALPORTSPEED);
+  Serial.begin(115200);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
   Serial.begin(SERIALPORTSPEED);
@@ -972,6 +981,10 @@ void setup()
 #endif // #if (CONTROLLERMODE == BLUETOOTHMODE)
 
   reboot = true;                                // booting up
+
+  portENTER_CRITICAL(&halt_alertMux);
+  halt_alert = false;
+  portEXIT_CRITICAL(&halt_alertMux);
 
   // Setup controller values
   heapmsg();
@@ -1046,73 +1059,7 @@ void setup()
 
   heapmsg();
 
-  // display controller values
-  Setup_DebugPrint("fposition=");                 // Print Loaded Values from SPIFF
-  Setup_DebugPrintln(mySetupData->get_fposition());
-  Setup_DebugPrint("focuserdirection=");
-  Setup_DebugPrintln(mySetupData->get_focuserdirection());
-  Setup_DebugPrint("maxstep=");
-  Setup_DebugPrintln(mySetupData->get_maxstep());
-  Setup_DebugPrint("stepsize= ");
-  Setup_DebugPrintln(mySetupData->get_stepsize());
-  Setup_DebugPrint("DelayAfterMove=");
-  Setup_DebugPrintln(mySetupData->get_DelayAfterMove());
-  Setup_DebugPrint("backlashsteps_in=");
-  Setup_DebugPrintln(mySetupData->get_backlashsteps_in());
-  Setup_DebugPrint("backlashsteps_out=");
-  Setup_DebugPrintln(mySetupData->get_backlashsteps_out());
-  Setup_DebugPrint("tempcoefficient=");
-  Setup_DebugPrintln(mySetupData->get_tempcoefficient());
-  Setup_DebugPrint("get_tempresolution=");
-  Setup_DebugPrintln(mySetupData->get_tempresolution());
-  Setup_DebugPrint("coilpower=");
-  Setup_DebugPrintln(mySetupData->get_coilpower());
-  Setup_DebugPrint("reversedirection=");
-  Setup_DebugPrintln(mySetupData->get_reversedirection());
-  Setup_DebugPrint("stepsizeenabled=");
-  Setup_DebugPrintln(mySetupData->get_stepsizeenabled());
-  Setup_DebugPrint("tempmode=");
-  Setup_DebugPrintln(mySetupData->get_tempmode());
-  Setup_DebugPrint("lcdupdateonmove=");
-  Setup_DebugPrintln(mySetupData->get_lcdupdateonmove());
-  Setup_DebugPrint("lcdpagedisplaytime=");
-  Setup_DebugPrintln(mySetupData->get_lcdpagetime());
-  Setup_DebugPrint("tempcompenabled=");
-  Setup_DebugPrintln(mySetupData->get_tempcompenabled());
-  Setup_DebugPrint("tcdirection=");
-  Setup_DebugPrintln(mySetupData->get_tcdirection());
-  Setup_DebugPrint("motorspeed=");
-  Setup_DebugPrintln(mySetupData->get_motorspeed());
-  Setup_DebugPrint("displayenabled=");
-  Setup_DebugPrintln(mySetupData->get_displayenabled());
-  Setup_DebugPrint("webserverport=");
-  Setup_DebugPrintln(mySetupData->get_webserverport());
-  Setup_DebugPrint("ascomalpacaport=");
-  Setup_DebugPrintln(mySetupData->get_ascomalpacaport());
-  Setup_DebugPrint("webpagerefreshrate=");
-  Setup_DebugPrintln(mySetupData->get_webpagerefreshrate());
-  Setup_DebugPrint("mdnsport=");
-  Setup_DebugPrintln(mySetupData->get_mdnsport());
-  Setup_DebugPrint("tcpipport=");
-  Setup_DebugPrintln(mySetupData->get_tcpipport());
-  Setup_DebugPrint("showstartscreen=");
-  Setup_DebugPrintln(mySetupData->get_showstartscreen());
-  Setup_DebugPrint("wp_backcolor=");
-  Setup_DebugPrintln(mySetupData->get_wp_backcolor());
-  Setup_DebugPrint("wp_textcolor=");
-  Setup_DebugPrintln(mySetupData->get_wp_textcolor());
-  Setup_DebugPrint("wp_headercolor=");
-  Setup_DebugPrintln(mySetupData->get_wp_headercolor());
-  Setup_DebugPrint("wp_titlecolor=");
-  Setup_DebugPrintln(mySetupData->get_wp_titlecolor());
-  Setup_DebugPrint("ascomserverstate=");
-  Setup_DebugPrintln(mySetupData->get_ascomserverstate());
-  Setup_DebugPrint("webserverstate=");
-  Setup_DebugPrintln(mySetupData->get_webserverstate());
-  Setup_DebugPrint("temperatureprobestate=");
-  Setup_DebugPrintln(mySetupData->get_temperatureprobestate());
-  Setup_DebugPrint("inoutledstate=");
-  Setup_DebugPrintln(mySetupData->get_inoutledstate());
+  // if you want to printout the data_per.jsn settings at load time, enable SETUP_DEBUG in generalDefinitions.h
 
   // Setup temperature probe
   tprobe1 = 0;
@@ -1446,7 +1393,6 @@ void setup()
     digitalWrite(mySetupData->get_brdoutledpin(), 0);
   }
 
-  halt_alert = false;
   reboot = false;                                           // we have finished the reboot now
 
 #if defined(TIMESETUP)
@@ -1457,9 +1403,6 @@ void setup()
 
 //_____________________ loop()___________________________________________
 
-extern volatile uint32_t stepcount;     // number of steps to go in timer interrupt service routine
-extern volatile bool     timerSemaphore;
-
 void loop()
 {
   static StateMachineStates MainStateMachine = State_Idle;
@@ -1468,6 +1411,7 @@ void loop()
   static uint32_t TimeStampDelayAfterMove = 0;
   static uint32_t TimeStampPark = millis();
   static bool     Parked = true;                  // focuser cannot be moving as it was just started
+  static bool     tms = false;                    // timersemaphore
   static uint8_t  updatecount = 0;
   static uint32_t steps = 0;
 
@@ -1732,12 +1676,15 @@ void loop()
       while ( backlash_count != 0 )
       {
         steppermotormove(DirOfTravel);                            // take 1 step and do not adjust position
-        delayMicroseconds(mySetupData->get_brdmsdelay());          // ensure delay between steps
+        delayMicroseconds(mySetupData->get_brdmsdelay());         // ensure delay between steps
         backlash_count--;
         if (HPS_alert() )                                         // check if home position sensor activated?
         {
           DebugPrintln("HPS_alert() during backlash move");
+          portENTER_CRITICAL(&timerSemaphoreMux);
           timerSemaphore = false;                                 // move finished
+          portEXIT_CRITICAL(&timerSemaphoreMux);
+
           backlash_count = 0;                                     // drop out of while loop
           MainStateMachine = State_Moving;                        // change state to State_Moving and handle HPSW
         }
@@ -1761,30 +1708,37 @@ void loop()
 
     case State_Moving:
       //DebugPrintln("S_M");
-      if ( timerSemaphore == true )
+      portENTER_CRITICAL(&timerSemaphoreMux);
+      tms = timerSemaphore;
+      portEXIT_CRITICAL(&timerSemaphoreMux);
+      if ( tms == true )
       {
         // move has completed, the driverboard keeps track of focuser position
         DebugPrintln("Move completed");
+        driverboard->end_move();                          // disable interrupt timer that moves motor
         DebugPrintln("go DelayAfterMove");
         MainStateMachine = State_DelayAfterMove;
       }
       else
       {
-        // timer semaphore is false. still moving, we need to check for halt and hpsw closure
-        if ( halt_alert )
+        // timer semaphore is false. still moving, we need to check for halt
+        if ( halt_alert )                                 // halt_alert set by comms.h webserver.cpp
         {
           DebugPrintln("halt_alert");
+          portENTER_CRITICAL(&halt_alertMux);
           halt_alert = false;                             // reset alert flag
+          portEXIT_CRITICAL(&halt_alertMux);
+          driverboard->end_move();                        // disable interrupt timer that moves motor
           ftargetPosition = driverboard->getposition();
           mySetupData->set_fposition(driverboard->getposition());
-          driverboard->halt();                            // disable interrupt timer that moves motor
           // we no longer need to keep track of steps here or halt because driverboard updates position on every move
           DebugPrintln("go DelayAfterMove");
           MainStateMachine = State_DelayAfterMove;
         } // if ( halt_alert )
-        
-        if (HPS_alert() )                                 // check if home position sensor activated?
+
+        if (HPS_alert() )                                 // and we need to check if home position sensor activated?
         {
+          driverboard->end_move();                        // disable interrupt timer that moves motor
           if (driverboard->getposition() > 0)
           {
             DebugPrintln("HP Sw=1, Pos not 0");
@@ -1894,6 +1848,7 @@ void loop()
           }
         }
       } //  if( mySetupData->get_homepositionswitch() == 1)
+      
       MainStateMachine = State_DelayAfterMove;
       TimeStampDelayAfterMove = millis();
       DebugPrintln("go DelayAfterMove");

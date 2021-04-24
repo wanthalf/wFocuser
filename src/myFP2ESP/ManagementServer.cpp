@@ -33,7 +33,6 @@ extern OLED_NON      *myoled;
 #include "temp.h"
 extern TempProbe     *myTempProbe;
 
-extern volatile bool halt_alert;
 extern unsigned long ftargetPosition;
 extern byte isMoving;
 extern int  packetsreceived;
@@ -2061,7 +2060,7 @@ void MANAGEMENT_handleget(void)
 {
   // return json string of state, on or off or value
   // ascom, boardconfig, coilpower, coilpowertimeout, dataconfig, display, fixedstepmode, hpsw, indi, ismoving,
-  // leds, motorspeed, motorspeeddelay, position, reverse, rssi, tempprobe, webserver
+  // leds, motorspeed, motorspeeddelay, position, reverse, rssi, tempprobe, tmc2209current, tmc2225current, webserver
   String jsonstr;
 
   if ( mserver.argName(0) == "ascom" )
@@ -2182,9 +2181,26 @@ void MANAGEMENT_handleget(void)
     jsonstr = "{ \"stepmode\":" + String(mySetupData->get_brdstepmode()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
+  else if ( mserver.argName(0) == "stallguard" )
+  {
+    byte sgval = STALL_VALUE;                     // we must set it to something in case the next lines are not enabled
+    sgval = driverboard->getstallguard();
+    jsonstr = "{ \"stallguard\":" + String(mySetupData->get_stallguard()) + ", \"tmc2209sg\":" + String(sgval) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
   else if ( mserver.argName(0) == "tempprobe" )
   {
     jsonstr = "{\"tempprobe\":" + String(mySetupData->get_temperatureprobestate()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "tmc2209current" )
+  {
+    jsonstr = "{\"tmc2209current\":" + String(mySetupData->get_tmc2209current()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "tmc2225current" )
+  {
+    jsonstr = "{\"tmc2225current\":" + String(mySetupData->get_tmc2225current()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
   else if ( mserver.argName(0) == "webserver" )
@@ -2224,7 +2240,7 @@ void MANAGEMENT_handleset(void)
   String value;
   String drvbrd = mySetupData->get_brdname();
   // ascom, coilpower, coilpowertimeout, display, fixedstepmode, hpsw, indi, leds, motorspeed, motorspeeddelay,
-  // move, position, reverse, stepmode, tempprobe, webserver,
+  // move, position, reverse, stepmode, tempprobe, tmc2209current, tmc2225current, webserver,
 
   // ascom remote server
   value = mserver.arg("ascom");
@@ -2499,6 +2515,18 @@ void MANAGEMENT_handleset(void)
     }
   }
 
+  // stall guard
+  value = mserver.arg("stallguard");
+  if ( value != "" )
+  {
+    int temp = value.toInt();
+    MSrvr_DebugPrint("stallguard: ");
+    MSrvr_DebugPrintln(temp);
+    driverboard->setstallguard((byte) temp);      // write to registers and update mySetupData
+    temp = mySetupData->get_stallguard();
+    jsonstr = "{ \"stallguard\":" + String(temp) + ",  }";
+  }
+
   // stepmode
   value = mserver.arg("stepmode");
   if ( value != "" )
@@ -2554,13 +2582,46 @@ void MANAGEMENT_handleset(void)
     }
   }
 
+  // tmc2209current
+  value = mserver.arg("tmc2209current");
+  if ( value != "" )
+  {
+    int temp = value.toInt();
+    MSrvr_DebugPrint("tmc2209current: ");
+    MSrvr_DebugPrintln(temp);
+    driverboard->settmc2209current(temp);   // write current value to tmc22xx, call mySetupData->set_tmc2209current(temp);
+    jsonstr = "{ \"tmc2209current\":" + String(temp) + " }";
+  }
+
+  // tmc2225current
+  value = mserver.arg("tmc2225current");
+  if ( value != "" )
+  {
+    int temp = value.toInt();
+    MSrvr_DebugPrint("tmc2225current: ");
+    MSrvr_DebugPrintln(temp);
+    driverboard->settmc2225current(temp);   // write current value to tmc22xx, call mySetupData->set_tmc2225current(temp);
+    jsonstr = "{ \"tmc2225current\":" + String(temp) + " }";
+  }
+
+  else if ( mserver.argName(0) == "tmc2209current" )
+  {
+    jsonstr = "{\"tmc2209current\":" + String(mySetupData->get_tmc2209current()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+  else if ( mserver.argName(0) == "tmc2225current" )
+  {
+    jsonstr = "{\"tmc2225current\":" + String(mySetupData->get_tmc2225current()) + " }";
+    MANAGEMENT_sendjson(jsonstr);
+  }
+
   // web server
   value = mserver.arg("webserver");
   if ( value != "" )
   {
     if ( value == "on" )
     {
-      MSrvr_DebugPrintln("weberver: ON");
+      MSrvr_DebugPrintln("webserver: ON");
       if ( mySetupData->get_webserverstate() == 0)
       {
         start_webserver();

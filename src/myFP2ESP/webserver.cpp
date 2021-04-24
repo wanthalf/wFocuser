@@ -7,7 +7,7 @@
 // ======================================================================
 // Includes
 // ======================================================================
-#include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
+#include "focuserconfig.h"                      // boarddefs.h included as part of focuserconfig.h"
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"
 #include "myBoards.h"
@@ -29,25 +29,27 @@
 // ======================================================================
 // EXTERNS
 // ======================================================================
-extern unsigned long ftargetPosition;           // target position
 extern volatile bool halt_alert;
-extern char         ipStr[16];                  // shared between BT mode and other modes
-extern byte         isMoving;                   // is the motor currently moving
-extern bool         webserverstate;
-extern bool         reboot;
-extern int          tprobe1;
-extern float        lasttemp;
-extern bool         displaystate;
+extern portMUX_TYPE  halt_alertMux;
 
-extern TempProbe    *myTempProbe;
-extern SetupData    *mySetupData;
-extern DriverBoard* driverboard;
-extern OLED_NON     *myoled;
-extern void         heapmsg(void);
+extern unsigned long ftargetPosition;           // target position
+extern char          ipStr[16];                 // shared between BT mode and other modes
+extern byte          isMoving;                  // is the motor currently moving
+extern bool          webserverstate;
+extern bool          reboot;
+extern int           tprobe1;
+extern float         lasttemp;
+extern bool          displaystate;
 
+extern TempProbe     *myTempProbe;
+extern SetupData     *mySetupData;
+extern DriverBoard*  driverboard;
+extern OLED_NON      *myoled;
+extern void          heapmsg(void);
+
+// forward declarations
 void WEBSERVER_sendpresets(void);
 void WEBSERVER_sendroot(void);
-
 
 // ======================================================================
 // WEBSERVER Data
@@ -194,8 +196,10 @@ void WEBSERVER_handlepresets(void)
   {
     TRACE();
     WebS_DebugPrintln(halt_str);
+    portENTER_CRITICAL(&halt_alertMux);
     halt_alert = true;
-    //ftargetPosition = fcurrentPosition;
+    portEXIT_CRITICAL(&halt_alertMux);
+    // ftargetPosition = fcurrentPosition;
   }
 
   // if set focuser preset 0
@@ -693,7 +697,9 @@ void WEBSERVER_handlemove()
   {
     TRACE();
     WebS_DebugPrintln(halt_str);
+    portENTER_CRITICAL(&halt_alertMux);
     halt_alert = true;
+    portEXIT_CRITICAL(&halt_alertMux);
     //ftargetPosition = fcurrentPosition;
   }
 
@@ -934,7 +940,9 @@ void WEBSERVER_handleroot()
   {
     WebS_DebugPrint("root() -halt:");
     WebS_DebugPrintln(halt_str);
-    halt_alert = true;;
+    portENTER_CRITICAL(&halt_alertMux);
+    halt_alert = true;
+    portEXIT_CRITICAL(&halt_alertMux);
     //ftargetPosition = fcurrentPosition;
   }
 
@@ -1056,7 +1064,7 @@ void WEBSERVER_handleroot()
   // Set driverboard->setstepmode(xx);                 // this sets the physical pins and saves new stepmode
   // ======================================================================
   // if update stepmode
-  // (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32, 64=1/64, 128=1/128)
+  // (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32, 64=1/64, 128=1/128, 256=1/256)
   String fsm_str = webserver->arg("sm");
   if ( fsm_str != "" )
   {
@@ -1068,9 +1076,9 @@ void WEBSERVER_handleroot()
     {
       temp1 = STEP1;
     }
-    if ( temp1 > STEP32 )
+    if ( temp1 > mySetupData->get_brdmaxstepmode() )
     {
-      temp1 = STEP32;
+      temp1 = mySetupData->get_brdmaxstepmode();
     }
     driverboard->setstepmode(temp1);
   }

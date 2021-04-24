@@ -23,9 +23,10 @@
 // ======================================================================
 // Extern Data
 // ======================================================================
-extern int DefaultBoardNumber;          // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
-extern int brdfixedstepmode;            // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
-extern int brdstepsperrev;
+extern int  DefaultBoardNumber;         // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
+extern int  brdfixedstepmode;           // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+extern int  brdstepsperrev;
+extern byte isMoving;
 extern DriverBoard* driverboard;
 
 // ======================================================================
@@ -56,7 +57,7 @@ SetupData::SetupData(void)
   else
   {
     SetupData_DebugPrintln("FS mounted");
-    //still has issues? esp8266? 
+    //still has issues? esp8266?
     //this->ListDir("/", 0);
   }
   this->LoadConfiguration();
@@ -140,6 +141,9 @@ byte SetupData::LoadConfiguration()
       this->hpswitchenable        = doc_per["hpswen"];
       this->pbenable              = doc_per["pbenable"];
       this->indi                  = doc_per["indi"];
+      this->stallguard            = doc_per["stallguard"];
+      this->tmc2225current        = doc_per["tmc2225mA"];
+      this->tmc2209current        = doc_per["tmc2209mA"];
     }
     SetupData_DebugPrintln("data_per loaded");
   }
@@ -163,7 +167,7 @@ byte SetupData::LoadConfiguration()
     // Reading board_config.jsn
     String board_data = bfile.readString();               // read content of the text file
     SetupData_DebugPrint("LoadConfiguration(): board_config= ");
-    SetupData_DebugPrintln(board_data);                             // ... and print on serial
+    SetupData_DebugPrintln(board_data);                   // ... and print on serial
     bfile.close();
 
     // Allocate a temporary JsonDocument
@@ -295,6 +299,13 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
   byte cstatus = false;
   unsigned long x = millis();
 
+  if( isMoving )
+  {
+    // do not save to SPIFFS if focuser is moving
+    cstatus = false;
+    return cstatus;
+  }
+  
   if ((SnapShotMillis + DEFAULTSAVETIME) < x || SnapShotMillis > x)    // 30s after snapshot
   {
     // save persistent data - focus controller data
@@ -460,7 +471,9 @@ void SetupData::LoadDefaultPersistantData()
   this->hpswitchenable        = DEFAULTOFF;           // this should be default OFF
   this->pbenable              = DEFAULTOFF;           // this should be default OFF
   this->indi                  = DEFAULTOFF;           // this should be default OFF
-
+  this->stallguard            = STALL_VALUE;
+  this->tmc2225current        = TMC2225CURRENT;
+  this->tmc2209current        = TMC2209CURRENT;
   this->SavePersitantConfiguration();                 // write default values to SPIFFS
 }
 
@@ -542,6 +555,9 @@ byte SetupData::SavePersitantConfiguration()
   doc["hpswen"]             = this->hpswitchenable;
   doc["pbenable"]           = this->pbenable;
   doc["indi"]               = this->indi;
+  doc["stallguard"]         = this->stallguard;
+  doc["tmc2225mA"]          = this->tmc2225current;
+  doc["tmc2209mA"]          = this->tmc2209current;
 
   // Serialize JSON to file
   SetupData_DebugPrintln("Writing to file");
@@ -779,6 +795,21 @@ byte SetupData::get_indi()
   return this->indi;
 }
 
+byte SetupData::get_stallguard()
+{
+  return this->stallguard;
+}
+
+int SetupData::get_tmc2225current()
+{
+  return this->tmc2225current;
+}
+
+int SetupData::get_tmc2209current()
+{
+  return this->tmc2209current;
+}
+
 //__Setter
 
 void SetupData::set_fposition(unsigned long fposition)
@@ -994,6 +1025,21 @@ void SetupData::set_pbenable(byte newval)
 void SetupData::set_indi(byte newval)
 {
   this->StartDelayedUpdate(this->indi, newval);
+}
+
+void SetupData::set_stallguard(byte newval)
+{
+  this->StartDelayedUpdate(this->stallguard, newval);
+}
+
+void SetupData::set_tmc2225current(int newval)
+{
+  this->StartDelayedUpdate(this->tmc2225current, newval);
+}
+
+void SetupData::set_tmc2209current(int newval)
+{
+  this->StartDelayedUpdate(this->tmc2209current, newval);
 }
 
 void SetupData::StartDelayedUpdate(int & org_data, int new_data)

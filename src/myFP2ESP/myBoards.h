@@ -27,8 +27,6 @@
 // ======================================================================
 // DRIVER BOARD CLASS : DO NOT CHANGE
 // ======================================================================
-extern volatile bool timerSemaphore;
-
 class DriverBoard
 {
   public:
@@ -40,16 +38,21 @@ class DriverBoard
     void init_tmc2209(void);
     void init_tmc2225(void);
     bool checkStall(void);
-
+    void end_move(void);
+    
     // getter
     unsigned long getposition(void);
+    byte getstallguard(void);    
     
     // setter
     void enablemotor(void);
     void setposition(unsigned long);
     void releasemotor(void);
     void setstepmode(int);
-
+    void setstallguard(byte);
+    void settmc2209current(int);
+    void settmc2225current(int);
+    
   private:
     HalfStepper*  myhstepper;
     Stepper*      mystepper;

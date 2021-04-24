@@ -49,16 +49,17 @@ extern ESP8266WebServer mserver;
 extern WebServer mserver;
 #endif
 
+extern volatile bool halt_alert;
+extern portMUX_TYPE  halt_alertMux;
+
 extern SetupData      *mySetupData;
 extern DriverBoard*   driverboard;
 extern unsigned long  ftargetPosition;              // target position
-extern volatile bool  halt_alert;
 extern char           ipStr[];
 extern byte           isMoving;                     // is the motor currently moving
 extern bool           ascomserverstate;
 extern bool           ascomdiscoverystate;
 extern float          lasttemp;
-
 extern void           heapmsg(void);
 
 // ======================================================================
@@ -639,7 +640,7 @@ void ASCOM_handle_focuser_setup()
   // ======================================================================
   // if update stepmode
   // (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32, 64=1/64, 128=1/128, 256=1/256)
-    
+
   String fsm_str = ascomserver->arg("sm");
   if ( fsm_str != "" )
   {
@@ -651,9 +652,9 @@ void ASCOM_handle_focuser_setup()
     {
       temp = STEP1;
     }
-    if ( temp > STEP256 )
+    if ( temp > mySetupData->get_brdmaxstepmode() )
     {
-      temp = STEP256;
+      temp = mySetupData->get_brdmaxstepmode();
     }
     // call boards.cpp to apply physical pins and save new stepmode
     driverboard->setstepmode(temp);
@@ -965,7 +966,10 @@ void  ASCOM_handlehaltput()
   ASCOMErrorNumber = 0;
   ASCOMErrorMessage = ASCOMERRORMSGNULL;
   ASCOM_getURLParameters();
-  halt_alert = true;;
+  portENTER_CRITICAL(&halt_alertMux);
+  halt_alert = true;
+  portEXIT_CRITICAL(&halt_alertMux);
+
   //ftargetPosition = fcurrentPosition;
   // addclientinfo adds clientid, clienttransactionid, servtransactionid, errornumber, errormessage and terminating }
   jsonretstr = "{" + ASCOM_addclientinfo( jsonretstr );

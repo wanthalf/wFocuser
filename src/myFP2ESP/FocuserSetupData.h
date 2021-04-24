@@ -65,24 +65,27 @@ class SetupData
     unsigned long get_focuserpreset(byte);
     unsigned long get_webserverport();
     unsigned long get_ascomalpacaport();
-    int get_webpagerefreshrate();
+    int           get_webpagerefreshrate();
     unsigned long get_mdnsport();
     unsigned long get_tcpipport();
-    byte get_showstartscreen();
+    byte    get_showstartscreen();
     String  get_wp_backcolor();
     String  get_wp_textcolor();
     String  get_wp_headercolor();
     String  get_wp_titlecolor();
-    byte get_ascomserverstate();
-    byte get_webserverstate();
-    byte get_inoutledstate();
-    byte get_temperatureprobestate();
-    byte get_showhpswmsg();
-    byte get_forcedownload();
+    byte    get_ascomserverstate();
+    byte    get_webserverstate();
+    byte    get_inoutledstate();
+    byte    get_temperatureprobestate();
+    byte    get_showhpswmsg();
+    byte    get_forcedownload();
     String  get_oledpageoption();
-    byte get_hpswitchenable();
-    byte get_pbenable();
-    byte get_indi();
+    byte    get_hpswitchenable();
+    byte    get_pbenable();
+    byte    get_indi();
+    byte    get_stallguard();
+    int     get_tmc2225current(void);
+    int     get_tmc2209current(void);
 
     //__setter data_per
     void set_fposition(unsigned long);
@@ -129,6 +132,9 @@ class SetupData
     void set_pbenable(byte);
     void set_irremoteenable(byte);
     void set_indi(byte);
+    void set_stallguard(byte);
+    void set_tmc2225current(int);
+    void set_tmc2209current(int);
 
     //__getter boardconfig
     String get_brdname(void);
@@ -252,6 +258,9 @@ class SetupData
     byte    pbenable;
     byte    inoutledenable;
     byte    indi;
+    byte    stallguard;                // value for STALL_GUARD, tmc2209
+    int     tmc2209current;
+    int     tmc2225current;
 
     // dataset board configuration
     String board;

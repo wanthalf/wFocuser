@@ -32,15 +32,15 @@
 //#define DRVBRD 	PRO2EL9110S
 //#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
-#define DRVBRD 	PRO2ESP32DRV8825
+//#define DRVBRD 	PRO2ESP32DRV8825
 //#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
 //#define DRVBRD 	PRO2ESP32L9110S
 //#define DRVBRD 	PRO2ESP32R3WEMOS
-//#define DRVBRD  PRO2ESP32TMC2225
-//#define DRVBRD  PRO2ESP32TMC2209
-//#define DRVBRD  PRO2ESP32TMC2209P                 // this is for Paul using TMC2209 - 58.jsn
+//#define DRVBRD    PRO2ESP32TMC2225
+//#define DRVBRD    PRO2ESP32TMC2209
+#define DRVBRD    PRO2ESP32TMC2209P              // this is for Paul using TMC2209 - 58.jsn
 //#define DRVBRD 	CUSTOMBRD
 
 // On bootup following a controller firmware update, a default driver board file 
@@ -79,7 +79,6 @@
 //#define STEPSPERREVOLUTION 	1036        // NEMA14HS13-0804S-PG5
 //#define STEPSPERREVOLUTION 	1036        // NEMA16HS13-0604S-PG5
 
-
 // ======================================================================
 // 4: SPECIFY OLED DISPLAY AND DRIVER TYPE: 
 // ======================================================================
@@ -97,7 +96,6 @@
 // For the OLED 128x64 1.3" display using the SSH1106 driver, uncomment the following line
 //#define USE_SSH1106   2
 
-
 // ======================================================================
 // 5: SPECIFY HARDWARE OPTIONS
 // ======================================================================
@@ -110,7 +108,6 @@
 
 // To enable the Infrared remote controller [ESP32 only], uncomment the next line
 //#define INFRAREDREMOTE
-
 
 // ======================================================================
 // 6: CONTROLLER MODE
@@ -131,7 +128,6 @@
 
 // to enable Bluetooth mode, uncomment the next line [ESP32 only]
 //#define CONTROLLERMODE  BLUETOOTHMODE
-
 
 // ======================================================================
 // 7: SPECIFY CONTROLLER OPTIONS
@@ -154,11 +150,9 @@
 // from SPIFFS file wificonfig at boot time, uncomment the following file
 //#define READWIFICONFIG 	1
 
-
 // ======================================================================
 // DO NOT CHANGE:
 // ======================================================================
-
 
 // ======================================================================
 // CHECK BOARD AND HW OPTIONS
@@ -203,7 +197,7 @@
 #endif
 #endif
 
-#if ((DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48))
+#if (DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48)
 #if (CONTROLLERMODE == LOCALSERIAL)
 #halt // ERROR - LOCALSERIAL not supported L293D Motor Shield [ESP8266] boards
 #endif
@@ -235,7 +229,7 @@
 #endif // #if defined(OTAUPDATES)
 
 #if defined(MDNSSERVER)
-#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE ==ACCESSPOINT)
+#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
 #halt // ERROR, mDNS only available with CONTROLLERMODE == STATIONMODE
 #endif
 #endif // MDNSSERVER
@@ -249,7 +243,7 @@
 
 // cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
 #ifdef USEDUCKDNS
-#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) ||(CONTROLLERMODE == ACCESSPOINT)
+#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
 #halt // Error- DUCKDNS only works with STATIONMODE
 #endif
 #ifndef STATIONMODE
@@ -259,7 +253,7 @@
 
 // DO NOT CHANGE
 #if defined(READWIFICONFIG)
-#if ((CONTROLLERMODE == BLUETOOTH) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT) )
+#if (CONTROLLERMODE == BLUETOOTH) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
 #halt // ERROR, READWIFICONFIG only available with CONTROLLERMODE == STATIONMODE
 #endif
 #endif // #if defined(READWIFICONFIG)

@@ -5,12 +5,28 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 © Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+219
+// Add stall guard value to data_per.jsn
+// Add tmc2209current and tmc2225current to data_per.jsn
+// Add stall guard value to management interface get/set
+// Add tmc22xxcurrent set/get interface to management interface get/set
+// Add mutex semaphores for halt_alert, stepcount, timerSemaphore
+// Fix for update stepmode in webserver.cpp not obeying mySetupData->get_brdmaxstepmode()
+// Fix for updatestepmode in ASCOM.cpp not obeying mySetupData->get_brdmaxstepmode()
+// Fix for set?stallguard in ManagementServer.cpp displaying wrong text
+// Fix for stallguard not updating when value is changed in Management server
+// Fix for tmc2209current reference in myBoards.cpp
+// Fix for interrupt timer not disposed once move is complete
+// Fix for saving data files to SPIFFS - delayed if focuser is moving
+
 218
 // Trinamic 2225 and 2209 support
 // Add stall guard support for TMC2209
 // Add get?commands= to show a list of get/set commands in Management Server
 // Fixes for comms.h to be more compatible with INDI driver
 // Fix for set?stepmode= in management server
+// Fix for set stepmode in comms.h not being set for DRVBRD == PRO2ESP32TMC2209P
+
 
 217 
 // Fix for saveboardconfiguration
