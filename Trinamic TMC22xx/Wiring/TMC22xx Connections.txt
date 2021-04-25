@@ -1,0 +1,32 @@
+YOU MUST USE THE BIGTREE TMC CHIPS
+OTHER CHIPS WILL NOT WORK
+
+/------------------------------------------------
+/ METHOD1: CONNECTION FOR TMC2225 WITH DRV8825HW203-rev11 PCB USING J12-BT CONNECTOR
+/------------------------------------------------
+D10			J12-BTTXD	TMC2225-UARTpin
+D11	1K R11 		J12-BTRXD	TMC2225-UARTpin	
+
+#define BTTX                11
+#define BTRX                10            
+
+Wire VIO on underside of PCB to 5V.
+Wire CLK to GND
+
+/------------------------------------------------
+/ METHOD 3: CONNECTION FOR TMC2225 WITH TMC2225 PCB
+/ NOTE: REDESIGNED BOARD REV4
+/------------------------------------------------
+D10			UARTpin
+D11	1K Resistor	UARTpin
+
+
+/------------------------------------------------
+/ METHOD 4: CONNECTION FOR TMC2209 WITH TMC2209 PCB
+/ NOTE: REDESIGNED BOARD
+/------------------------------------------------
+D10			UARTpin
+D11	1K Resistor	UARTpin
+D12			DIAG
+
+
