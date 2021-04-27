@@ -573,8 +573,12 @@ void ESP_Communication()
     case 80: // return number of backlash steps OUT
       SendPaket('7', mySetupData->get_backlashsteps_out());
       break;
-    case 81:  // Get number of backlashmaximum steps
-      SendPaket('8', 400);
+    case 81: // get STALL_VALUE (for TMC2209 stepper modules)
+      SendPaket('8', mySetupData->get_stallguard());
+      break;
+    case 82: // set STALL_VALUE (for TMC2209 stepper modules)
+      WorkString = receiveString.substring(2, receiveString.length() );
+      driverboard->setstallguard( (byte) WorkString.toInt() );
       break;
     case 83: // get if there is a temperature probe
       SendPaket('c', tprobe1);
@@ -840,8 +844,6 @@ void ESP_Communication()
       break;
     case 68:  // myFP2 Get jogging direction, 0=IN, 1=OUT
       SendPaket('V', 0);
-      break;
-    case 82:  // myFP2 Set backlash maximum steps
       break;
     case 94:  // myFP2 Set DelayedDisplayUpdate (0=disabled, 1-enabled)
       break;

@@ -18,9 +18,9 @@
 // setstallguard()
 // Write
 // to change a stall-guard value, code must call driverboard->setstallguard(sgval)
-// which also updates mySetypData->set_stallguard(smgval);
+// which also updates mySetupData->set_stallguard(smgval);
 // Read
-// code calls mySetupData->get_brdstepmode();
+// code calls mySetupData->get_stallguard();
 
 // settmc2209current()
 // Write
@@ -414,7 +414,7 @@ void DriverBoard::init_tmc2209(void)
   mytmcstepper->rms_current(mySetupData->get_tmc2209current());   // Set driver current mA
   int sm = mySetupData->get_brdstepmode();                        // stepmode set according to mySetupData->get_brdstepmode()
   sm = (sm == STEP1) ? 0 : sm;                                    // handle full steps
-  mytmcstepper->microsteps(sm);                                   // step mode = 1/4 - default specified in boardfile.jsn
+  mytmcstepper->microsteps(sm); 
   // Lower threshold velocity for switching on smart energy CoolStep and StallGuard to DIAG output
   mytmcstepper->TCOOLTHRS(0xFFFFF);                               // 20bit max
   mytmcstepper->ihold(15);
