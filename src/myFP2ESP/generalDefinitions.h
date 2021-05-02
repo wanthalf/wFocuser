@@ -112,7 +112,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define FILEFOUNDSTR          "Found"
 #define NOTDEFINEDSTR         "Not defined"
 #define MDNSSTARTFAILSTR      "Err starting MDNS responder"
-#define MDNSSTARTEDSTR            "mDNS responder started"
+#define MDNSSTARTEDSTR        "mDNS responder started"
 
 // ======================================================================
 // 2: DO NOT CHANGE

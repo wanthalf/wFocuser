@@ -5,6 +5,14 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 © Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+222
+// Fix for HPSW code
+// Fix for TMC2209 and TMC2225 initialization code
+// Fix for DelayAfterMove not being applied in some cases
+
+221
+// Fix for TMC2209 and TMC2225 initialization
+
 220
 // Fix for compilation errors on ESP8266
 // Add serial code support for get/set stall_value for tmc2209 [if fitted]

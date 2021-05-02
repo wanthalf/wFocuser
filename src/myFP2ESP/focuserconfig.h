@@ -285,7 +285,7 @@
 #halt // ERROR, Cannot enabled READWIFICONFIG with BLUETOOTHMODE
 #endif
 #ifdef USEDUCKDNS
-#halt // ERROR, Cannot enable DUCKDNS with with BLUETOOTHMODE
+#halt // ERROR, Cannot enable DUCKDNS with BLUETOOTHMODE
 #endif
 #endif // #if (CONTROLLERMODE == BLUETOOTHMODE)
 
@@ -307,7 +307,7 @@
 #halt // ERROR, READWIFICONFIG only available with CONTROLLERMODE == STATIONMODE
 #endif
 #ifdef USEDUCKDNS
-#halt // ERROR, Cannot enable DUCKDNS with with BLUETOOTHMODE
+#halt // ERROR, Cannot enable DUCKDNS with BLUETOOTHMODE
 #endif
 #endif // #if (CONTROLLERMODE == LOCALSERIAL)
 
@@ -320,7 +320,7 @@
 #halt // Error Cannot enable OTAUPDATES with ACCESSPOINT
 #endif
 #ifdef USEDUCKDNS
-#halt // ERROR, Cannot enable DUCKDNS with with ACCESSPOINT
+#halt // ERROR, Cannot enable DUCKDNS with ACCESSPOINT
 #endif
 #endif // #if (CONTROLLERMODE == ACCESSPOINT)
 

@@ -1,10 +1,10 @@
 // ======================================================================
-// generalDefinitions.cpp : myFP2ESP GENERAL DEFINITIONS AND Textmessages
+// generalDefinitions.cpp : myFP2ESP GENERAL DEFINITIONS AND Text messages
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // ======================================================================
 
-const char* programVersion            = "220";
+const char* programVersion            = "222";
 const char* ProgramAuthor             = "(c) R BROWN 2020";
 
 const char* MANAGEMENTURLNOTFOUNDSTR  = "<html><head><title>Management server></title></head><body><p>URL was not found</p><p><form action=\"/\" method=\"GET\"><input type=\"submit\" value=\"HOME\"></form></p></body></html>";

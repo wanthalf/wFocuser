@@ -1,6 +1,11 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 220-2
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222
+// (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
+// (c) Copyright Holger M, 2019-2021. All Rights Reserved.
+// (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
+// (c) Copyright Paul P, 2021. All Rights Reserved. TMC22xx code
 // ======================================================================
+//
 // myFP2ESP Firmware for ESP8266 and ESP32 myFocuserPro2 WiFi Controllers
 // Supports Driver boards DRV8825, ULN2003, L298N, L9110S, L293DMINI, L293D, TMC2209, TMC2225
 // ESP8266  OLED display, Temperature Probe
@@ -10,10 +15,6 @@
 //          ASCOMREMOTE
 // Remember to change your target CPU depending on board selection
 //
-// (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
-// (c) Copyright Holger M, 2019-2021. All Rights Reserved.
-// (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
-// (c) Copyright Paul P, 2021. All Rights Reserved. TMC22xx code
 // ======================================================================
 // SPECIAL LICENSE
 // ======================================================================
@@ -300,21 +301,25 @@ extern void start_webserver(void);
 #include "comms.h"                                // do not change or move
 
 // check hpsw, switch uses internal pullup, pulled low when closed
-// if hpsw is closed = low, !() closed means return high, return false if open
+// if hpsw is closed = low, !() closed means return high and return false if open
 bool HPS_alert()
 {
-  // check tmc2209 stall guard )
-  if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
+  if ( mySetupData->get_hpswitchenable() == 0)
   {
-    return driverboard->checkStall();
-  }
-  if ( mySetupData->get_hpswitchenable() == 1)
-  {
-    return !((bool)digitalRead(mySetupData->get_brdhpswpin()));
-  }
-  else
-  {
+    // hpsw is not enabled
     return false;
+  }
+  // check tmc2209 boards for stall guard
+  else if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
+  {
+    // default = switch open = false 
+    return (driverboard->checkStall());
+  }
+  // check HOMEPOSITIONSWITCH for all other boards
+  else 
+  {
+    // default = switch open = false , return false if open, true if closed
+    return ((bool)digitalRead(mySetupData->get_brdhpswpin()));
   }
 }
 
@@ -1240,7 +1245,7 @@ void setup()
   // otherwise after loading driverboard focuser will start moving immediately
   Setup_DebugPrintln("driver board: start");
   ftargetPosition = mySetupData->get_fposition();
-  driverboard = new DriverBoard(mySetupData->get_fposition() );
+  driverboard = new DriverBoard( mySetupData->get_fposition() );
   Setup_DebugPrintln("driver board: end");
   delay(5);
   heapmsg();
@@ -1689,7 +1694,6 @@ void loop()
           varENTER_CRITICAL(&timerSemaphoreMux);
           timerSemaphore = false;                                 // move finished
           varEXIT_CRITICAL(&timerSemaphoreMux);
-
           backlash_count = 0;                                     // drop out of while loop
           MainStateMachine = State_Moving;                        // change state to State_Moving and handle HPSW
         }
@@ -1721,6 +1725,7 @@ void loop()
         // move has completed, the driverboard keeps track of focuser position
         DebugPrintln("Move completed");
         driverboard->end_move();                          // disable interrupt timer that moves motor
+        TimeStampDelayAfterMove = millis();
         DebugPrintln("go DelayAfterMove");
         MainStateMachine = State_DelayAfterMove;
       }
@@ -1738,10 +1743,11 @@ void loop()
           mySetupData->set_fposition(driverboard->getposition());
           // we no longer need to keep track of steps here or halt because driverboard updates position on every move
           DebugPrintln("go DelayAfterMove");
+          TimeStampDelayAfterMove = millis();
           MainStateMachine = State_DelayAfterMove;
         } // if ( halt_alert )
 
-        if (HPS_alert() )                                 // and we need to check if home position sensor activated?
+        if ( HPS_alert() )                                // and we need to check if home position sensor activated?
         {
           driverboard->end_move();                        // disable interrupt timer that moves motor
           if (driverboard->getposition() > 0)
@@ -1755,7 +1761,7 @@ void loop()
           ftargetPosition = 0;
           driverboard->setposition(0);
           mySetupData->set_fposition(0);
-          if ( mySetupData->get_showhpswmsg() == 1)     // check if display home position messages is enabled
+          if ( mySetupData->get_showhpswmsg() == 1)       // check if display home position messages is enabled
           {
             if (mySetupData->get_displayenabled() == 1)
             {
@@ -1767,6 +1773,7 @@ void loop()
             // stall guard in effect - there is no need to find and set position. there is no real backlash
             // finally,.... the rock has come..... home.
             DebugPrintln("Stall Guard: Pos = 0");
+            TimeStampDelayAfterMove = millis();
             MainStateMachine = State_DelayAfterMove;
           }
           else
@@ -1794,7 +1801,7 @@ void loop()
       }
       break;
 
-    case State_SetHomePosition:                         // move out till home position switch opens
+    case State_SetHomePosition:                           // move out till home position switch opens
       DebugPrintln("State_SetHomePosition");
       if ( mySetupData->get_hpswitchenable() == 1)
       {
