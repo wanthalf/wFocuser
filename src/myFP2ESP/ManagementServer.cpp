@@ -61,7 +61,6 @@ extern void stop_ascomremoteserver(void);
 extern void software_Reboot(int);
 extern long getrssi(void);
 extern bool init_leds(void);
-extern bool init_homepositionswitch(void);
 extern bool init_pushbuttons(void);
 
 #ifdef MDNSSERVER
@@ -1524,7 +1523,14 @@ void MANAGEMENT_handleadminpg2(void)
       if ( mySetupData->get_hpswitchenable() == 0)
       {
         mySetupData->set_hpswitchenable(1);
-        init_homepositionswitch();
+        if ( driverboard->init_homepositionswitch() == true)
+        {
+          MSrvr_DebugPrintln("hpsw init OK");
+        }
+        else
+        {
+          MSrvr_DebugPrintln("hpsw init NOK");
+        }
       }
     }
   }
@@ -2368,7 +2374,14 @@ void MANAGEMENT_handleset(void)
       if ( value == "on" )
       {
         mySetupData->set_hpswitchenable(1);
-        init_homepositionswitch();
+        if ( driverboard->init_homepositionswitch() == true)
+        {
+          MSrvr_DebugPrintln("hpsw init OK");
+        }
+        else
+        {
+          MSrvr_DebugPrintln("hpsw init NOK");
+        }
         jsonstr = "{ \"hpsw\":\"on\" }";
       }
       else if ( value == "off" )

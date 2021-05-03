@@ -44,7 +44,6 @@ extern void  stop_webserver();
 extern long  getrssi(void);
 extern void  software_Reboot(int);
 extern bool  init_leds(void);
-extern bool  init_homepositionswitch(void);
 extern bool  init_pushbuttons(void);
 
 // ======================================================================
@@ -774,19 +773,26 @@ void ESP_Communication()
         enablestate = WorkString.toInt();
         if ( mySetupData->get_brdhpswpin() == -1)
         {
-          Comms_DebugPrintln("hpsw pin not set");
+          Comms_DebugPrintln("hpswpin is -1");
         }
         else
         {
           mySetupData->set_hpswitchenable(enablestate);
           if ( enablestate == 1 )
           {
-            init_homepositionswitch();
-            Comms_DebugPrintln("hpsw enabled");
+            Comms_DebugPrintln("hpsw state: enabled");
+            if( driverboard->init_homepositionswitch() == true)
+            {
+              Comms_DebugPrintln("hpsw init OK");
+            }
+            else
+            {
+              Comms_DebugPrintln("hpsw init NOK");              
+            }
           }
           else
           {
-            Comms_DebugPrintln("hpsw disabled");
+            Comms_DebugPrintln("hpsw state: disabled");
           }
         }
       }

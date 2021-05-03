@@ -1,7 +1,10 @@
 # myFP2ESP Firmware for ESP32 and ESP8266 myFP2ESP Controllers
 This is the firmware for the myFocuserPro2E ESP8266 and ESP32 focus controller projects on Sourceforge.
 
-(c) Robert Brown and Holger Manz, 2019-2021. All rights reserved.
+(c) Robert Brown 2019-2021
+(c) Holger Manz 2020-2021 
+(c) Paul Porters 2021. 
+All rights reserved.
 
 The source code is located in the **src** folder. 
 
@@ -149,9 +152,3 @@ Libraries
 You may need to turn 12V off to reprogram chip. Speed is 115200. Sometimes you might need to
 remove the chip from PCB before re-programming new firmware. Remember to remove WIFI library
 as instructed in PDF when programming ESP32.
-
-# ESP8266 ISSUES  
-One chip I have boots fine.  
-Another chip will not boot properly from 12V only. I need to plug in USB cable, press reset 
-then turn on 12V for it to boot correctly. ESP8266 Arduino lib 2.2.0 does not work with this 
-chip either.

@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222-2
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -299,29 +299,6 @@ extern void start_webserver(void);
 // FIRMWARE CODE START - CHANGE AT YOUR OWN PERIL
 // ======================================================================
 #include "comms.h"                                // do not change or move
-
-// check hpsw, switch uses internal pullup, pulled low when closed
-// if hpsw is closed = low, !() closed means return high and return false if open
-bool HPS_alert()
-{
-  if ( mySetupData->get_hpswitchenable() == 0)
-  {
-    // hpsw is not enabled
-    return false;
-  }
-  // check tmc2209 boards for stall guard
-  else if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
-  {
-    // default = switch open = false 
-    return (driverboard->checkStall());
-  }
-  // check HOMEPOSITIONSWITCH for all other boards
-  else 
-  {
-    // default = switch open = false , return false if open, true if closed
-    return ((bool)digitalRead(mySetupData->get_brdhpswpin()));
-  }
-}
 
 // ======================================================================
 // INFRARED REMOTE CONTROLLER - CHANGE AT YOUR OWN PERIL
@@ -841,18 +818,6 @@ long getrssi()
   return strength;
 }
 
-bool init_homepositionswitch()
-{
-  // Basic assumption rule: If associated pin is -1 then cannot set enable
-  Setup_DebugPrintln("init_homepositionswitch");
-  if ( mySetupData->get_hpswitchenable() == 1)
-  {
-    pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);
-    return true;
-  }
-  return false;
-}
-
 void heapmsg()
 {
   HDebugPrint("Heap = ");
@@ -1274,27 +1239,6 @@ void setup()
 
   delay(5);
 
-  // Setup home position switch input pin
-  // Basic assumption rule: If associated pin is -1 then cannot set enable
-  Setup_DebugPrint("hpsw:");
-  if ( mySetupData->get_hpswitchenable() == 1)
-  {
-    DebugPrintln("enabled");
-    bool result = init_homepositionswitch();
-    if ( result == true )
-    {
-      Setup_DebugPrintln("enabled");
-    }
-    else
-    {
-      Setup_DebugPrintln("disabled");
-    }
-  }
-  else
-  {
-    Setup_DebugPrintln("disabled");
-  }
-
   // Setup infra red remote
 #ifdef INFRAREDREMOTE
   // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -1688,7 +1632,7 @@ void loop()
         steppermotormove(DirOfTravel);                            // take 1 step and do not adjust position
         delayMicroseconds(mySetupData->get_brdmsdelay());         // ensure delay between steps
         backlash_count--;
-        if (HPS_alert() )                                         // check if home position sensor activated?
+        if (driverboard->hpsw_alert() )                           // check if home position sensor activated?
         {
           DebugPrintln("HPS_alert() during backlash move");
           varENTER_CRITICAL(&timerSemaphoreMux);
@@ -1709,7 +1653,7 @@ void loop()
       }
       else
       {
-        // MainStateMachine is State_Moving - timerSemaphore is false. is then caught by if(HPS_alert() ) and HPSW is processed
+        // MainStateMachine is State_Moving - timerSemaphore is false. is then caught by if(driverboard->hpsw_alert() ) and HPSW is processed
       }
       break;
 
@@ -1747,7 +1691,7 @@ void loop()
           MainStateMachine = State_DelayAfterMove;
         } // if ( halt_alert )
 
-        if ( HPS_alert() )                                // and we need to check if home position sensor activated?
+        if ( driverboard->hpsw_alert() )                  // and we need to check if home position sensor activated?
         {
           driverboard->end_move();                        // disable interrupt timer that moves motor
           if (driverboard->getposition() > 0)
@@ -1782,7 +1726,7 @@ void loop()
             DebugPrintln("go SetHomePosition");
             MainStateMachine = State_SetHomePosition;
           }
-        } // if (HPS_alert() )
+        } // if (driverboard->hpsw_alert() )
 
         // if the update position on display when moving is enabled, then update the display
         if ( mySetupData->get_oledupdateonmove() == 1)
@@ -1839,8 +1783,7 @@ void loop()
           }
           else
           {
-            //hpswstate = !(digitalRead(HPSWPIN));        // read state of HPSW
-            hpswstate = HPS_alert();                      // hps_alert returns true if closed, false = open
+            hpswstate = driverboard->hpsw_alert();        // hpsw_alert returns true if closed, false = open
           }
         }
         DebugPrint("HP Sw, Mov out steps:");

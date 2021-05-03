@@ -32,13 +32,15 @@ class DriverBoard
   public:
     DriverBoard(unsigned long);                 // constructor
     ~DriverBoard(void);                         // destructor
-    void initmove(bool, unsigned long);
-    void movemotor(byte, bool);
-    void halt(void);
+    void initmove(bool, unsigned long);         // prepare to move
+    void movemotor(byte, bool);                 // move the motor
+    void halt(void);                            // halt the motor
+    bool init_homepositionswitch(void);         // initialize home position switch
     void init_tmc2209(void);
     void init_tmc2225(void);
-    bool checkStall(void);
-    void end_move(void);
+    bool hpsw_alert(void);                      // check for HPSW
+    bool checkStall(void);                      // check for TMC2209 stall guard
+    void end_move(void);                        // end a move
     
     // getter
     unsigned long getposition(void);
@@ -66,7 +68,7 @@ class DriverBoard
     unsigned long focuserposition;                  // current focuser position
     int           inputPins[4];                     // input pins for driving stepper boards
     unsigned int  clock_frequency;                  // clock frequency used to generate 2us delay for ESP32 160Mhz/240Mhz
-    int           boardnum;
+    int           boardnum;                
 };
 
 #endif

@@ -52,7 +52,6 @@
 extern SetupData   *mySetupData;
 extern DriverBoard *driverboard;
 extern int  DefaultBoardNumber;
-extern bool HPS_alert(void);
 
 extern volatile bool timerSemaphore;
 extern volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
@@ -68,7 +67,7 @@ extern portMUX_TYPE  stepcountMux;
 // ======================================================================
 // Data
 // ======================================================================
-bool stepdir;
+bool stepdir;                                 // direction of steps to move
 
 
 // ======================================================================
@@ -83,12 +82,14 @@ hw_timer_t * myfp2timer = NULL;               // use a unique name for the timer
 #endif
 
 /*
-  stepcount   HPS_altert    stepdir           action
+  if (stepcount  && !(driverboard->hpsw_alert() && stepdir == moving_in))
+
+  stepcount   stepdir        hpsw_alert     action
   ----------------------------------------------------
     0           x             x             stop
-    >0        false           x             step
-    !0        true        moving_in         stop
-    !0        true        moving_out        step
+    >0          moving_out    x             step
+    >0          moving_in     False         step
+    >0          moving_in     True          stop
 */
 
 inline void asm2uS()  __attribute__((always_inline));
@@ -98,8 +99,6 @@ inline void asm2uS()  __attribute__((always_inline));
 // To get to 2uS for ESP8266 we will need 80 nop instructions
 // On esp32 with 240mHz clock a nop takes ? 1/240000000 second or 0.000000004166 of a second
 // To get to 2us for ESP32 we will need 240 nop instructions
-// TODO
-// I need to finish code with clock_frequency and half asm1uS calls if using a clock frequency of 120MHZ on ESP32
 
 inline void asm1uS()                  // 1uS on ESP8266, 1/3uS on ESP32
 {
@@ -152,25 +151,25 @@ inline void asm1uS()                  // 1uS on ESP8266, 1/3uS on ESP32
 #if defined(ESP8266)
 ICACHE_RAM_ATTR void onTimer()
 {
-  static bool mjob = false;      // motor job is running or not
-  if (stepcount  && !(HPS_alert() && stepdir == moving_in))
+  static bool mjob = false;                                     // motor job is running or not
+  if (stepcount  && !(driverboard->hpsw_alert() && stepdir == moving_in))
   {
-    driverboard->movemotor(stepdir, true);
+    driverboard->movemotor(stepdir, true);                      // move motor in direction and adjust position
     varENTER_CRITICAL(&stepcountMux);
-    stepcount--;
+    stepcount--;                                                // decrement steps to move
     varEXIT_CRITICAL(&stepcountMux);
-    mjob = true;                  // mark a running job
+    mjob = true;                                                // mark a running job
   }
   else
   {
     if (mjob == true)
     {
       varENTER_CRITICAL(&stepcountMux);
-      stepcount = 0;              // just in case HPS_alert was fired up
+      stepcount = 0;                                            // just in case hps_alert was fired up
       varEXIT_CRITICAL(&stepcountMux);
-      mjob = false;               // wait, and do nothing
+      mjob = false;                                             // wait, and do nothing
       varENTER_CRITICAL(&timerSemaphoreMux);
-      timerSemaphore = true;      // signal move complere
+      timerSemaphore = true;                                    // signal move complere
       varEXIT_CRITICAL(&timerSemaphoreMux);
     }
   }
@@ -178,21 +177,21 @@ ICACHE_RAM_ATTR void onTimer()
 #else
 void IRAM_ATTR onTimer()
 {
-  static bool mjob = false;      // motor job is running or not
-  if (stepcount  && !(HPS_alert() && stepdir == moving_in))
+  static bool mjob = false;                                     // motor job is running or not
+  if (stepcount  && !(driverboard->hpsw_alert() && stepdir == moving_in))
   {
     driverboard->movemotor(stepdir, true);
     varENTER_CRITICAL(&stepcountMux);
     stepcount--;
     varEXIT_CRITICAL(&stepcountMux);
-    mjob = true;                  // mark a running job
+    mjob = true;                                                // mark a running job
   }
   else
   {
     if (mjob == true)
     {
       varENTER_CRITICAL(&stepcountMux);
-      stepcount = 0;              // just in case HPS_alert was fired up
+      stepcount = 0;              // just in case hps_alert was fired up
       varEXIT_CRITICAL(&stepcountMux);
       mjob = false;               // wait, and do nothing
       varENTER_CRITICAL(&timerSemaphoreMux);
@@ -213,15 +212,15 @@ DriverBoard::DriverBoard(unsigned long startposition)
     // do nothing
 #else
     // esp32
-    clock_frequency = ESP.getCpuFreqMHz();    // returns the CPU frequency in MHz as an unsigned 8-bit integer
+    clock_frequency = ESP.getCpuFreqMHz();                      // returns the CPU frequency in MHz as an unsigned 8-bit integer
     //DebugPrint("Clock Freq: ");
     //DebugPrintln(clock_frequency);
 #endif
 
-    varENTER_CRITICAL(&timerSemaphoreMux);   // make sure timersemaphore is false when driverboard created
+    varENTER_CRITICAL(&timerSemaphoreMux);                      // make sure timersemaphore is false when driverboard created
     timerSemaphore = false;
     varEXIT_CRITICAL(&timerSemaphoreMux);
-    varENTER_CRITICAL(&stepcountMux);        // make sure stepcount is 0 when driverboard created
+    varENTER_CRITICAL(&stepcountMux);                           // make sure stepcount is 0 when driverboard created
     stepcount = 0;
     varEXIT_CRITICAL(&stepcountMux);
 
@@ -348,12 +347,11 @@ DriverBoard::DriverBoard(unsigned long startposition)
       pinMode(mySetupData->get_brdenablepin(), OUTPUT);
       pinMode(mySetupData->get_brddirpin(), OUTPUT);
       pinMode(mySetupData->get_brdsteppin(), OUTPUT);
-      digitalWrite(mySetupData->get_brdenablepin(), 1);     // high disables the driver chip
+      digitalWrite(mySetupData->get_brdenablepin(), 1);         // high disables the driver chip
       digitalWrite(mySetupData->get_brdsteppin(), 0);
-      pinMode(mySetupData->get_brdboardpins(0), OUTPUT);    // ms1
-      pinMode(mySetupData->get_brdboardpins(1), OUTPUT);    // ms2
-      // set step mode handled by init_tmc2225
-      this->init_TMC2225();
+      pinMode(mySetupData->get_brdboardpins(0), OUTPUT);        // ms1
+      pinMode(mySetupData->get_brdboardpins(1), OUTPUT);        // ms2
+      this->init_TMC2225();                                     // set step mode handled by init_tmc2225
 #endif
     }
     else if ( boardnum == PRO2ESP32TMC2209 || boardnum == PRO2ESP32TMC2209P )
@@ -365,25 +363,29 @@ DriverBoard::DriverBoard(unsigned long startposition)
       pinMode(mySetupData->get_brdsteppin(), OUTPUT);
       digitalWrite(mySetupData->get_brdenablepin(), 1);         // high disables the driver chip
       digitalWrite(mySetupData->get_brdsteppin(), 0);
-      pinMode(mySetupData->get_brdboardpins(0), OUTPUT);    // ms1
-      pinMode(mySetupData->get_brdboardpins(1), OUTPUT);    // ms2
-      // diag
-      // the init of this pin handled by the driverboard library
-      // set step mode handled by init_tmc2209
-      this->init_tmc2209();
+      pinMode(mySetupData->get_brdboardpins(0), OUTPUT);        // ms1
+      pinMode(mySetupData->get_brdboardpins(1), OUTPUT);        // ms2
+      this->init_tmc2209();                                     // set step mode handled by init_tmc2209()
 #endif // #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
     }
-    // set default focuser position - ensure it is same as mySetupData when loaded
-    this->focuserposition = startposition;
+    // For all boards do the following
+    this->focuserposition = startposition;                      // set default focuser position to same as mySetupData
+    if ( init_homepositionswitch() == true )                    // initialize home position switch
+    {
+      Board_DebugPrintln("hpswpin enabled");
+    }
+    else
+    {
+      Board_DebugPrintln("hpswpin NOT enabled");
+    }
   } while (0);
 }
 
 // destructor
 DriverBoard::~DriverBoard()
 {
-  if ( boardnum == PRO2EULN2003      || boardnum == PRO2ESP32ULN2003  \
-       || boardnum == PRO2EL298N     || boardnum == PRO2ESP32L298N    \
-       || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI \
+  if ( boardnum    == PRO2EULN2003   || boardnum == PRO2ESP32ULN2003 || boardnum == PRO2EL298N  \
+       || boardnum == PRO2ESP32L298N || boardnum == PRO2EL293DMINI   || boardnum == PRO2ESP32L293DMINI \
        || boardnum == PRO2EL9110S    || boardnum == PRO2ESP32L9110S)
   {
     delete myhstepper;
@@ -400,39 +402,53 @@ DriverBoard::~DriverBoard()
   }
 }
 
+bool DriverBoard::init_homepositionswitch(void)
+{
+  // Basic assumption rule: If associated pin is -1 then cannot set enable
+  Board_DebugPrintln("init_homepositionswitch");
+  if ( mySetupData->get_hpswitchenable() == 1)
+  {
+    pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);       // initialize the pin as 
+    return true;
+  }
+  return false;
+}
+
 void DriverBoard::init_tmc2209(void)
 {
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
-  mytmcstepper = new TMC2209Stepper(&SERIAL_PORT2, R_SENSE, DRIVER_ADDRESS);     // Specify the serial3 interface to the tmc2225
+  // Specify the serial3 interface to the tmc2225
+  mytmcstepper = new TMC2209Stepper(&SERIAL_PORT2, R_SENSE, DRIVER_ADDRESS);
   Serial2.begin(TMC2209SPEED);
   mytmcstepper->begin();
-  mytmcstepper->pdn_disable(1);                                   // Use PDN/UART pin for communication
-  mytmcstepper->mstep_reg_select(1);                              // Adjust stepMode from the registers
-  mytmcstepper->I_scale_analog(0);                                // Adjust current from the registers
-  mytmcstepper->toff(TOFF_VALUE);                                 // use TMC22xx Calculations sheet to get these
+  mytmcstepper->pdn_disable(1);                                 // Use PDN/UART pin for communication
+  mytmcstepper->mstep_reg_select(1);                            // Adjust stepMode from the registers
+  mytmcstepper->I_scale_analog(0);                              // Adjust current from the registers
+  mytmcstepper->toff(TOFF_VALUE);                               // use TMC22xx Calculations sheet to get these
   mytmcstepper->tbl(2);
-  mytmcstepper->rms_current(mySetupData->get_tmc2209current());   // set driver current mA
-  int sm = mySetupData->get_brdstepmode();                        // stepmode set according to mySetupData->get_brdstepmode()
-  sm = (sm == STEP1) ? 0 : sm;                                    // handle full steps
-  mytmcstepper->microsteps(sm);                                   // set micro stepping
+  mytmcstepper->rms_current(mySetupData->get_tmc2209current()); // set driver current mA
+  int sm = mySetupData->get_brdstepmode();                      // stepmode set according to mySetupData->get_brdstepmode()
+  sm = (sm == STEP1) ? 0 : sm;                                  // handle full steps
+  mytmcstepper->microsteps(sm);                                 // set micro stepping
 
   // stall guard settings
   mytmcstepper->semin(0);
   // lower threshold velocity for switching on smart energy CoolStep and StallGuard to DIAG output
-  mytmcstepper->TCOOLTHRS(0xFFFFF);                               // 20bit max
-  mytmcstepper->hysteresis_end(0);                                // use TMC22xx Calculations sheet to get these
-  mytmcstepper->hysteresis_start(0);                              // use TMC22xx Calculations sheet to get these
+  mytmcstepper->TCOOLTHRS(0xFFFFF);                             // 20bit max
+  mytmcstepper->hysteresis_end(0);                              // use TMC22xx Calculations sheet to get these
+  mytmcstepper->hysteresis_start(0);                            // use TMC22xx Calculations sheet to get these
   // StallGuard4 threshold [0... 255] level for stall detection. It compensates for
   // motor specific characteristics and controls sensitivity. A higher value gives a higher
   // sensitivity. A higher value makes StallGuard4 more sensitive and requires less torque to
   // indicate a stall. The double of this value is compared to SG_RESULT.
   // The stall output becomes active if SG_RESULT falls below this value.
   mytmcstepper->SGTHRS(mySetupData->get_stallguard());
-  Board_DebugPrint("TMC2209 Status: "); Board_DebugPrintln( driver.test_connection() == 0 ? "OK" : "NOT OK" );
-  Board_DebugPrint("Motor is "); Board_DebugPrintln(digitalRead(mySetupData->get_brdenablepin()) ? "DISABLED" : "ENABLED");
-  Board_DebugPrint("stepMode is "); Board_DebugPrintln(driver.microsteps());
-  // setup diag pin, brdpins[2] = DIAG = 4
-  pinMode(mySetupData->get_brdboardpins(2), INPUT_PULLUP);
+  Board_DebugPrint("TMC2209 Status: ");
+  Board_DebugPrintln( driver.test_connection() == 0 ? "OK" : "NOT OK" );
+  Board_DebugPrint("Motor is ");
+  Board_DebugPrintln(digitalRead(mySetupData->get_brdenablepin()) ? "DISABLED" : "ENABLED");
+  Board_DebugPrint("stepMode is ");
+  Board_DebugPrintln(driver.microsteps());
 #endif // #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
 }
 
@@ -452,21 +468,48 @@ void DriverBoard::init_tmc2225(void)
   mytmcstepper->microsteps(sm);                                   // step mode = 1/4 - default specified in boardfile.jsn
   mytmcstepper->hysteresis_end(0);
   mytmcstepper->hysteresis_start(0);
-  Board_DebugPrint("TMC2225 Status: "); 
+  Board_DebugPrint("TMC2225 Status: ");
   Board_DebugPrintln( driver.test_connection() == 0 ? "OK" : "NOT OK" );
-  Board_DebugPrint("Motor is "); 
+  Board_DebugPrint("Motor is ");
   Board_DebugPrintln(digitalRead(mySetupData->get_brdenablepin()) ? "DISABLED" : "ENABLED");
-  Board_DebugPrint("stepMode is "); 
+  Board_DebugPrint("stepMode is ");
   Board_DebugPrintln(driver.microsteps());
 #endif // #if (DRVBRD == PRO2ESP32TMC2225)
 }
 
-// tmc2209 stall guard check code - return true if stall guard detected on DIAG pin
-bool DriverBoard::checkStall(void)
+// check hpsw state - switch or stall guard
+// switch uses internal pullup, if hpsw is closed = low, so we need to invert state to return high when switch is closed
+// if tmc2209 check stall guard
+// if stall guard high then stall guard detected on DIAG pin - HIGH = activated
+// hps_alert must return high if hpsw or stall guard is activated
+bool DriverBoard::hpsw_alert(void)
 {
-  // avoid using debug statements becase this is called for every step
-  // hpsw closed = true, hpsw open = false
-  return ( (bool) digitalRead(mySetupData->get_brdboardpins(2)) );
+  // if moving out OR hpsw is not enabled then return
+  if ( stepdir == moving_out )
+  {
+    return false;
+  }
+  // if hpsw is not enabled then return false
+  if ( mySetupData->get_hpswitchenable() == 0 )
+  {
+    return false;
+  }
+  // hpsw is enabled so check it
+  else
+  {
+    // check tmc2209 boards for stall guard
+    if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
+    {
+      // DIAG pin, High if stall guard is detected
+      return ( (bool) digitalRead(mySetupData->get_brdhpswpin()) );
+    }
+    // check physical HOMEPOSITIONSWITCH for all other boards
+    else
+    {
+      // switch uses internal pullup, if hpsw is closed = low, so we need to invert state to return high when switch is closed
+      return !( (bool)digitalRead(mySetupData->get_brdhpswpin()) );
+    }
+  }
 }
 
 // ======================================================================
@@ -608,13 +651,14 @@ void DriverBoard::movemotor(byte ddir, bool updatefpos)
   //DebugPrint("movemotor() : ");
   //DebugPrintln(dir);
   // only ESP32 boards have in out leds
+  stepdir = ddir;
   if (boardnum == PRO2ESP32ULN2003    || boardnum == PRO2ESP32L298N   || boardnum == PRO2ESP32L293DMINI || boardnum == PRO2ESP32L9110S \
       || boardnum == PRO2ESP32DRV8825 || boardnum == PRO2ESP32TMC2225 || boardnum == PRO2ESP32TMC2209   || boardnum == PRO2ESP32TMC2209P )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
     if ( mySetupData->get_inoutledstate() == 1)
     {
-      ( ddir == moving_in ) ? digitalWrite(mySetupData->get_brdinledpin(), 1) : digitalWrite(mySetupData->get_brdoutledpin(), 1);
+      ( stepdir == moving_in ) ? digitalWrite(mySetupData->get_brdinledpin(), 1) : digitalWrite(mySetupData->get_brdoutledpin(), 1);
     }
   }
 
@@ -624,23 +668,23 @@ void DriverBoard::movemotor(byte ddir, bool updatefpos)
   {
     if ( mySetupData->get_reversedirection() == 1 )
     {
-      digitalWrite(mySetupData->get_brddirpin(), !ddir);        // set Direction of travel
+      digitalWrite(mySetupData->get_brddirpin(), !stepdir);     // set Direction of travel
     }
     else
     {
-      digitalWrite(mySetupData->get_brddirpin(), ddir);         // set Direction of travel
+      digitalWrite(mySetupData->get_brddirpin(), stepdir);      // set Direction of travel
     }
     digitalWrite(mySetupData->get_brdenablepin(), 0);           // Enable Motor Driver
     digitalWrite(mySetupData->get_brdsteppin(), 1);             // Step pin on
 #if defined(ESP8266)
-    asm1uS();                             // ESP8266 must be 2uS delay for DRV8825 chip
+    asm1uS();                                                   // ESP8266 must be 2uS delay for DRV8825 chip
     asm1uS();
     asm1uS();
 #else
     // ESP32
     if ( clock_frequency == 160 )
     {
-      asm1uS();                           // ESP32 must be 2uS delay for DRV8825 chip
+      asm1uS();                                                 // ESP32 must be 2uS delay for DRV8825 chip
       asm1uS();
       asm1uS();
       asm1uS();
@@ -648,7 +692,7 @@ void DriverBoard::movemotor(byte ddir, bool updatefpos)
     else
     {
       // assume clock frequency is 240mHz
-      asm1uS();                             // ESP32 must be 2uS delay for DRV8825 chip
+      asm1uS();                                                 // ESP32 must be 2uS delay for DRV8825 chip
       asm1uS();
       asm1uS();
       asm1uS();
@@ -656,13 +700,12 @@ void DriverBoard::movemotor(byte ddir, bool updatefpos)
       asm1uS();
     }
 #endif // #if defined(ESP8266)
-    digitalWrite(mySetupData->get_brdsteppin(), 0);               // Step pin off
+    digitalWrite(mySetupData->get_brdsteppin(), 0);             // Step pin off
   }
-
   else if ( boardnum    == PRO2EULN2003   || boardnum == PRO2ESP32ULN2003   || boardnum == PRO2EL298N  || boardnum == PRO2ESP32L298N \
             || boardnum == PRO2EL293DMINI || boardnum == PRO2ESP32L293DMINI || boardnum == PRO2EL9110S || boardnum == PRO2ESP32L9110S )
   {
-    if ( ddir == moving_in )
+    if ( stepdir == moving_in )
     {
       if ( mySetupData->get_reversedirection() == 1 )
       {
@@ -689,7 +732,7 @@ void DriverBoard::movemotor(byte ddir, bool updatefpos)
   }
   else if ( boardnum == PRO2EL293DNEMA || boardnum == PRO2EL293D28BYJ48 )
   {
-    if ( ddir == moving_in )
+    if ( stepdir == moving_in )
     {
       if ( mySetupData->get_reversedirection() == 1 )
       {
@@ -722,7 +765,7 @@ void DriverBoard::movemotor(byte ddir, bool updatefpos)
     // Basic assumption rule: If associated pin is -1 then cannot set enable
     if ( mySetupData->get_inoutledstate() == 1)
     {
-      ( ddir == moving_in ) ? digitalWrite(mySetupData->get_brdinledpin(), 0) : digitalWrite(mySetupData->get_brdoutledpin(), 0);
+      ( stepdir == moving_in ) ? digitalWrite(mySetupData->get_brdinledpin(), 0) : digitalWrite(mySetupData->get_brdoutledpin(), 0);
     }
   }
   // update focuser position
@@ -748,17 +791,23 @@ void DriverBoard::end_move(void)
 
 void DriverBoard::initmove(bool mdir, unsigned long steps)
 {
+  stepdir = mdir;
   varENTER_CRITICAL(&stepcountMux);        // make sure stepcount is 0 when driverboard created
   stepcount = steps;
   varEXIT_CRITICAL(&stepcountMux);
-  stepdir = mdir;
   DriverBoard::enablemotor();
   varENTER_CRITICAL(&timerSemaphoreMux);
   timerSemaphore = false;
   varEXIT_CRITICAL(&timerSemaphoreMux);
 
-  Board_DebugPrint("initmove: "); Board_DebugPrint(mdir); Board_DebugPrint(" : "); Board_DebugPrint(steps); Board_DebugPrint(" : "); 
-  Board_DebugPrint(motorspeed); Board_DebugPrint(" : "); Board_DebugPrintln(leds);
+  Board_DebugPrint("initmove: ");
+  Board_DebugPrint(mdir);
+  Board_DebugPrint(" : ");
+  Board_DebugPrint(steps);
+  Board_DebugPrint(" : ");
+  Board_DebugPrint(motorspeed);
+  Board_DebugPrint(" : ");
+  Board_DebugPrintln(leds);
 
 #if defined(ESP8266)
   // ESP8266
@@ -822,15 +871,15 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
     }
   }
 
-  Board_DebugPrint("cursp: "); 
+  Board_DebugPrint("cursp: ");
   Board_DebugPrintln(curspd);
 
   // for TMC2209 stall guard setting varies with speed seeting so we need to adjust for best results
   // handle different speeds
   byte sgval = mySetupData->get_stallguard();
-  Board_DebugPrint("stallguard: "); 
+  Board_DebugPrint("stallguard: ");
   Board_DebugPrintln(sgval);
-  Board_DebugPrint("motorspeed: "); 
+  Board_DebugPrint("motorspeed: ");
   Board_DebugPrintln(mySetupData->get_motorspeed());
   switch ( mySetupData->get_motorspeed() )
   {

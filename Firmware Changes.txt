@@ -1,9 +1,17 @@
 ==============================================================
 myFP2ESP Focus Controller [ESP8266/ESP32]
-© Copyright Robert Brown 2014-2021. All Rights Reserved.
-© Copyright Holger M, 2019-2021. All Rights Reserved.
-© Copyright Paul P, 2021. All Rights Reserved.
+(c) Copyright Robert Brown 2014-2021. All Rights Reserved.
+(c) Copyright Holger M, 2019-2021. All Rights Reserved.
+(c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
+
+222-2
+// Move the init_homepositionswitch() code from main ino file to myBoards.cpp
+// Init the homeposition switch pins when driverboard constructor is called
+// Change code in comms.h myBoards.cpp ManagementServer.cpp to use new hpsw code in myBoards
+
+222-1
+// Fix for TMC2209 hpsw detection
 
 222
 // Fix for HPSW code
