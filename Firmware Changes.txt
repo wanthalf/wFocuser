@@ -5,6 +5,10 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+222-3
+// Fix for Joystick2 SW routine
+// Add additional Joystick test programs
+
 222-2
 // Move the init_homepositionswitch() code from main ino file to myBoards.cpp
 // Init the homeposition switch pins when driverboard constructor is called

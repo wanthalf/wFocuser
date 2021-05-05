@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222-2
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222-3
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -425,7 +425,7 @@ void init_irremote(void)
 #include "joystick.h"
 
 #ifdef JOYSTICK2
-volatile int joy2swstate;
+volatile bool joy2swstate = false;
 #endif
 
 // 2-AXIS Analog Thumb Joystick for Arduino
@@ -467,14 +467,15 @@ void init_joystick1(void)
   // for future use
   pinMode(JOYINOUTPIN, INPUT);
   pinMode(JOYOTHERPIN, INPUT);
+  
 }
 #endif // #ifdef JOYSTICK1
 
 // Keyes KY-023 PS2 style 2-Axis Joystick
 #ifdef JOYSTICK2
 void IRAM_ATTR joystick2sw_isr()
-{
-  joy2swstate = !(digitalRead(JOYOTHERPIN));      // joy2swstate will be 1 when switch is pressed
+{                                                 // an interrupt means switch has been pressed
+  joy2swstate = true;                             // flag joy2swstate set to 1 indicates switch is pressed
 }
 
 void update_joystick2(void)
@@ -506,7 +507,7 @@ void update_joystick2(void)
     DebugPrint(joyval);
   }
 
-  if ( joy2swstate == 1)                          // switch is pressed
+  if ( joy2swstate == true)                     // switch is pressed
   {
     // user defined code here
     // could be a halt
@@ -514,7 +515,7 @@ void update_joystick2(void)
     // could be a preset
     // insert code here
 
-    joy2swstate = 0;                              // finally reset joystick switch state
+    joy2swstate = false;                        // finally reset joystick switch state in update_joystick2()
   }
 }
 
@@ -522,9 +523,9 @@ void init_joystick2(void)
 {
   pinMode(JOYINOUTPIN, INPUT);
   pinMode(JOYOTHERPIN, INPUT_PULLUP);
-  // setup interrupt, falling, when switch is pressed, pin falls from high to low
+  // setup interrupt, falling edge, pin state = HIGH and falls to GND (0) when pressed
   attachInterrupt(JOYOTHERPIN, joystick2sw_isr, FALLING);
-  joy2swstate = 0;
+  joy2swstate = false;                        // after interrupt is processed, the joy2swtate is reset to 0
 }
 #endif // #ifdef JOYSTICK2
 

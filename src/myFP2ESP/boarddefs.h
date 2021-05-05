@@ -81,7 +81,7 @@
 #define PRO2ESP32L298N        46
 #define PRO2ESP32L293DMINI    47          // uses PCB layout for ULN2003
 #define PRO2ESP32L9110S       48          // uses PCB layout for ULN2003
-#define PRO2ESP32R3WEMOS      49          // https://www.ebay.com/itm/R3-Wemos-UNO-D1-R32-ESP32-
+#define PRO2ESP32R3WEMOS      49          // https://www.ebay.com/itm/R3-Wemos-UNO-D1-R32-ESP32-WIFI-Bluetooth-CH340-Development-Board-For-Arduino/264166013552 
 #define WEMOSDRV8825H         50          // this is for Holger
 #define PRO2ESP32TMC2225      56
 #define PRO2ESP32TMC2209      57

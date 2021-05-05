@@ -45,7 +45,7 @@
 
 // On bootup following a controller firmware update, a default driver board file 
 // is created based on your board selection above.
-// In the MANAGEMENT server you can edit the board pin numbers and save the config.
+// In the MANAGEMENT server you can edit the board pin numbers and save the config [only if you know what you are doing].
 
 // ======================================================================
 // 2: SPECIFY FIXEDSTEPMODE
@@ -104,7 +104,7 @@
 
 // To enable the Keyes KY-023 PS2 2-Axis Joystick [ESP32 only],
 // uncomment the next line
-//#define JOYSTICK2 	2
+#define JOYSTICK2 	2
 
 // To enable the Infrared remote controller [ESP32 only], uncomment the next line
 //#define INFRAREDREMOTE
