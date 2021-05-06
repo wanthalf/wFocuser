@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222-3
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222-5
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -432,31 +432,29 @@ volatile bool joy2swstate = false;
 #ifdef JOYSTICK1
 void update_joystick1(void)
 {
-  int joyval;
-
+  static int joyval;
+  static long newpos;
   DebugPrintln("update joystick");
   joyval = analogRead(JOYINOUTPIN);
   DebugPrint("Raw joyval:");
   DebugPrintln(joyval);
   if ( joyval < (JZEROPOINT - JTHRESHOLD) )
   {
-    ftargetPosition--;                            // move IN
+    newpos = ftargetPosition - 1;
+    newpos = (newpos < 0 ) ? 0 : newpos;
+    ftargetPosition = newpos;
     DebugPrint("X IN joyval:");
     DebugPrint(joyval);
   }
   else if ( joyval > (JZEROPOINT + JTHRESHOLD) )
   {
-    ftargetPosition++;                            // move OUT
-    if ( ftargetPosition > mySetupData->get_maxstep())
-    {
-      ftargetPosition = mySetupData->get_maxstep();
-    }
-    joyval = joyval - (JZEROPOINT + JTHRESHOLD);
-    if ( joyval < 0 )
-    {
-      joyval = JZEROPOINT - joyval;
-    }
-    DebugPrint(JOYSTICKXOUTVALSTR);
+    newpos = ftargetPosition + 1;
+    // an unsigned long range is 0 to 4,294,967,295
+    // when an unsigned long decrements from 0-1 it goes to largest +ve value, ie 4,294,967,295
+    // which would in likely be much much greater than maxstep
+    newpos = (newpos > (long) mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : newpos;
+    ftargetPosition = newpos;
+    DebugPrint("X OUT joyval:");
     DebugPrint(joyval);
   }
 }
@@ -464,50 +462,46 @@ void update_joystick1(void)
 void init_joystick1(void)
 {
   // perform any inititalisations necessary
-  // for future use
   pinMode(JOYINOUTPIN, INPUT);
-  pinMode(JOYOTHERPIN, INPUT);
-  
+  //pinMode(JOYOTHERPIN, INPUT);      // otherpin is not used in Joystick1
 }
 #endif // #ifdef JOYSTICK1
 
 // Keyes KY-023 PS2 style 2-Axis Joystick
 #ifdef JOYSTICK2
 void IRAM_ATTR joystick2sw_isr()
-{                                                 // an interrupt means switch has been pressed
+{ // an interrupt means switch has been pressed
   joy2swstate = true;                             // flag joy2swstate set to 1 indicates switch is pressed
 }
 
 void update_joystick2(void)
 {
-  int joyval;
-
+  static int joyval;
+  static long newpos;
   joyval = analogRead(JOYINOUTPIN);               // range is 0 - 4095, midpoint is 2047
   DebugPrint("Raw joyval:");
   DebugPrintln(joyval);
   if ( joyval < (JZEROPOINT - JTHRESHOLD) )
   {
-    ftargetPosition--;                            // move IN
+    newpos = ftargetPosition - 1;
+    newpos = (newpos < 0 ) ? 0 : newpos;
+    ftargetPosition = newpos;
     DebugPrint("X IN joyval:");
     DebugPrint(joyval);
   }
   else if ( joyval > (JZEROPOINT + JTHRESHOLD) )
   {
-    ftargetPosition++;                            // move OUT
-    if ( ftargetPosition > mySetupData->get_maxstep())
-    {
-      ftargetPosition = mySetupData->get_maxstep();
-    }
-    joyval = joyval - (JZEROPOINT + JTHRESHOLD);
-    if ( joyval < 0 )
-    {
-      joyval = JZEROPOINT - joyval;
-    }
+    newpos = ftargetPosition + 1;
+    // an unsigned long range is 0 to 4,294,967,295
+    // when an unsigned long decrements from 0-1 it goes to largest +ve value, ie 4,294,967,295
+    // which would in likely be much much greater than maxstep
+    newpos = (newpos > (long) mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : newpos;
+    ftargetPosition = newpos;
     DebugPrint("X OUT joyval:");
     DebugPrint(joyval);
   }
 
-  if ( joy2swstate == true)                     // switch is pressed
+  if ( joy2swstate == true)                         // switch is pressed
   {
     // user defined code here
     // could be a halt
@@ -522,10 +516,10 @@ void update_joystick2(void)
 void init_joystick2(void)
 {
   pinMode(JOYINOUTPIN, INPUT);
-  pinMode(JOYOTHERPIN, INPUT_PULLUP);
+  pinMode(JOYOTHERPIN, INPUT);                  // otherpin is the switch botton on Joystick2
   // setup interrupt, falling edge, pin state = HIGH and falls to GND (0) when pressed
   attachInterrupt(JOYOTHERPIN, joystick2sw_isr, FALLING);
-  joy2swstate = false;                        // after interrupt is processed, the joy2swtate is reset to 0
+  joy2swstate = false;                          // after interrupt is processed, the joy2swtate is reset to 0
 }
 #endif // #ifdef JOYSTICK2
 
@@ -561,13 +555,13 @@ bool init_pushbuttons(void)
 
 void update_pushbuttons(void)
 {
+  static long newpos;
   //DebugPrint("updatePB: ");
   if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
     if ( mySetupData->get_pbenable() == 1)
     {
-      long newpos;
       // PB are active high - pins float low if unconnected
       if ( digitalRead(mySetupData->get_brdpb1pin()) == 1 )                // is pushbutton pressed?
       {
@@ -1804,7 +1798,7 @@ void loop()
           }
         }
       } //  if( mySetupData->get_homepositionswitch() == 1)
-      
+
       MainStateMachine = State_DelayAfterMove;
       TimeStampDelayAfterMove = millis();
       DebugPrintln("go DelayAfterMove");

@@ -5,6 +5,12 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+222-5
+// Update for joystick2
+
+222-4
+// Update for joystick2
+
 222-3
 // Fix for Joystick2 SW routine
 // Add additional Joystick test programs
