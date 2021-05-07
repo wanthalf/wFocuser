@@ -5,6 +5,9 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+222-7
+// add test program (thanks Paul) to do automatic calibration of joystick values
+
 222-6
 // fix for push button code - init_pushbuttons() and update_pushbuttons() as reported by Sven
 
