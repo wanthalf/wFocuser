@@ -104,7 +104,7 @@
 
 // To enable the Keyes KY-023 PS2 2-Axis Joystick [ESP32 only],
 // uncomment the next line
-#define JOYSTICK2 	2
+//#define JOYSTICK2 	2
 
 // To enable the Infrared remote controller [ESP32 only], uncomment the next line
 //#define INFRAREDREMOTE

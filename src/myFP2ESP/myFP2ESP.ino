@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222-5
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222-6
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -531,7 +531,7 @@ void init_joystick2(void)
 bool init_pushbuttons(void)
 {
   //Setup_DebugPrint("initPB: ");
-  if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
+  if ( (mySetupData->get_brdpb1pin() != -1) && (mySetupData->get_brdpb2pin() != -1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
     if ( mySetupData->get_pbenable() == 1)
@@ -557,13 +557,17 @@ void update_pushbuttons(void)
 {
   static long newpos;
   //DebugPrint("updatePB: ");
-  if ( (mySetupData->get_brdpb1pin() == 1) && (mySetupData->get_brdpb2pin() == 1) )
+  // check to see if the pins for pb-in and pb-out are defined in the board configuration file
+  // Any pin - if not used in a board configuration, it will be set to -1 in the board configuration file
+  // if the pin is defined for this board - then getbrdpin returns board pin number, if not used then getbrdpin returns -1
+  if ( (mySetupData->get_brdpb1pin() != -1) && (mySetupData->get_brdpb2pin() != -1) )
   {
-    // Basic assumption rule: If associated pin is -1 then cannot set enable
+    // check to see if push buttons are enabled
     if ( mySetupData->get_pbenable() == 1)
     {
-      // PB are active high - pins float low if unconnected
-      if ( digitalRead(mySetupData->get_brdpb1pin()) == 1 )                // is pushbutton pressed?
+      // PB are active high - pins are low by virtue of oull down resistors through J16 and J17 jumpers
+      // read from the board pin number, and compare the return pin value - if 1 then button is pressed
+      if ( digitalRead(mySetupData->get_brdpb1pin()) == 1 ) 
       {
         newpos = ftargetPosition - 1;
         newpos = (newpos < 0 ) ? 0 : newpos;
