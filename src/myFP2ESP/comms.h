@@ -178,14 +178,7 @@ void ESP_Communication()
       SendPaket('E', "OK");
       break;
     case 3: // get firmware version
-      if ( mySetupData->get_indi() == 1)
-      {
-        SendPaket('F', "291");
-      }
-      else
-      {
-        SendPaket('F', programVersion);
-      }
+      SendPaket('F', programVersion);
       break;
     case 4: // get firmware name
       {
@@ -781,13 +774,13 @@ void ESP_Communication()
           if ( enablestate == 1 )
           {
             Comms_DebugPrintln("hpsw state: enabled");
-            if( driverboard->init_homepositionswitch() == true)
+            if ( driverboard->init_homepositionswitch() == true)
             {
               Comms_DebugPrintln("hpsw init OK");
             }
             else
             {
-              Comms_DebugPrintln("hpsw init NOK");              
+              Comms_DebugPrintln("hpsw init NOK");
             }
           }
           else

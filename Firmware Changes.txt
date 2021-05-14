@@ -5,6 +5,14 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+223
+// Fix for Infra-red remote
+
+222-8
+// Add help file
+// Fix init of Serial.begin() 
+// Fix for INDI (no longer require a revision check) in comms.h
+
 222-7
 // add test program (thanks Paul) to do automatic calibration of joystick values
 

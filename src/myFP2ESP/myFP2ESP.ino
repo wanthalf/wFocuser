@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 222-7
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 223
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -273,6 +273,7 @@ bool    tcpipserverstate;
 bool    otaupdatestate;
 bool    duckdnsstate;
 bool    displaystate;                       // true if a display was found
+bool    irremotestate;
 bool    reboot;                             // flag used to indicate a reboot has occurred
 int     tprobe1;                            // true if a temperature probe was detected
 float   lasttemp;                           // last valid temp reading
@@ -308,113 +309,130 @@ extern void start_webserver(void);
 #include <myfp2eIRrecv.h>                             // unable to turn off all options by using a define
 #include <myfp2eIRutils.h>
 #include "irremotemappings.h"
-const uint16_t RECV_PIN = IRPIN;
-//TODO This is an issue - mySetupData->get_brdirpin()
-IRrecv irrecv(RECV_PIN);
+const uint16_t RECV_PIN = 15;
+IRrecv *irrecv;
 decode_results results;
 
 void update_irremote()
 {
-  // check IR
-  if (irrecv.decode(&results))
+  if ( irremotestate == true )
   {
-    int adjpos = 0;
-    static long lastcode;
-    if ( results.value == KEY_REPEAT )
+    // check IR
+    if (irrecv->decode(&results))
     {
-      results.value = lastcode;                   // repeat last code
-    }
-    else
-    {
-      lastcode = results.value;
-    }
-    if ( (isMoving == 1) && (lastcode == IR_HALT))
-    {
-      varENTER_CRITICAL(&halt_alertMux);
-      halt_alert = true;
-      varEXIT_CRITICAL(&halt_alertMux);
-    }
-    else
-    {
-      switch ( lastcode )
+      int adjpos = 0;
+      static long lastcode;
+      if ( results.value == KEY_REPEAT )
       {
-        case IR_SLOW:
-          mySetupData->set_motorspeed(SLOW);
-          break;
-        case IR_MEDIUM:
-          mySetupData->set_motorspeed(MED);
-          break;
-        case IR_FAST:
-          mySetupData->set_motorspeed(FAST);
-          break;
-        case IR_IN1:
-          adjpos = -1;
-          break;
-        case IR_OUT1:
-          adjpos = 1;
-          break;
-        case IR_IN10:
-          adjpos = -10;
-          break;
-        case IR_OUT10:
-          adjpos = 10;
-          break;
-        case IR_IN50:
-          adjpos = -50;
-          break;
-        case IR_OUT50:
-          adjpos = 50;
-          break;
-        case IR_IN100:
-          adjpos = -100;
-          break;
-        case IR_OUT100:
-          adjpos = 100;
-          break;
-        case IR_SETPOSZERO:                         // 0 RESET POSITION TO 0
-          adjpos = 0;
-          ftargetPosition = 0;
-          driverboard->setposition(0);
-          mySetupData->set_fposition(0);
-          break;
-        case IR_PRESET0:
-          ftargetPosition = mySetupData->get_focuserpreset(0);
-          break;
-        case IR_PRESET1:
-          ftargetPosition = mySetupData->get_focuserpreset(1);
-          break;
-        case IR_PRESET2:
-          ftargetPosition = mySetupData->get_focuserpreset(2);
-          break;
-        case IR_PRESET3:
-          ftargetPosition = mySetupData->get_focuserpreset(3);
-          break;
-        case IR_PRESET4:
-          ftargetPosition = mySetupData->get_focuserpreset(4);
-          break;
-      } // switch(lastcode)
-    } // if ( (isMoving == 1) && (lastcode == IR_HALT))
-    irrecv.resume();                              // Receive the next value
-    long newpos;
-    if ( adjpos < 0 )
-    {
-      newpos = mySetupData->get_fposition() + adjpos;
-      newpos = (newpos < 0 ) ? 0 : newpos;
-      ftargetPosition = newpos;
+        results.value = lastcode;                   // repeat last code
+      }
+      else
+      {
+        lastcode = results.value;
+      }
+      if ( (isMoving == 1) && (lastcode == IR_HALT))
+      {
+        varENTER_CRITICAL(&halt_alertMux);
+        halt_alert = true;
+        varEXIT_CRITICAL(&halt_alertMux);
+      }
+      else
+      {
+        switch ( lastcode )
+        {
+          case IR_SLOW:
+            mySetupData->set_motorspeed(SLOW);
+            break;
+          case IR_MEDIUM:
+            mySetupData->set_motorspeed(MED);
+            break;
+          case IR_FAST:
+            mySetupData->set_motorspeed(FAST);
+            break;
+          case IR_IN1:
+            adjpos = -1;
+            break;
+          case IR_OUT1:
+            adjpos = 1;
+            break;
+          case IR_IN10:
+            adjpos = -10;
+            break;
+          case IR_OUT10:
+            adjpos = 10;
+            break;
+          case IR_IN50:
+            adjpos = -50;
+            break;
+          case IR_OUT50:
+            adjpos = 50;
+            break;
+          case IR_IN100:
+            adjpos = -100;
+            break;
+          case IR_OUT100:
+            adjpos = 100;
+            break;
+          case IR_SETPOSZERO:                         // 0 RESET POSITION TO 0
+            adjpos = 0;
+            ftargetPosition = 0;
+            driverboard->setposition(0);
+            mySetupData->set_fposition(0);
+            break;
+          case IR_PRESET0:
+            ftargetPosition = mySetupData->get_focuserpreset(0);
+            break;
+          case IR_PRESET1:
+            ftargetPosition = mySetupData->get_focuserpreset(1);
+            break;
+          case IR_PRESET2:
+            ftargetPosition = mySetupData->get_focuserpreset(2);
+            break;
+          case IR_PRESET3:
+            ftargetPosition = mySetupData->get_focuserpreset(3);
+            break;
+          case IR_PRESET4:
+            ftargetPosition = mySetupData->get_focuserpreset(4);
+            break;
+        } // switch(lastcode)
+      } // if ( (isMoving == 1) && (lastcode == IR_HALT))
+      irrecv->resume();                              // Receive the next value
+      long newpos;
+      if ( adjpos < 0 )
+      {
+        newpos = mySetupData->get_fposition() + adjpos;
+        newpos = (newpos < 0 ) ? 0 : newpos;
+        ftargetPosition = newpos;
+      }
+      else if ( adjpos > 0)
+      {
+        newpos = mySetupData->get_fposition() + adjpos;
+        newpos = (newpos > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : newpos;
+        ftargetPosition = newpos;
+      }
     }
-    else if ( adjpos > 0)
-    {
-      newpos = mySetupData->get_fposition() + adjpos;
-      newpos = (newpos > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : newpos;
-      ftargetPosition = newpos;
-    }
+  }
+  else
+  {
+    Setup_DebugPrintln("Cannot start irremote: board pin is -1");
   }
 }
 
 void init_irremote(void)
 {
   Setup_DebugPrintln("init_irremote");
-  irrecv.enableIRIn();                            // Start the IR
+  irremotestate = false;
+  if ( mySetupData->get_brdirpin() != -1 )
+  {
+    irrecv = new IRrecv(mySetupData->get_brdirpin());
+    irrecv->enableIRIn();                            // Start the IR
+    irremotestate = true;
+  }
+  else
+  {
+    Setup_DebugPrintln("Cannot start irremote: board pin is -1");
+    irremotestate = false;
+  }
 }
 #endif // #ifdef INFRAREDREMOTE
 
@@ -567,7 +585,7 @@ void update_pushbuttons(void)
     {
       // PB are active high - pins are low by virtue of oull down resistors through J16 and J17 jumpers
       // read from the board pin number, and compare the return pin value - if 1 then button is pressed
-      if ( digitalRead(mySetupData->get_brdpb1pin()) == 1 ) 
+      if ( digitalRead(mySetupData->get_brdpb1pin()) == 1 )
       {
         newpos = ftargetPosition - 1;
         newpos = (newpos < 0 ) ? 0 : newpos;
@@ -923,7 +941,7 @@ void stop_tcpipserver()
 
 void setup()
 {
-  Serial.begin(115200);
+  //Serial.begin(115200);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
   Serial.begin(SERIALPORTSPEED);
@@ -1241,14 +1259,14 @@ void setup()
   // Setup infra red remote
 #ifdef INFRAREDREMOTE
   // Basic assumption rule: If associated pin is -1 then cannot set enable
-  if ( mySetupData->get_irremoteenable() == 1)
+  if ( mySetupData->get_brdirpin() != 1)
   {
     Setup_DebugPrintln("ir-remote enabled");
     init_irremote();
   }
   else
   {
-    Setup_DebugPrintln("ir-remote disabled");
+    Setup_DebugPrintln("ir-remote pin disabled");
   }
 #endif // #ifdef INFRAREDREMOTE
 

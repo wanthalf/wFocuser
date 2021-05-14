@@ -1,0 +1,81 @@
+I uploaded the firmware but the Board is showing as the older board I had before.
+* You forgot to upload the data files, and the controller is using the previous board_config.jsn file
+
+I uploaded the firmware but the Management Server is not found.
+* You forgot to upload the data files
+* Did you enable MANAGEMENT in the focuserconfig.h file
+* If controller mode is ACCESSPOINT, did you use the correct TCP/IP address and connect to the ACCESSPOINT
+* If controller mode is STATIONMODE, are you using the correct TCP/IP address (use IP Scanner)
+
+I uploaded the firmware and the data files but the Web Server is not working.
+* Did you use the Management server to enable the web server. The web server is disabled by default.
+* If controller mode is ACCESSPOINT, did you use the correct TCP/IP address and connect to the ACCESSPOINT
+* If controller mode is STATIONMODE, are you using the correct TCP/IP address (use IP Scanner)
+
+The push buttons are not working.
+* Did you use the Management server to enable the push buttons. The push buttons are disabled by default.
+* Did you define an ESP32 board? Push buttons are only available on ESP32 boards. Check DRVBRD in focuserconfig.h
+
+The in-out LED's are not working.
+* Did you use the Management server to enable the in-out LED's. The in-out LED's are disabled by default.
+* Did you define an ESP32 board? in-out LED's are only available on ESP32 boards. Check DRVBRD in focuserconfig.h
+
+The Home Position Switch is not working.
+* Did you use the Management server to enable the Home Position Switch. The Home Position Switch is disabled by default.
+* Did you define an ESP32 board? Home Position Switch is only available on ESP32 boards. Check DRVBRD in focuserconfig.h
+* Did you use a custom board configuration file and set the hpsw pin to -1? Use url:6060/showconfig to view the board config.
+* Did you change the board configuration file and set the hpsw pin to -1? Use url:6060/showconfig to view the board config.
+
+I enabled the joystick but the focuser moves even when the joystick is not moved.
+* Did you calibrate the joystick. Determine the correct values by running the AUTOCALIBIRATEJOYSTICK.ino program, then use those values to update the firmware and reprogram the controller.
+
+I am using LOCALSERIAL and I cannot access the Management or Web servers.
+* The Management and Web servers are only available in either ACCESSPOINT or STATIONMODE.
+
+The push buttons are very slow. Is there a way to speed them up?
+* No.
+
+I am using TMC2209 with Stall Guard but it stops during a move and resets position to 0. When detecting a stall, the firmware sets the position to 0.
+* Did you determine the correct values for your stepper motor using the spreadsheets. 
+* Read the PDF and follow the instructions on how to generate the correct values for your stepper motor and how to determine the correct STALL_VALUE for your motor.
+
+I am using the ASCOM driver and the Windows Application for myFP2E. I get a No response msg when trying to connect.
+* Did you select the correct interface? These applications support both Serial and TCP/IP. The interface in the application and driver MUST match the interface used by the controller. For example, if you programmed the controller with LOCALSERIAL, then the only interface you can use in the application or driver is Serial.
+
+Can I use the INDI myfocuserpro2 driver with the myFP2E controllers?
+* Yes.
+
+Can I use the myFP2 Windows application or myFP2 ASCOM driver with the myFP2E controllers?
+* Yes. But the full features of the controller are not available to these apps. It is preferred to use the myFP2E applications and drivers with myFP2E controllers.
+
+Can I use the myFP2E Windows application or myFP2E ASCOM driver with myFocuserPro2 controllers?
+* No.
+
+I am using the myFP2E ASCOM driver, but am having issues. How do I generate a log file?
+* First enable the TRACE ON checkbox in the Setup dialog form for the driver. In Windows, the log files will be the users Documents\ASCOM\logs folder.
+
+How do I get a copy of the data_per.jsn and board_config.jsn files?
+* This is covered in the PDF.
+
+I am thinking of upgrading the firmware on the controller. How do I save my current configuration and restore it later?
+* This is covered in the PDF. You should save the data_per.jsn and board_config.jsn files, reprogram the controller, then use the Management server to upload the two saved files.
+
+I am trying to set the step mode. I set the stepmode, then click Set button. But when I use Get the stepmode has not changed.
+* Are you trying to set a step mode that the controller cannot support.
+
+I change the focuser position or some setting and then reboot the controller. The settings are not remembered.
+* The important focuser settings are placed into a timed queue and written to the data_per.jsn file when a specific time has elasped (around 30 seconds). If you reboot before the 30s has elapsed, the controller will not be able to save the changed values. Wait at least 30s after making a change before rebooting the controller.
+
+When the focuser is moving the Windows application does not show the position changing and only updates the position after the move has completed. Why can't I see the position changing?
+* On the Extra settings tab, check the option "FP updates when moving"
+
+I have the Joystick2 and the push switch does not work
+* If you have a ESP8266 board the joystick is not supported on these boards. Only ESP32 boards support joysticks.
+* You need to use firmware 222-7 or higher
+* For the following PCB boards, you need to use a 4.7K resistor pullup to 3V3 on D35. The best way to do this is to wire the resistor to a 2P header plug and connect it to J11 PBOUT (in other words short J11 PBOUT with a 4.7k resistor)
+** ESP32DRV8825 r08, ESP32CLOSEDLOOP r01, ESP32TMC22xx r02, ESP32ULN2003 r6
+
+
+
+
+
