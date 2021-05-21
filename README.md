@@ -138,7 +138,7 @@ This is a special cut down version of the SSD1306AsciiWire library by Bill Greim
 * ESP8266 Core 2.7.4
 * ESP32 Core 1.0.4
 Libraries  
-* Arduino JSON 6.15.2 https://github.com/bblanchon/ArduinoJson.git  
+* Arduino JSON 6.18.0 https://github.com/bblanchon/ArduinoJson.git  
 * myfp2eIremoteESP8266 as in Library Files
 * myOLED as in Library Files
 * myHalfStepperESP32 as in Library Files

@@ -48,7 +48,7 @@ extern bool          displaystate;
 
 extern TempProbe     *myTempProbe;
 extern SetupData     *mySetupData;
-extern DriverBoard*  driverboard;
+extern DriverBoard   *driverboard;
 extern OLED_NON      *myoled;
 extern void          heapmsg(void);
 

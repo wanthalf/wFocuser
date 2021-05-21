@@ -27,8 +27,6 @@
 // ======================================================================
 extern SetupData     *mySetupData;
 extern DriverBoard   *driverboard;
-extern int           DefaultBoardNumber;
-extern int           brdfixedstepmode;
 extern OLED_NON      *myoled;
 #include "temp.h"
 extern TempProbe     *myTempProbe;

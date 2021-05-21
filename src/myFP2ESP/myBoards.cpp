@@ -45,13 +45,11 @@
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 
-
 // ======================================================================
 // Externs
 // ======================================================================
 extern SetupData   *mySetupData;
 extern DriverBoard *driverboard;
-extern int  DefaultBoardNumber;
 
 extern volatile bool timerSemaphore;
 extern volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
@@ -408,7 +406,7 @@ bool DriverBoard::init_homepositionswitch(void)
   Board_DebugPrintln("init_homepositionswitch");
   if ( mySetupData->get_hpswitchenable() == 1)
   {
-    pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);       // initialize the pin as 
+    pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);       // initialize the pin as
     return true;
   }
   return false;
@@ -510,6 +508,21 @@ bool DriverBoard::hpsw_alert(void)
       return !( (bool)digitalRead(mySetupData->get_brdhpswpin()) );
     }
   }
+}
+
+int DriverBoard::getboardnumber(void)
+{
+  return this->DefaultBoardNumber;          // DRVBRD
+}
+
+int DriverBoard::getfixedstepmode(void)
+{
+  return this->brdfixedstepmode;            // FIXEDSTEPMODE
+}
+
+int DriverBoard::getstepsperrev(void)
+{
+  return this->brdstepsperrev;              // STEPSPERREVOLUTION
 }
 
 // ======================================================================

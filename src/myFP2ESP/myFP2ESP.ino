@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 223
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 224
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -238,11 +238,6 @@ OLED_NON *myoled;
 //moving_out  1||  1   |   0
 //moving_in   0||  0   |   1
 
-// These are important and used at runtime. Do not change.
-int DefaultBoardNumber  = DRVBRD;           // use this to create a default board configuration
-int brdfixedstepmode    = FIXEDSTEPMODE;    // only used by boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
-int brdstepsperrev      = STEPSPERREVOLUTION;
-
 volatile bool timerSemaphore = false;       // move completed=true, still moving or not moving = false;
 volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
 volatile bool halt_alert;
@@ -255,7 +250,9 @@ portMUX_TYPE  stepcountMux = portMUX_INITIALIZER_UNLOCKED;
 portMUX_TYPE  halt_alertMux = portMUX_INITIALIZER_UNLOCKED;
 #endif
 
-DriverBoard*  driverboard;
+DriverBoard   *driverboard;
+SetupData     *mySetupData;                 // focuser data
+
 unsigned long ftargetPosition;              // target position
 bool    displayfound;
 byte    isMoving;                           // is the motor currently moving
@@ -277,8 +274,6 @@ bool    irremotestate;
 bool    reboot;                             // flag used to indicate a reboot has occurred
 int     tprobe1;                            // true if a temperature probe was detected
 float   lasttemp;                           // last valid temp reading
-
-SetupData *mySetupData;                     // focuser data
 
 #if defined(ESP8266)
 #undef DEBUG_ESP_HTTP_SERVER
@@ -1729,7 +1724,7 @@ void loop()
               myoled->oledtextmsg("HP Sw=1, Pos=0", -1, true, true);
             }
           }
-          if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
+          if ( driverboard->getboardnumber() == PRO2ESP32TMC2209 || driverboard->getboardnumber() == PRO2ESP32TMC2209P )
           {
             // stall guard in effect - there is no need to find and set position. there is no real backlash
             // finally,.... the rock has come..... home.

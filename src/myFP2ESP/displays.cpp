@@ -27,7 +27,7 @@ extern char  ipStr[];                       // ip address
 extern char  mySSID[];
 extern bool  displaystate;
 
-extern DriverBoard* driverboard;
+extern DriverBoard  *driverboard;
 extern TempProbe    *myTempProbe;
 extern SetupData    *mySetupData;
 extern bool TimeCheck(unsigned long, unsigned long);
