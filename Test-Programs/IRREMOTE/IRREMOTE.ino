@@ -15,71 +15,208 @@
 // and then insert those codes into the irremotemappings.h file
 
 #include <Arduino.h>
-#define ESP32
-#include <myfp2eIRremoteESP8266.h>
-#include <myfp2eIRrecv.h>
-#include <myfp2eIRutils.h>
-#undef ESP32
+#include "boarddefs.h"                      // include driver board and motor high level definitions
+#include "generalDefinitions.h"             // include global definitions
+#include "myBoards.h"                       // include driverboard class definitions
+#include "focuserconfig.h"
 
-#define IRPIN 15
-const uint16_t RECV_PIN = IRPIN;
-IRrecv irrecv(RECV_PIN);
+#include "SPIFFS.h"
+#include <SPI.h>
+#include "FocuserSetupData.h"
+
+// ======================================================================
+// 1: SPECIFY DRIVER BOARD in 1: focuserconfig.h
+// ======================================================================
+// Please specify your driver board [DRVBRD] in focuserconfig.h
+
+// ======================================================================
+// 2: SPECIFY FIXEDSTEPMODE in 2: focuserconfig.h
+// ======================================================================
+// For specific boards, specify the correct FIXEDSTEPMODE focuserconfig.h
+
+// ======================================================================
+// 3: SPECIFY STEPSPERREVOLUTION in 3: focuserconfig.h
+// ======================================================================
+// For specific boards, specify the correct STEPSPERREVOLUTION focuserconfig.h
+
+volatile bool timerSemaphore = false;       // move completed=true, still moving or not moving = false;
+volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
+volatile bool halt_alert;
+#if defined(ESP8266)
+// in esp8266, volatile data_type varname is all that is needed
+#else
+// in esp32, we should use a Mutex for access
+portMUX_TYPE  timerSemaphoreMux = portMUX_INITIALIZER_UNLOCKED; // shared vars in interrupt routines must control access via mutex
+portMUX_TYPE  stepcountMux = portMUX_INITIALIZER_UNLOCKED;
+portMUX_TYPE  halt_alertMux = portMUX_INITIALIZER_UNLOCKED;
+#endif
+
+DriverBoard   *driverboard;
+SetupData     *mySetupData;                 // focuser data
+
+// ======================================================================
+// INFRARED REMOTE CONTROLLER - CHANGE AT YOUR OWN PERIL
+// ======================================================================
+
+#include <myfp2eIRremoteESP8266.h>                    // use cut down version to save spave
+#include <myfp2eIRrecv.h>                             // unable to turn off all options by using a define
+#include <myfp2eIRutils.h>
+#include "irremotemappings.h"
+const uint16_t RECV_PIN = 15;
+IRrecv *irrecv;
 decode_results results;
 
 void update_irremote()
 {
-  // check IR
-  if (irrecv.decode(&results))
+  if ( irremotestate == true )
   {
-    static long lastcode;
-    if ( results.value == 4294967295 )
+    // check IR
+    if (irrecv->decode(&results))
     {
-      results.value = lastcode;       // repeat last code
+      int adjpos = 0;
+      static long lastcode;
+      if ( results.value == KEY_REPEAT )
+      {
+        results.value = lastcode;                   // repeat last code
+      }
+      else
+      {
+        lastcode = results.value;
+      }
+      if ( (isMoving == 1) && (lastcode == IR_HALT))
+      {
+        varENTER_CRITICAL(&halt_alertMux);
+        halt_alert = true;
+        varEXIT_CRITICAL(&halt_alertMux);
+      }
+      else
+      {
+        switch ( lastcode )
+        {
+          case IR_SLOW:
+            mySetupData->set_motorspeed(SLOW);
+            break;
+          case IR_MEDIUM:
+            mySetupData->set_motorspeed(MED);
+            break;
+          case IR_FAST:
+            mySetupData->set_motorspeed(FAST);
+            break;
+          case IR_IN1:
+            adjpos = -1;
+            break;
+          case IR_OUT1:
+            adjpos = 1;
+            break;
+          case IR_IN10:
+            adjpos = -10;
+            break;
+          case IR_OUT10:
+            adjpos = 10;
+            break;
+          case IR_IN50:
+            adjpos = -50;
+            break;
+          case IR_OUT50:
+            adjpos = 50;
+            break;
+          case IR_IN100:
+            adjpos = -100;
+            break;
+          case IR_OUT100:
+            adjpos = 100;
+            break;
+          case IR_SETPOSZERO:                         // 0 RESET POSITION TO 0
+            adjpos = 0;
+            ftargetPosition = 0;
+            driverboard->setposition(0);
+            mySetupData->set_fposition(0);
+            break;
+          case IR_PRESET0:
+            ftargetPosition = mySetupData->get_focuserpreset(0);
+            break;
+          case IR_PRESET1:
+            ftargetPosition = mySetupData->get_focuserpreset(1);
+            break;
+          case IR_PRESET2:
+            ftargetPosition = mySetupData->get_focuserpreset(2);
+            break;
+          case IR_PRESET3:
+            ftargetPosition = mySetupData->get_focuserpreset(3);
+            break;
+          case IR_PRESET4:
+            ftargetPosition = mySetupData->get_focuserpreset(4);
+            break;
+        } // switch(lastcode)
+      } // if ( (isMoving == 1) && (lastcode == IR_HALT))
+      irrecv->resume();                              // Receive the next value
+      long newpos;
+      if ( adjpos < 0 )
+      {
+        newpos = mySetupData->get_fposition() + adjpos;
+        newpos = (newpos < 0 ) ? 0 : newpos;
+        ftargetPosition = newpos;
+      }
+      else if ( adjpos > 0)
+      {
+        newpos = mySetupData->get_fposition() + adjpos;
+        newpos = (newpos > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : newpos;
+        ftargetPosition = newpos;
+      }
     }
-    else
-    {
-      lastcode = results.value;
-    }
-    switch ( lastcode )
-    {
-      case 16753245:                  // CH- IN -1 SLOW
-        Serial.println("CH-");
-        break;
-      case 16769565:                  // CH+ OUT +1 SLOW
-        Serial.println("CH+");
-        break;
-      case 16720605:                  // |<< IN -10 MEDIUM
-        Serial.println("|<<");
-        break;
-      case 16761405:                  // >>| OUT +10 MEDIUM
-        Serial.println("|>>");
-        break;
-      case 16769055:                  // '-' IN -50 FAST
-        Serial.println("-");
-        break;
-      case 16754775:
-        Serial.println("+");
-        break;
-      case 16748655:                  // 'EQ' OUT +50 FAST
-        Serial.println("EQ");
-        break;
-      case 16738455 :                 // 0 RESET POSITION TO 0
-        Serial.println("0");
-        break;
-    }
-    irrecv.resume();                  // Receive the next value
+  }
+  else
+  {
+    Serial.println("Cannot start irremote: board pin is -1");
+  }
+}
+
+void init_irremote(void)
+{
+  Serial.println("init_irremote");
+  irremotestate = false;
+  if ( mySetupData->get_brdirpin() != -1 )
+  {
+    irrecv = new IRrecv(mySetupData->get_brdirpin());
+    irrecv->enableIRIn();                            // Start the IR
+    irremotestate = true;
+  }
+  else
+  {
+    Serial.println("Cannot start irremote: board pin is -1");
+    irremotestate = false;
   }
 }
 
 void setup()
 {
-  Serial.begin(115200);
-
+  Serial.begin(SERIALPORTSPEED);
   Serial.println("started serial port");
-  Serial.println("Start IR");
 
+  Setup_DebugPrintln("setup(): mySetupData()");
+  mySetupData = new SetupData();                // instantiate object SetUpData with SPIFFS file
+
+  delay(20);
+  
+  Setup_DebugPrintln("driver board: start");
+  ftargetPosition = mySetupData->get_fposition();
+  driverboard = new DriverBoard( mySetupData->get_fposition() );
+  Setup_DebugPrintln("driver board: end");
+  
+  delay(20);
+  
   Serial.println("Start IR");
-  irrecv.enableIRIn();                              // Start the IR
+  // Setup infra red remote
+  // Basic assumption rule: If associated pin is -1 then cannot set enable
+  if ( mySetupData->get_brdirpin() != 1)
+  {
+    Serial.println("ir-remote enabled");
+    init_irremote();
+  }
+  else
+  {
+    Serial.println("ir-remote pin disabled");
+  }
   Serial.println("End setup");
 }
 
@@ -88,4 +225,5 @@ void setup()
 void loop()
 {
   update_irremote();
+  delay(200);
 }

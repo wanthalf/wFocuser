@@ -6,11 +6,12 @@
 
 #include <Arduino.h>
 
-//#include "generalDefinitions.h"
-//#include "boarddefs.h"
+#include "generalDefinitions.h"
+#include "boarddefs.h"
+#include "focuserconfig.h"
 
 // data_per.jsn       650
-// board_config.jsn   265
+// board_config.jsn   271
 
 // ======================================================================
 // Defines
@@ -156,6 +157,9 @@ class SetupData
     int get_brdpb1pin(void);
     int get_brdpb2pin(void);
     unsigned long get_brdmsdelay(void);
+    int get_brdnumber(void);
+    int get_fixedstepmode(void);
+    int get_stepsperrev(void);
 
     //__setter boardconfig
     void set_brdname(String);
@@ -177,6 +181,9 @@ class SetupData
     void set_brdpb1pin(int);
     void set_brdpb2pin(int);
     void set_brdmsdelay(unsigned long);
+    void set_brdnumber(int);
+    void set_fixedstepmode(int);
+    void set_stepsperrev(int);
 
   private:
     byte SavePersitantConfiguration();
@@ -278,13 +285,15 @@ class SetupData
     int    pb1pin;
     int    pb2pin;
     int    irpin;
+    int    boardnumber   = DRVBRD;              // define in focuserconfig.h
+    int    fixedstepmode = FIXEDSTEPMODE;       // define in focuserconfig.h  
+    int    stepsperrev   = STEPSPERREVOLUTION;  // define in focuserconfig.h
     int    boardpins[4];
-    int    stepsperrev;
-    int    fixedstepmode;
     unsigned long msdelay;
+
     /*
-      { "board":"PRO2ESP32DRV8825","maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,
-      "temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":-1,
+      { "board":"PRO2ESP32DRV8825","brdnum":20,"maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,
+      "temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"brdnum":60,"stepsrev":-1,
       "fixedsmode":-1,"brdpins":[27,26,25,-1],"mspeed":4000 }
     */
 };

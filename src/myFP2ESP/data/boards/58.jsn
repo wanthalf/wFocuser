@@ -1,1 +1,1 @@
-{ "board":"PRO2ESP32TMC2209P","maxstepmode":256,"stepmode":4,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,4,-1],"msdelay":1200 }
+{ "board":"PRO2ESP32TMC2209P","maxstepmode":256,"stepmode":4,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"brdnum":58,"stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,4,-1],"msdelay":1200 }

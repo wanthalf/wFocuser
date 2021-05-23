@@ -222,9 +222,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
     stepcount = 0;
     varEXIT_CRITICAL(&stepcountMux);
 
-    boardnum = DefaultBoardNumber;
-
-    // THESE NEED TO BE CREATED AT RUNTIME
+    boardnum = mySetupData->get_brdnumber();                    // get board number and cache it locally here
 
     if ( boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H )
     {
@@ -232,7 +230,6 @@ DriverBoard::DriverBoard(unsigned long startposition)
       pinMode(mySetupData->get_brddirpin(), OUTPUT);
       pinMode(mySetupData->get_brdsteppin(), OUTPUT);
       digitalWrite(mySetupData->get_brdenablepin(), 1);
-      digitalWrite(mySetupData->get_brdsteppin(), 0);
       // fixed step mode
     }
     else if ( boardnum == PRO2ESP32DRV8825 )
@@ -496,7 +493,7 @@ bool DriverBoard::hpsw_alert(void)
   else
   {
     // check tmc2209 boards for stall guard
-    if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
+    if ( boardnum == PRO2ESP32TMC2209 || boardnum == PRO2ESP32TMC2209P )
     {
       // DIAG pin, High if stall guard is detected
       return ( (bool) digitalRead(mySetupData->get_brdhpswpin()) );
@@ -508,21 +505,6 @@ bool DriverBoard::hpsw_alert(void)
       return !( (bool)digitalRead(mySetupData->get_brdhpswpin()) );
     }
   }
-}
-
-int DriverBoard::getboardnumber(void)
-{
-  return this->DefaultBoardNumber;          // DRVBRD
-}
-
-int DriverBoard::getfixedstepmode(void)
-{
-  return this->brdfixedstepmode;            // FIXEDSTEPMODE
-}
-
-int DriverBoard::getstepsperrev(void)
-{
-  return this->brdstepsperrev;              // STEPSPERREVOLUTION
 }
 
 // ======================================================================
@@ -816,11 +798,7 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   Board_DebugPrint("initmove: ");
   Board_DebugPrint(mdir);
   Board_DebugPrint(" : ");
-  Board_DebugPrint(steps);
-  Board_DebugPrint(" : ");
-  Board_DebugPrint(motorspeed);
-  Board_DebugPrint(" : ");
-  Board_DebugPrintln(leds);
+  Board_DebugPrintln(steps);
 
 #if defined(ESP8266)
   // ESP8266

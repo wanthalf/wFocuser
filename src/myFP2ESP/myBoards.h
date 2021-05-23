@@ -46,8 +46,6 @@ class DriverBoard
     unsigned long getposition(void);
     byte getstallguard(void);    
     int getboardnumber(void);
-    int getfixedstepmode(void);
-    int getstepsperrev(void);
      
     // setter
     void enablemotor(void);
@@ -71,11 +69,7 @@ class DriverBoard
     unsigned long focuserposition;                  // current focuser position
     int           inputPins[4];                     // input pins for driving stepper boards
     unsigned int  clock_frequency;                  // clock frequency used to generate 2us delay for ESP32 160Mhz/240Mhz
-    int           boardnum;      
-    // These are important and used at runtime. Do not change.
-    int DefaultBoardNumber  = DRVBRD;               // use this to create a default board configuration
-    int brdfixedstepmode    = FIXEDSTEPMODE;        // only used by boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
-    int brdstepsperrev      = STEPSPERREVOLUTION;          
+    int boardnum;                                   // get the board number from mySetupData
 };
 
 #endif

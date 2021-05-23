@@ -1,1 +1,1 @@
-{ "board":"PRO2ESP32ULN2003","maxstepmode":2,"stepmode":1,"sda":21,"sck":22,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"stepsrev":2048,"fixedsmode":-1,"brdpins":[25,27,14,26],"msdelay":8000 }
+{ "board":"PRO2ESP32ULN2003","maxstepmode":2,"stepmode":1,"sda":21,"sck":22,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,"brdnum":45,"stepsrev":2048,"fixedsmode":-1,"brdpins":[25,27,14,26],"msdelay":8000 }

@@ -936,7 +936,7 @@ void stop_tcpipserver()
 
 void setup()
 {
-  //Serial.begin(115200);
+  Serial.begin(115200);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
   Serial.begin(SERIALPORTSPEED);
@@ -1724,7 +1724,7 @@ void loop()
               myoled->oledtextmsg("HP Sw=1, Pos=0", -1, true, true);
             }
           }
-          if ( driverboard->getboardnumber() == PRO2ESP32TMC2209 || driverboard->getboardnumber() == PRO2ESP32TMC2209P )
+          if ( mySetupData->get_brdnumber() == PRO2ESP32TMC2209 || mySetupData->get_brdnumber() == PRO2ESP32TMC2209P )
           {
             // stall guard in effect - there is no need to find and set position. there is no real backlash
             // finally,.... the rock has come..... home.

@@ -5,29 +5,30 @@
 // Moving joystick one way so decrease value to 0
 // Moving other way will increase value to 4095
 
-#define JOYINOUTPIN   34      // ADC1_6, D34 - Wire to X, with 10K resitor to GND
+#include "joystick.h"
 
-void updatejoystick(void)
+void update_joystick(void)
 {
   int joyval;
   joyval = analogRead(JOYINOUTPIN);             // range is 0 - 4095, midpoint is 2047
   Serial.println(joyval);
 }
 
-void initjoystick(void)
+void init_joystick(void)
 {
+  pinMode(JOYINOUTPIN, INPUT);
   Serial.println("joystick: initialise joystick");
 }
 
 void setup(void)
 {
   Serial.begin(115200);
-  initjoystick();
+  init_joystick();
 }
 
 void loop(void)
 {
-  updatejoystick();
+  update_joystick();
   // small delay so things do not happen so fast
   delay(100);
 }

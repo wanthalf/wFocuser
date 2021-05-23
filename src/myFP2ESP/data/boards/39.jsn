@@ -1,1 +1,1 @@
-{ "board":"PRO2EL293DNEMA","maxstepmode":1,"stepmode":1,"sda":12,"sck":14,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"stepsrev":200,"fixedsmode":1,"brdpins":[5,0,4,2],"msdelay":10500 }
+{ "board":"PRO2EL293DNEMA","maxstepmode":1,"stepmode":1,"sda":12,"sck":14,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"brdnum":39,"stepsrev":200,"fixedsmode":1,"brdpins":[5,0,4,2],"msdelay":10500 }

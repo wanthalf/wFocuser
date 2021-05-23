@@ -8,6 +8,8 @@
 // If the switch is open it will be shown as open
 // If the switch is closed it will be shown as closed
 
+// Do not use on TMC2209 board because that board uses stall-guard instead
+
 // ----------------------------------------------------------------------------------------------
 // COPYRIGHT
 // ----------------------------------------------------------------------------------------------
@@ -15,7 +17,7 @@
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 
 // ----------------------------------------------------------------------------------------------
-// 16: FIRMWARE CODE START - CHANGE AT YOUR OWN PERIL
+// FIRMWARE CODE START - CHANGE AT YOUR OWN PERIL
 // ----------------------------------------------------------------------------------------------
 
 #define HPSWPIN       4
@@ -32,7 +34,8 @@ void setup()
 
 void loop()
 {
-  if( digitalRead(HPSWPIN == 0 ))
+  // hpsw is normally HIGH but is pulled LOW when switch is closed
+  if( !digitalRead(HPSWPIN))
   {
     Serial.println("HPSW State: 0 or open");
   }
