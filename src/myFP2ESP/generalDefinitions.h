@@ -252,11 +252,11 @@ extern const char* WRITEFILESUCCESSSTR;
 //#define DEBUG 1
 
 //#define ASCOM_DEBUG       1                                   // for debugging ascomserver
-#define BOARD_DEBUG       1                                   // for debugging myboards
+//#define BOARD_DEBUG       1                                   // for debugging myboards
 //#define COMMS_DEBUG       1                                   // for debugging comms
 //#define MANAGEMENT_DEBUG  1                                   // for debugging management server
-#define SETUP_DEBUG       1                                   // for debugging setup()
-#define SETUPDATA_DEBUG   1                                   // for debugging FocuserSetupData
+//#define SETUP_DEBUG       1                                   // for debugging setup()
+//#define SETUPDATA_DEBUG   1                                   // for debugging FocuserSetupData
 //#define TEMP_DEBUG        1                                   // for debugging temp probe
 //#define WEBSERVER_DEBUG   1                                   // for debugging webserver
 //#define HPSW_Debug        1                                   // for debugging hpsw
