@@ -1,0 +1,1 @@
+{ "board":"PRO2EDRV8825","maxstepmode":32,"stepmode":4,"sda":5,"sck":4,"enpin":14,"steppin":12,"dirpin":13,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"brdnum":36,"stepsrev":-1,"fixedsmode":4,"brdpins":[-1,-1,-1,-1],"msdelay":8000 }

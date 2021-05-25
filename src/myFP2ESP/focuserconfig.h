@@ -85,7 +85,7 @@
 // If NOT using an OLED skip this section. 
 // To enable the OLED_TEXT or OLED_GRAPHIC display uncomment the related line below. 
 
-//#define OLED_MODE 	OLED_TEXT       // OLED text only mode
+#define OLED_MODE 	OLED_TEXT       // OLED text only mode
 //#define OLED_MODE 	OLED_GRAPHIC    // OLED graphic mode
 
 // and

@@ -461,7 +461,7 @@ void SetupData::LoadDefaultPersistantData()
   this->ascomserverstate      = DEFAULTOFF;           // this should be default OFF
   this->webserverstate        = DEFAULTOFF;           // this should be default OFF
   this->temperatureprobestate = DEFAULTOFF;           // this should be default OFF - if HW not fitted could crash
-  this->inoutledstate         = DEFAULTOFF;           // this should be default OFF - if HW not fitted could crash
+  this->inoutledstate         = DEFAULTON;            // this should be default OFF - if HW not fitted could crash
   this->showhpswmessages      = DEFAULTOFF;           // this should be default OFF
   this->forcedownload         = DEFAULTOFF;           // this should be default OFF, MANAGEMENT Server only
   this->oledpageoption        = OLEDPGOPTIONALL;

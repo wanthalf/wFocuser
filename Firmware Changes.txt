@@ -12,6 +12,7 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 // Fix for DEBUG errors in myBoards.cpp if BOARD_DEBUG defined
 // Add "brdnum" to every board definition file in /data/boards
 // Update test programs
+// Fix for OLED TEXT displays - remove duplicated code in Displays.cpp
 
 223
 // Fix for Infra-red remote

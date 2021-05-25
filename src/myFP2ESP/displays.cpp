@@ -242,216 +242,6 @@ void OLED_GRAPHIC::display_off(void)
 // Section OLED TEXT
 // ======================================================================
 
-void OLED_TEXT::oledtextmsg(String str, int val, boolean clrscr, boolean nl)
-{
-  if ( clrscr == true)                                  // clear the screen?
-  {
-    clear();
-    setCursor(0, 0);
-  }
-  if ( nl == true )                                     // need to print a new line?
-  {
-    if ( val != -1)                                     // need to print a value?
-    {
-      print(str);
-      println(val);
-    }
-    else
-    {
-      println(str);
-    }
-  }
-  else
-  {
-    print(str);
-    if ( val != -1 )
-    {
-      print(val);
-    }
-  }
-  //  display();
-}
-
-void OLED_TEXT::displayoledpage0(void)      // display screen
-{
-  char tempString[20];
-
-  setCursor(0, 0);
-  print(CURRENTPOSSTR);
-  println(driverboard->getposition());
-  print(TARGETPOSSTR);
-  println(ftargetPosition);
-
-  print(COILPWRSTR);
-  println(mySetupData->get_coilpower());
-
-  print(REVDIRSTR);
-  println(mySetupData->get_reversedirection());
-
-  // stepmode setting
-  print(STEPMODESTR);
-  println(mySetupData->get_brdstepmode());
-
-  //Temperature
-  print(TEMPSTR);
-  print(String(lasttemp, 2));
-  println(" c");
-
-  //Motor Speed
-  print(MOTORSPEEDSTR);
-  println(mySetupData->get_motorspeed());
-
-  //MaxSteps
-  print(MAXSTEPSSTR);
-  ltoa(mySetupData->get_maxstep(), tempString, 10);
-  println(tempString);
-  //  display();
-}
-
-void OLED_TEXT::displayoledpage1(void)
-{
-  setCursor(0, 0);
-  // temperature compensation
-  print(TCOMPSTEPSSTR);
-  println(mySetupData->get_tempcoefficient());
-
-  print(TCOMPSTATESTR);
-  println(mySetupData->get_tempcompenabled());
-
-  print(TCOMPDIRSTR);
-  println(mySetupData->get_tcdirection());
-
-  print(BACKLASHINSTR);
-  println(mySetupData->get_backlash_in_enabled());
-
-  print(BACKLASHOUTSTR);
-  println(mySetupData->get_backlash_out_enabled());
-
-  print(BACKLASHINSTEPSSTR);
-  println(mySetupData->get_backlashsteps_in());
-
-  print(BACKLASHOUTSTEPSSTR);
-  println(mySetupData->get_backlashsteps_out());
-  //  display();
-}
-
-void OLED_TEXT::displayoledpage2(void)
-{
-#if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
-  setCursor(0, 0);
-#if (CONTROLLERMODE == ACCESSPOINT)
-  println("Access point");
-#endif
-#if (CONTROLLERMODE == STATIONMODE)
-  println("Station mode");
-#endif
-  print("SSID:");
-  print(mySSID);
-  println();
-
-  print("IP  :");
-  print(ipStr);
-  println();
-#endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
-
-  if ( mySetupData->get_webserverstate() == 1)
-  {
-    setCursor(0, 0);
-    println("Web server");
-#if (CONTROLLERMODE == ACCESSPOINT)
-    println("Access point");
-#endif
-#if (CONTROLLERMODE == STATIONMODE)
-    println("Station mode");
-#endif
-    print("IP  :");
-    print(ipStr);
-    print("Port:");
-    println(String(mySetupData->get_webserverport()));
-  }
-  if ( mySetupData->get_ascomserverstate() == 1)
-  {
-    setCursor(0, 0);
-    println("ASCOM REMOTE");
-    print("IP  :");
-    print(ipStr);
-    print("Port:");
-    println(mySetupData->get_ascomalpacaport());
-  }
-
-#if (CONTROLLERMODE == BLUETOOTHMODE)
-  setCursor(0, 0);
-  print("Bluetooth");
-  println();
-#endif
-#if (CONTROLLERMODE == LOCALSERIAL)
-  setCursor(0, 0);
-  println("Local serial");
-#endif
-  //  display();
-}
-
-void OLED_TEXT::update_oledtextdisplay(void)
-{
-  static unsigned long currentMillis;
-  static unsigned long olddisplaytimestampNotMoving = millis();
-  static byte displaypage = 0;
-
-  currentMillis = millis();                       // see if the display needs updating
-  if (((currentMillis - olddisplaytimestampNotMoving) > ((int)mySetupData->get_oledpagetime() * 1000)) || (currentMillis < olddisplaytimestampNotMoving))
-  {
-    olddisplaytimestampNotMoving = currentMillis; // update the timestamp
-    clear();                              // clrscr OLED
-    switch (displaypage % 3)
-    {
-      case 2:   display_oledtext_page2();
-        break;
-      case 1:   display_oledtext_page1();
-        break;
-      case 0:
-      default:  display_oledtext_page0();
-        break;
-    }
-    displaypage++;
-  }
-}
-
-void OLED_TEXT::UpdatePositionOledText(void)
-{
-  setCursor(0, 0);
-  print(CURRENTPOSSTR);
-  println(driverboard->getposition());
-
-  print(TARGETPOSSTR);
-  println(ftargetPosition);
-  //  display();
-}
-
-void OLED_TEXT::update_oledtext_position(void)
-{
-  setCursor(0, 0);
-  print(CURRENTPOSSTR);
-  print(driverboard->getposition());
-  clearToEOL();
-  println();
-
-  print(TARGETPOSSTR);
-  print(ftargetPosition);
-  clearToEOL();
-  println();
-  //  display();
-}
-
-void OLED_TEXT::display_on(void)
-{
-  Display_On();
-}
-
-void OLED_TEXT::display_off(void)
-{
-  Display_Off();
-}
-
 OLED_TEXT::OLED_TEXT(void)
 {
     // Setup the OLED
@@ -482,6 +272,86 @@ OLED_TEXT::OLED_TEXT(void)
     println(programVersion);
     println(ProgramAuthor);
   }    
+}
+
+void OLED_TEXT::oledtextmsg(String str, int val, boolean clrscr, boolean nl)
+{
+  if ( clrscr == true)                                  // clear the screen?
+  {
+    clear();
+    setCursor(0, 0);
+  }
+  if ( nl == true )                                     // need to print a new line?
+  {
+    if ( val != -1)                                     // need to print a value?
+    {
+      print(str);
+      println(val);
+    }
+    else
+    {
+      println(str);
+    }
+  }
+  else
+  {
+    print(str);
+    if ( val != -1 )
+    {
+      print(val);
+    }
+  }
+  //  display();
+}
+
+void OLED_TEXT::update_oledtextdisplay(void)
+{
+  static unsigned long currentMillis;
+  static unsigned long olddisplaytimestampNotMoving = millis();
+  static byte displaypage = 0;
+
+  currentMillis = millis();                       // see if the display needs updating
+  if (((currentMillis - olddisplaytimestampNotMoving) > ((int)mySetupData->get_oledpagetime() * 1000)) || (currentMillis < olddisplaytimestampNotMoving))
+  {
+    olddisplaytimestampNotMoving = currentMillis; // update the timestamp
+    clear();                              // clrscr OLED
+    switch (displaypage % 3)
+    {
+      case 2:   display_oledtext_page2();
+        break;
+      case 1:   display_oledtext_page1();
+        break;
+      case 0:
+      default:  display_oledtext_page0();
+        break;
+    }
+    displaypage++;
+  }
+}
+
+void OLED_TEXT::update_oledtext_position(void)
+{
+  setCursor(0, 0);
+  print(CURRENTPOSSTR);
+  print(driverboard->getposition());
+  clearToEOL();
+  println();
+
+  print(TARGETPOSSTR);
+  print(ftargetPosition);
+  clearToEOL();
+  println();
+  //  display();
+}
+
+void OLED_TEXT::display_on(void)
+{
+  Display_On();
+}
+
+void OLED_TEXT::display_off(void)
+{
+  Display_Off();
 }
 
 void OLED_TEXT::display_oledtext_page0(void)           // display screen

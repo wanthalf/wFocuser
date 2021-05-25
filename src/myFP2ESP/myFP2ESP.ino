@@ -1004,7 +1004,7 @@ void setup()
   if ( mySetupData->get_pbenable() == 1)
   {
     bool result = init_pushbuttons();
-    Setup_DebugPrintln("Push Buttons");
+    Setup_DebugPrint("Push Buttons: ");
     if ( result == true )
     {
       Setup_DebugPrintln("enabled");

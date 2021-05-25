@@ -12,7 +12,7 @@
 #include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
-#include "images.h"
+//#include "images.h"                         // ????? why included here???
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #include <FS.h>                             // include the SPIFFS library  

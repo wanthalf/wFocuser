@@ -1,0 +1,1 @@
+{ "board":"PRO2ESP32R3WEMOS","maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":27,"dirpin":26,"temppin":13,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"brdnum":49,"stepsrev":-1,"fixedsmode":1,"brdpins":[-1,-1,-1,-1],"msdelay":8000 }

@@ -71,6 +71,7 @@
 // ======================================================================
 // 5: SPECIFY HARDWARE OPTIONS
 // ======================================================================
+// To enable the Infrared remote controller [ESP32 only], uncomment the next line
 #define INFRAREDREMOTE
 
 // ======================================================================
@@ -78,6 +79,11 @@
 // ======================================================================
 // to work only via USB cable as Serial port, uncomment the next line
 #define CONTROLLERMODE  LOCALSERIAL
+
+
+// ======================================================================
+// 7: SPECIFY CONTROLLER OPTIONS
+// ======================================================================
 
 
 // ======================================================================
@@ -91,30 +97,11 @@
 #halt // ERROR you must have DRVBRD defined in myBoards.h
 #endif
 
-#if defined(USE_SSD1306) && defined(USE_SSH1106)
-#halt //Error - you can must define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
-#endif
-
-#ifndef USE_SSD1306
-#ifndef USE_SSH1106
-#halt //Error - you  must define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
-#endif
-#endif
-
 // DO NOT CHANGE
 #if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
   || DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N   || DRVBRD == PRO2EL293DMINI \
   || DSRVBRD == PRO2EL9110S || DRVBRD == PRO2EL293D   || DRVBRD == PRO2ESP32R3WEMOS )
 // no support for pushbuttons, inout leds, irremote
-#ifdef PUSHBUTTONS
-#halt // ERROR - PUSHBUTTONS not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
-#ifdef INFRAREDREMOTE
-#halt // ERROR - INFRAREDREMOTE not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
-#if defined(JOYSTICK1) || defined(JOYSTICK2)
-#halt // ERROR - JOYSTICK not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
 #endif // #if defined(JOYSTICK1) || defined(JOYSTICK2)
 
 // Check board availability for a specific controller mode
@@ -133,127 +120,9 @@
 #endif
 #endif // #if ((DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48))
 
-#if defined(JOYSTICK1) || defined(JOYSTICK2)
-#ifdef PUSHBUTTONS
-#halt // ERROR - you cannot have PUSHBUTTONS and JOYSTICK enabled at the same time
-#endif
-#endif // #if defined(JOYSTICK1) || defined(JOYSTICK2)
-
-#ifdef JOYSTICK1
-#ifdef JOYSTICK2
-#halt // ERROR - you cannot have both JOYSTICK1 or JOYSTICK2 defined at the same time
-#endif
-#endif // #ifdef JOYSTICK1
-
 // ======================================================================
 // CHECK CONTROLLER OPTIONS
 // ======================================================================
-
-#if defined(OTAUPDATES)
-#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL)
-#halt //ERROR you cannot have both OTAUPDATES with either BLUETOOTHMODE or LOCALSERIAL enabled at the same time
-#endif
-#if (CONTROLLERMODE == ACCESSPOINT)
-#halt //ERROR you cannot use ACCESSPOINT with OTAUPDATES
-#endif
-#endif // #if defined(OTAUPDATES)
-
-#if defined(MDNSSERVER)
-#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
-#halt // ERROR, mDNS only available with CONTROLLERMODE == STATIONMODE
-#endif
-#endif // MDNSSERVER
-
-// Check management server only available in accesspoint or stationmode
-#ifdef MANAGEMENT
-#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL)
-#halt // ERROR You cannot run the MANAGEMENT service in Bluetooth or Local Serial modes
-#endif
-#endif
-
-// cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
-#ifdef USEDUCKDNS
-#if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
-#halt // Error- DUCKDNS only works with STATIONMODE
-#endif
-#ifndef STATIONMODE
-#halt // Error- DUCKDNS only works with STATIONMODE, you must enable STATIONMODE
-#endif
-#endif
-
-// DO NOT CHANGE
-#if defined(READWIFICONFIG)
-#if (CONTROLLERMODE == BLUETOOTH) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
-#halt // ERROR, READWIFICONFIG only available with CONTROLLERMODE == STATIONMODE
-#endif
-#endif // #if defined(READWIFICONFIG)
-
-
-// ======================================================================
-// CHECK CONTROLLER MODES
-// ======================================================================
-
-#if !defined(CONTROLLERMODE) 
-#halt // Error CONTROLLERMODE NOT DEFINED
-#endif
-
-// check bluetooth mode, cannot be used for esp8266 and accesspoint and stationmode and localserial
-#if (CONTROLLERMODE == BLUETOOTHMODE)
-#if defined(ESP8266)
-#halt // ERROR Bluetooth only available on ESP32 boards
-#endif
-#ifdef OTAUPDATES
-#halt // Error Cannot enable OTAUPDATES with BLUETOOTHMODE
-#endif
-#ifdef MDNSSERVER
-#halt // Error Cannot enable MDNSSERVER with BLUETOOTHMODE
-#endif
-#ifdef MANAGEMENT
-#halt // Error Cannot enable MANAGEMENT with BLUETOOTHMODE
-#endif
-#ifdef READWIFICONFIG
-#halt // ERROR, Cannot enabled READWIFICONFIG with BLUETOOTHMODE
-#endif
-#ifdef USEDUCKDNS
-#halt // ERROR, Cannot enable DUCKDNS with BLUETOOTHMODE
-#endif
-#endif // #if (CONTROLLERMODE == BLUETOOTHMODE)
-
-// check localserial mode
-#if (CONTROLLERMODE == LOCALSERIAL)
-#ifdef OTAUPDATES
-#halt // Error Cannot enable OTAUPDATES with LOCALSERIAL
-#endif
-#ifdef MDNSSERVER
-#halt // Error Cannot enable MDNSSERVER with LOCALSERIAL
-#endif
-#ifdef MANAGEMENT
-#halt // Error Cannot enable MANAGEMENT with LOCALSERIAL
-#endif
-#ifdef DEBUG
-#halt // Error Cannot enable DEBUG with LOCALSERIAL
-#endif
-#ifdef READWIFICONFIG
-#halt // ERROR, READWIFICONFIG only available with CONTROLLERMODE == STATIONMODE
-#endif
-#ifdef USEDUCKDNS
-#halt // ERROR, Cannot enable DUCKDNS with BLUETOOTHMODE
-#endif
-#endif // #if (CONTROLLERMODE == LOCALSERIAL)
-
-// check accesspoint mode
-#if (CONTROLLERMODE == ACCESSPOINT)
-#ifdef MDNSSERVER
-#halt // Error Cannot enable MDNSSERVER with ACCESSPOINT
-#endif
-#ifdef OTAUPDATES
-#halt // Error Cannot enable OTAUPDATES with ACCESSPOINT
-#endif
-#ifdef USEDUCKDNS
-#halt // ERROR, Cannot enable DUCKDNS with ACCESSPOINT
-#endif
-#endif // #if (CONTROLLERMODE == ACCESSPOINT)
-
 
 // ======================================================================
 // DO NOT CHANGE: THESE DEFINITIONS NOW DEPRECATED

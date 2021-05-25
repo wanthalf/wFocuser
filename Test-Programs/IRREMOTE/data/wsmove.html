@@ -1,0 +1,36 @@
+<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><title>myFP2ESP WEB SERVER</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:sans-serif;" text="%TXC%" bgcolor="%BKC%"><h2 style="color: #%TIC%">myFP2ESP Controller</h2><p>&copy; R. Brown, Holger M, 2019-2021. All rights reserved<br>Firmware Version=%VER%, Driverboard=%NAM%</p><b>Position is : </b><span id="POS">%CPO%</span><br><b>Target  : </b> %TPO%<br><b>IsMoving: </b> <span id="MOV">%MOV%</span></p>
+<script>
+function getposition(){
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+if (this.readyState == 4 && this.status == 200) {
+document.getElementById("POS").innerHTML = this.responseText;
+}
+};
+xhttp.open("GET", "position", true);
+xhttp.send();
+}
+
+setInterval(function(){	
+getposition();
+}, 1000);
+</script>
+
+<script>
+function getismoving(){
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+if (this.readyState == 4 && this.status == 200) {
+document.getElementById("MOV").innerHTML = this.responseText;
+}
+};
+xhttp.open("GET", "ismoving", true);
+xhttp.send();
+}
+
+setInterval(function() {	
+getismoving();
+}, 666);
+</script>
+
+<p><h3 style="color: #%HEC%">MOVE</h3></p><table><tr><td><form action="/move" method="post"><input type="hidden" name="mv" value="-500"><input type="submit" value="-500"></form></td><td><form action="/move" method="post"><input type="hidden" name="mv" value="-100"><input type="submit" value="-100"></form></td><td><form action="/move" method="post"><input type="hidden" name="mv" value="-10"><input type="submit" value="-10"></form></td><td><form action="/move" method="post"><input type="hidden" name="mv" value="-1"><input type="submit" value="-1"></form></td><td><form action="/move" method="post"><input type="hidden" name="ha" value="true"><input type="submit" value="HALT"></form></td><td><form action="/move" method="post"><input type="hidden" name="mv" value="1"><input type="submit" value="+1"></form></td><td><form action="/move" method="post"><input type="hidden" name="mv" value="10"><input type="submit" value="+10"></form></td><td><form action="/move" method="post"><input type="hidden" name="mv" value="100"><input type="submit" value="+100"></form></td><td><form action="/move" method="post"><input type="hidden" name="mv" value="500"><input type="submit" value="+500"></form></td></tr></table><form action="/move" method="post"><input type="hidden" name="ha" value="true"><input type="submit" value="HALT"></form></p><p><table><tr><td><form action="/presets" method="GET"><input type="submit" value="PRESETS-PAGE"></form></td><td><form action="/" method="GET"><input type="submit" value="HOME-PAGE"></form></td></tr></table></p></body></html>

@@ -1,0 +1,37 @@
+<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><title>myFP2ESP MANAGEMENT SERVER</title><meta name="viewport" content="width=device-width, initial-scale=1"><script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script></head><body style="font-family:sans-serif;" text="%TXC%" bgcolor="%BKC%"><h2 style="color: #%TIC%">myFP2ESP ADMIN 5</h2><p>&copy; R. Brown, Holger M, 2019-2021. All rights reserved<br>Firmware Version=%VER%, Driverboard=%NAM%</p><canvas width="542" height="268" id="canvas_picker"></canvas><div id="hex">HEX: <input type="text"></input></div>
+<script type="text/javascript">
+	var canvas = document.getElementById('canvas_picker').getContext('2d');
+
+	// create an image object and get it’s source
+	var img = new Image();
+	img.src = '/image.jpg';
+
+	// copy the image to the canvas
+	$(img).load(function(){
+	  canvas.drawImage(img,0,0);
+	});
+
+	// http://www.javascripter.net/faq/rgbtohex.htm
+	function rgbToHex(R,G,B) {return toHex(R)+toHex(G)+toHex(B)}
+	function toHex(n) {
+	  n = parseInt(n,10);
+	  if (isNaN(n)) return "00";
+	  n = Math.max(0,Math.min(n,255));
+	  return "0123456789ABCDEF".charAt((n-n%16)/16)  + "0123456789ABCDEF".charAt(n%16);
+	}
+	$('#canvas_picker').click(function(event){
+	  // getting user coordinates
+	  var x = event.pageX - this.offsetLeft;
+	  var y = event.pageY - this.offsetTop;
+	  // getting image data and RGB values
+	  var img_data = canvas.getImageData(x, y, 1, 1).data;
+	  var R = img_data[0];
+	  var G = img_data[1];
+	  var B = img_data[2];  var rgb = R + ',' + G + ',' + B;
+	  // convert RGB to HEX
+	  var hex = rgbToHex(R,G,B);
+	  // making the color the value of the input
+	  $('#hex input').val(hex);
+	});
+</script>
+<h3 style="color: #%HEC%">CONTROLLER</h3><p>%BT%</p><p><b>Free heap memory: </b>%HEA%</p><hr><p><table><tr><td><form action="/msindex1" method="GET"><input type="submit" value="ADMIN 1"></form></td><td><form action="/msindex2" method="GET"><input type="submit" value="ADMIN 2"></form></td><td><form action="/msindex3" method="GET"><input type="submit" value="ADMIN 3"></form></td><td><form action="/msindex4" method="GET"><input type="submit" value="ADMIN 4"></form></td></tr></form></tr><tr><td><form action="/list" method="GET"><input type="submit" value="LIST FILES"></form></td><td><form action="/upload" method="GET"><input type="submit" value="UPLOAD FILE"></form></td><td><form action="/delete" method="GET"><input type="submit" value="DELETE FILE"></form></td><td><form action="/color" method="GET"><input type="submit" value="COLORS"></form></td></tr></table></p></html>

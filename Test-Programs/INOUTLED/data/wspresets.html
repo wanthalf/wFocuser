@@ -1,0 +1,36 @@
+<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta http-equiv=refresh content="%RAT%"><title>myFP2ESP WEB SERVER</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:sans-serif;" text="%TXC%" bgcolor="%BKC%"><h2 style="color: #%TIC%">myFP2ESP Controller</h2><p>&copy; R. Brown, Holger M, 2019-2021. All rights reserved<br>Firmware Version=%VER%, Driverboard=%NAM%</p><p><h3 style="color: #%HEC%">FOCUSER PRESETS</h3></p><b>Position is : </b><span id="POS">%CPO%</span><br><b>Target  : </b> %TPO%<br><b>IsMoving: </b> <span id="MOV">%MOV%</span></p>
+<script>
+function getposition() {
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+if (this.readyState == 4 && this.status == 200) {
+document.getElementById("POS").innerHTML = this.responseText;
+}
+};
+xhttp.open("GET", "position", true);
+xhttp.send();
+}
+
+setInterval(function() {	
+getposition();
+}, 1000);
+</script>
+
+<script>
+function getismoving() {
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+if (this.readyState == 4 && this.status == 200) {
+document.getElementById("MOV").innerHTML = this.responseText;
+}
+};
+xhttp.open("GET", "ismoving", true);
+xhttp.send();
+}
+
+setInterval(function() {	
+getismoving();
+}, 666);
+</script>
+
+<p><form action="/presets" method="post"><b>Focuser Preset 0</b> <input type="text" name="p0" size ="15" value="%WSP0%"> <input type="submit" name="setp0" value="Set"> <input type="submit" name="gop0" value="Goto"><br><b>Focuser Preset 1</b> <input type="text" name="p1" size ="15" value="%WSP1%"> <input type="submit" name="setp1" value="Set"> <input type="submit" name="gop1" value="Goto"><br><b>Focuser Preset 2</b> <input type="text" name="p2" size ="15" value="%WSP2%"> <input type="submit" name="setp2" value="Set"> <input type="submit" name="gop2" value="Goto"><br><b>Focuser Preset 3</b> <input type="text" name="p3" size ="15" value="%WSP3%"> <input type="submit" name="setp3" value="Set"> <input type="submit" name="gop3" value="Goto"><br><b>Focuser Preset 4</b> <input type="text" name="p4" size ="15" value="%WSP4%"> <input type="submit" name="setp4" value="Set"> <input type="submit" name="gop4" value="Goto"><br><b>Focuser Preset 5</b> <input type="text" name="p5" size ="15" value="%WSP5%"> <input type="submit" name="setp5" value="Set"> <input type="submit" name="gop5" value="Goto"><br><b>Focuser Preset 6</b> <input type="text" name="p6" size ="15" value="%WSP6%"> <input type="submit" name="setp6" value="Set"> <input type="submit" name="gop6" value="Goto"><br><b>Focuser Preset 7</b> <input type="text" name="p7" size ="15" value="%WSP7%"> <input type="submit" name="setp7" value="Set"> <input type="submit" name="gop7" value="Goto"><br><b>Focuser Preset 8</b> <input type="text" name="p8" size ="15" value="%WSP8%"> <input type="submit" name="setp8" value="Set"> <input type="submit" name="gop8" value="Goto"><br><b>Focuser Preset 9</b> <input type="text" name="p9" size ="15" value="%WSP9%"> <input type="submit" name="setp9" value="Set"> <input type="submit" name="gop9" value="Goto"></form></p><p><form action="/presets" method="post"><input type="hidden" name="ha" value="true"><input type="submit" value="HALT"></form></p><p><table><tr><td><form action="/move" method="GET"><input type="submit" value="MOVE-PAGE"></form></td><td><form action="/" method="GET"><input type="submit" value="HOME-PAGE"></form></td></tr></table></p></body></html>
