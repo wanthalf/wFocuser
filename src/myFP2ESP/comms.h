@@ -33,7 +33,7 @@ extern const char*   programVersion;
 extern unsigned long ftargetPosition;          // target position
 extern bool          displaystate;
 extern SetupData     *mySetupData;
-extern DriverBoard*  driverboard;
+extern DriverBoard   *driverboard;
 extern TempProbe     *myTempProbe;
 
 extern void  software_Reboot(int);

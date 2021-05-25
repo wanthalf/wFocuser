@@ -12,7 +12,7 @@
 #include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
-#include "images.h"
+//#include "images.h"                         // ????? why included here???
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #include <FS.h>                             // include the SPIFFS library  
@@ -27,8 +27,6 @@
 // ======================================================================
 extern SetupData     *mySetupData;
 extern DriverBoard   *driverboard;
-extern int           DefaultBoardNumber;
-extern int           brdfixedstepmode;
 extern OLED_NON      *myoled;
 #include "temp.h"
 extern TempProbe     *myTempProbe;
@@ -2855,6 +2853,10 @@ void MANAGEMENT_genbrd()
       jsonstr = jsonstr + "\"irpin\":\"" + value + "\",";
     }
 
+    // value = mserver.arg("brn");
+    // do not allow user to change brn boardnumber - if they did then it will stuff things up big time
+    jsonstr = jsonstr + "\"brdnum\":\"" + String(mySetupData->get_brdnumber()) + "\",";
+    
     value = mserver.arg("str");
     if ( value != "" )
     {
@@ -2930,7 +2932,7 @@ void MANAGEMENT_custombrd()
     MSpg.replace("%HEC%", hcol);
     MSpg.replace("%VER%", String(programVersion));
     MSpg.replace("%NAM%", mySetupData->get_brdname());
-
+  
     MSpg.replace("%STA%", "<form action=\"/genbrd\" method=\"post\"><table><tr>");
     MSpg.replace("%BRD%", "<td>Board Name : </td><td><input type=\"text\" name=\"brd\" value=\"" + mySetupData->get_brdname() + "\"></td></tr><tr>");
     MSpg.replace("%MAX%", "<td>MaxStepMode: </td><td><input type=\"text\" name=\"max\" value=\"" + String(mySetupData->get_brdmaxstepmode()) + "\"></td></tr><tr>");
@@ -2947,6 +2949,7 @@ void MANAGEMENT_custombrd()
     MSpg.replace("%PB1%", "<td>PB1 pin : </td><td><input type=\"text\" name=\"pb1\" value=\"" + String(mySetupData->get_brdpb1pin()) + "\"></td></tr><tr>");
     MSpg.replace("%PB2%", "<td>PB2 pin : </td><td><input type=\"text\" name=\"pb2\" value=\"" + String(mySetupData->get_brdpb2pin()) + "\"></td></tr><tr>");
     MSpg.replace("%IRP%", "<td>IR pin : </td><td><input type=\"text\" name=\"irp\" value=\"" + String(mySetupData->get_brdirpin()) + "\"></td></tr><tr>");
+    MSpg.replace("%BRN%", "<td>Board Num : </td><td>" + String(mySetupData->get_brdnumber()) + "</td></tr><tr>");
     MSpg.replace("%STR%", "<td>Steps per rev : </td><td><input type=\"text\" name=\"str\" value=\"" + String(mySetupData->get_brdstepsperrev()) + "\"></td></tr><tr>");
     MSpg.replace("%FIM%", "<td>Fixed Step Mode: </td><td><input type=\"text\" name=\"fim\" value=\"" + String(mySetupData->get_brdfixedstepmode()) + "\"></td></tr><tr>");
     String boardpins;
@@ -3035,7 +3038,7 @@ void MANAGEMENT_showboardconfig()
       }
     }
     MSpg.replace("%BRP%", boardpins);
-
+    MSpg.replace("%BRN%", String(mySetupData->get_brdnumber()));
     MSpg.replace("%SPR%", String(mySetupData->get_brdstepsperrev()));
     MSpg.replace("%FSM%", String(mySetupData->get_brdfixedstepmode()));
     MSpg.replace("%PB1%", String(mySetupData->get_brdpb1pin()));

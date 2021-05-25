@@ -5,6 +5,15 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+224
+// Requires Updated ArduinoJson 6-18-0 Libary - https://github.com/bblanchon/ArduinoJson
+// Move DefaultBoardNumber, brdfixedstepmode, brdstepsperrev into mySetupData
+// Fix circular reference between driverboard and mySetupData when controller boots
+// Fix for DEBUG errors in myBoards.cpp if BOARD_DEBUG defined
+// Add "brdnum" to every board definition file in /data/boards
+// Update test programs
+// Fix for OLED TEXT displays - remove duplicated code in Displays.cpp
+
 223
 // Fix for Infra-red remote
 
@@ -70,7 +79,6 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 // Fixes for comms.h to be more compatible with INDI driver
 // Fix for set?stepmode= in management server
 // Fix for set stepmode in comms.h not being set for DRVBRD == PRO2ESP32TMC2209P
-
 
 217 
 // Fix for saveboardconfiguration

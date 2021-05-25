@@ -8,25 +8,20 @@
 
 // check for SSD1306 display
 #ifdef USE_SSD1306                            // for the OLED 128x64 0.96" display using the SSD1306 driver
-// check for graphic display
-#if OLED_MODE == OLED_GRAPHICS
+#if OLED_MODE == OLED_GRAPHICS                // check for graphic display
 #include <SSD1306Wire.h>                      // requires esp8266-oled-ssd1306 library
 #endif // #if OLED_MODE == OLED_GRAPHICS
-//check for text display
-#if OLED_MODE == OLED_TEXT                    // do NOT use else!
-//#include <mySSD1306Ascii.h>
+#if OLED_MODE == OLED_TEXT                    //check for text display        
 #include <mySSD1306AsciiWire.h>               // requires myOLED library
 #endif // if OLED_MODE == OLED_TEXT 
 #endif // #ifdef USE_SSD1306
 
 // check for SSH1106 display
 #ifdef USE_SSH1106                            // for the OLED 128x64 1.3" display using the SSH1106 driver
-// check for graphic display
-#if OLED_MODE == OLED_GRAPHICS
+#if OLED_MODE == OLED_GRAPHICS                // check for graphic display
 #include <SH1106Wire.h>                       // requires esp8266-oled-ssd1306 library
 #endif // #ifdef OLED_MODE == OLED_GRAPHICS
-// check for text display
-#if OLED_MODE == OLED_TEXT                    // do NOT use else!
+#if OLED_MODE == OLED_TEXT                    // check for text display
 #include <mySSD1306Ascii.h>
 #include <mySSD1306AsciiWire.h>               // requires myOLED library
 #endif // if OLED_MODE == OLED_TEXT 
@@ -76,10 +71,6 @@ class OLED_TEXT : public SSD1306AsciiWire, public OLED_NON
     void display_on(void);
     void display_off(void);
   private:
-    void displayoledpage0(void);      // displaylcd screen
-    void displayoledpage1(void);
-    void displayoledpage2(void);
-    void Update_OledText(void);
     void UpdatePositionOledText(void);
     void display_oledtext_page0(void);
     void display_oledtext_page1(void);

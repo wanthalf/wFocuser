@@ -63,7 +63,7 @@ I am thinking of upgrading the firmware on the controller. How do I save my curr
 I am trying to set the step mode. I set the stepmode, then click Set button. But when I use Get the stepmode has not changed.
 * Are you trying to set a step mode that the controller cannot support.
 
-I change the focuser position or some setting and then reboot the controller. The settings are not remembered.
+I changed the focuser position or some setting and then rebooted the controller. The settings are not remembered.
 * The important focuser settings are placed into a timed queue and written to the data_per.jsn file when a specific time has elasped (around 30 seconds). If you reboot before the 30s has elapsed, the controller will not be able to save the changed values. Wait at least 30s after making a change before rebooting the controller.
 
 When the focuser is moving the Windows application does not show the position changing and only updates the position after the move has completed. Why can't I see the position changing?

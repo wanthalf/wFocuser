@@ -45,13 +45,11 @@
 #include "myBoards.h"
 #include "FocuserSetupData.h"
 
-
 // ======================================================================
 // Externs
 // ======================================================================
 extern SetupData   *mySetupData;
 extern DriverBoard *driverboard;
-extern int  DefaultBoardNumber;
 
 extern volatile bool timerSemaphore;
 extern volatile uint32_t stepcount;                // number of steps to go in timer interrupt service routine
@@ -224,9 +222,7 @@ DriverBoard::DriverBoard(unsigned long startposition)
     stepcount = 0;
     varEXIT_CRITICAL(&stepcountMux);
 
-    boardnum = DefaultBoardNumber;
-
-    // THESE NEED TO BE CREATED AT RUNTIME
+    boardnum = mySetupData->get_brdnumber();                    // get board number and cache it locally here
 
     if ( boardnum == WEMOSDRV8825 || boardnum == PRO2EDRV8825 || boardnum == PRO2ESP32R3WEMOS || boardnum == WEMOSDRV8825H )
     {
@@ -234,7 +230,6 @@ DriverBoard::DriverBoard(unsigned long startposition)
       pinMode(mySetupData->get_brddirpin(), OUTPUT);
       pinMode(mySetupData->get_brdsteppin(), OUTPUT);
       digitalWrite(mySetupData->get_brdenablepin(), 1);
-      digitalWrite(mySetupData->get_brdsteppin(), 0);
       // fixed step mode
     }
     else if ( boardnum == PRO2ESP32DRV8825 )
@@ -408,7 +403,7 @@ bool DriverBoard::init_homepositionswitch(void)
   Board_DebugPrintln("init_homepositionswitch");
   if ( mySetupData->get_hpswitchenable() == 1)
   {
-    pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);       // initialize the pin as 
+    pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);       // initialize the pin as
     return true;
   }
   return false;
@@ -498,7 +493,7 @@ bool DriverBoard::hpsw_alert(void)
   else
   {
     // check tmc2209 boards for stall guard
-    if ( DefaultBoardNumber == PRO2ESP32TMC2209 || DefaultBoardNumber == PRO2ESP32TMC2209P )
+    if ( boardnum == PRO2ESP32TMC2209 || boardnum == PRO2ESP32TMC2209P )
     {
       // DIAG pin, High if stall guard is detected
       return ( (bool) digitalRead(mySetupData->get_brdhpswpin()) );
@@ -803,11 +798,7 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   Board_DebugPrint("initmove: ");
   Board_DebugPrint(mdir);
   Board_DebugPrint(" : ");
-  Board_DebugPrint(steps);
-  Board_DebugPrint(" : ");
-  Board_DebugPrint(motorspeed);
-  Board_DebugPrint(" : ");
-  Board_DebugPrintln(leds);
+  Board_DebugPrintln(steps);
 
 #if defined(ESP8266)
   // ESP8266

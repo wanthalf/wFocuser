@@ -1,56 +1,81 @@
-#include <Arduino.h>
+// ======================================================================
+// myBoards.h : myFP2ESP DRIVER BOARD DEFINITIONS
+// (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
+// (c) Copyright Holger M, 2019-2021. All Rights Reserved.
+// (c) Copyright Paul P, 2021. All Rights Reserved. TMC22xx code
+// ======================================================================
+
+#include "focuserconfig.h"          // because of DRVBRD
+#include "generalDefinitions.h"
 
 #ifndef myBoards_h
 #define myBoards_h
 
-// YOU MUST CHANGE THIS TO MATCH THE STEPMODE SET IN HARDWARE JUMPERS ON THE PCB ESP8266-DRV
-#define DRV8825TEPMODE        STEP16    // jumpers MS1/2/3 on the PCB for ESP8266
+#include <myHalfStepperESP32.h>
+#include <myStepperESP32.h>
 
-// stepper motor steps per full revolution using full steps - Non DRV8825 boards require this to be set
-#define STEPSPERREVOLUTION 2048          // 28BYJ-48 stepper motor unipolar with ULN2003 board  
-// #define STEPSPERREVOLUTION  200        // NEMA17
-// #define STEPSPERREVOLUTION  400        // NEMA14HM11-0404S 0.9 motor
-// #define STEPSPERREVOLUTION 1028        // 17HS13-0404S-PG5
-// #define STEPSPERREVOLUTION 5370        // NEMA17HS13-0404S-PG27
-// #define STEPSPERREVOLUTION 1036        // NEMA14HS13-0804S-PG5
-// #define STEPSPERREVOLUTION 1036        // NEMA16HS13-0604S-PG5
-
-#if (DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N || DRVBRD == PRO2EL293DMINI || DRVBRD == PRO2EL9110S \
- || DRVBRD == PRO2EESP32ULN2003 || DRVBRD == PRO2EESP32L298N || DRVBRD == PRO2ESP32L293DMINI \
- || DRVBRD == PRO2ESP32L9110S )
-#include "HalfStepperESP32.h"
+#if (DRVBRD == PRO2ESP32TMC2225) || (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
+#define SERIAL_PORT2  Serial2       // TMC2225/TMC2209 HardwareSerial port
+#if (DRVBRD == PRO2ESP32TMC2225)
+#include <TMC2208Stepper.h>         // tmc2225
+#endif
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
+#include <TMCStepper.h>             // tmc2209
+#endif
 #endif
 
+// ======================================================================
+// DRIVER BOARD CLASS : DO NOT CHANGE
+// ======================================================================
 class DriverBoard
 {
   public:
-    DriverBoard(byte, String, byte, byte);                          // driver drv8825 constructor
-    DriverBoard(byte, String, byte, byte, byte, byte, byte, byte);  // driver uln2003, L298N, L293DMini
-
+    DriverBoard(unsigned long);                   // constructor
+    ~DriverBoard(void);                           // destructor
+    void initmove(bool, unsigned long);           // prepare to move
+    void movemotor(byte, bool);                   // move the motor
+    void halt(void);                              // halt the motor
+    bool init_homepositionswitch(void);           // initialize home position switch
+    void init_tmc2209(void);
+    void init_tmc2225(void);
+    bool hpsw_alert(void);                        // check for HPSW
+    bool checkStall(void);                        // check for TMC2209 stall guard
+    void end_move(void);                          // end a move
+    
     // getter
-    String getname(void);
-    byte getmotorspeed(void);
-    byte getstepmode(void);
-
+    unsigned long getposition(void);
+    byte getstallguard(void);    
+    int getboardnumber(void);
+    int getfixedstepmode(void);
+    int getstepsperrev(void);
+     
     // setter
-    void setstepdelay(int);
-    void setstepmode(byte);
-    void movemotor(byte);
     void enablemotor(void);
     void releasemotor(void);
-    void setmotorspeed(byte);
-
+    void setposition(unsigned long);
+    void setstepmode(int);
+    void setstallguard(byte);
+    void settmc2209current(int);
+    void settmc2225current(int);
+    
   private:
-#if (DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N || DRVBRD == PRO2EL293DMINI || DRVBRD == PRO2EL9110S \
- || DRVBRD == PRO2EESP32ULN2003 || DRVBRD == PRO2EESP32L298N || DRVBRD == PRO2ESP32L293DMINI \
- || DRVBRD == PRO2ESP32L9110S )
-    HalfStepper* mystepper;
-#endif
-    int inputPins[4];                             // The input pin numbers
-    byte boardtype;
-    byte stepmode;
-    int stepdelay;                                // time in milliseconds to wait between pulses when moving
-    String boardname;
-    int Step;                                     // used to control step count
+    HalfStepper*  myhstepper;
+    Stepper*      mystepper;
+#if (DRVBRD == PRO2ESP32TMC2225 )
+    TMC2208Stepper* mytmcstepper;
+#endif // #if (DRVBRD == PRO2ESP32TMC2225)
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+    TMC2209Stepper* mytmcstepper;
+#endif // DRVBRD == PRO2ESP32TMC2209  || DRVBRD == PRO2ESP32TMC2209P 
+
+    unsigned long focuserposition;                  // current focuser position
+    int           inputPins[4];                     // input pins for driving stepper boards
+    unsigned int  clock_frequency;                  // clock frequency used to generate 2us delay for ESP32 160Mhz/240Mhz
+    int           boardnum;      
+    // These are important and used at runtime. Do not change.
+    int DefaultBoardNumber  = DRVBRD;               // use this to create a default board configuration
+    int brdfixedstepmode    = FIXEDSTEPMODE;        // only used by boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
+    int brdstepsperrev      = STEPSPERREVOLUTION;          
 };
+
 #endif

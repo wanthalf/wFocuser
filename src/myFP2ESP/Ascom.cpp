@@ -58,7 +58,7 @@ extern portMUX_TYPE  halt_alertMux;
 #endif
 
 extern SetupData      *mySetupData;
-extern DriverBoard*   driverboard;
+extern DriverBoard    *driverboard;
 extern unsigned long  ftargetPosition;              // target position
 extern char           ipStr[];
 extern byte           isMoving;                     // is the motor currently moving

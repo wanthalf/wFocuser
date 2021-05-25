@@ -18,16 +18,12 @@
 #include "boarddefs.h"
 #include "generalDefinitions.h"
 #include "FocuserSetupData.h"
-#include "myBoards.h"                   // to be able to reference driverboard
+#include "myBoards.h"
 
 // ======================================================================
 // Extern Data
 // ======================================================================
-extern int  DefaultBoardNumber;         // this was set to DRVBRD at compile time - used in LoadDefaultBoardData();
-extern int  brdfixedstepmode;           // set to FIXEDSTEPMODE for boards WEMOSDRV8825H, WEMOSDRV8825, PRO2EDRV8825BIG, PRO2EDRV8825
-extern int  brdstepsperrev;
 extern byte isMoving;
-extern DriverBoard* driverboard;
 
 // ======================================================================
 // Defines
@@ -126,17 +122,17 @@ byte SetupData::LoadConfiguration()
       this->mdnsport              = doc_per["mdnsport"];
       this->tcpipport             = doc_per["tcpipport"];
       this->startscreen           = doc_per["startscrn"];
-      this->backcolor             = doc_per["bcol"].as<char*>();
-      this->textcolor             = doc_per["tcol"].as<char*>();
-      this->headercolor           = doc_per["hcol"].as<char*>();
-      this->titlecolor            = doc_per["ticol"].as<char*>();
+      this->backcolor             = doc_per["bcol"].as<const char*>();
+      this->textcolor             = doc_per["tcol"].as<const char*>();
+      this->headercolor           = doc_per["hcol"].as<const char*>();
+      this->titlecolor            = doc_per["ticol"].as<const char*>();
       this->ascomserverstate      = doc_per["ason"];
       this->webserverstate        = doc_per["wson"];
       this->temperatureprobestate = doc_per["tprobe"];
       this->inoutledstate         = doc_per["leds"];
       this->showhpswmessages      = doc_per["hpswmsg"];
       this->forcedownload         = doc_per["fcdownld"];
-      this->oledpageoption        = doc_per["oledpg"].as<char*>();
+      this->oledpageoption        = doc_per["oledpg"].as<const char*>();
       this->motorspeed            = doc_per["mspeed"];                  // motorspeed slow, med, fast
       this->hpswitchenable        = doc_per["hpswen"];
       this->pbenable              = doc_per["pbenable"];
@@ -156,7 +152,7 @@ byte SetupData::LoadConfiguration()
   File bfile = SPIFFS.open(filename_boardconfig, "r");
   if (!bfile)
   {
-    SetupData_DebugPrint("err: no board_config file. Create defaults.");
+    SetupData_DebugPrintln("err: no board_config file. Create defaults.");
     LoadDefaultBoardData();
     delay(10);
     retval = 4;
@@ -164,10 +160,7 @@ byte SetupData::LoadConfiguration()
   else
   {
     delay(10);
-    // Reading board_config.jsn
     String board_data = bfile.readString();               // read content of the text file
-    SetupData_DebugPrint("LoadConfiguration(): board_config= ");
-    SetupData_DebugPrintln(board_data);                   // ... and print on serial
     bfile.close();
 
     // Allocate a temporary JsonDocument
@@ -185,9 +178,9 @@ byte SetupData::LoadConfiguration()
       /*
         { "board":"PRO2ESP32DRV8825","maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,
         "dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,
-        "stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
+        "brdnum":60, "stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
       */
-      this->board         = doc_brd["board"].as<char*>();
+      this->board         = doc_brd["board"].as<const char*>();
       this->maxstepmode   = doc_brd["maxstepmode"];
       this->stepmode      = doc_brd["stepmode"];
       this->sda           = doc_brd["sda"];
@@ -202,6 +195,7 @@ byte SetupData::LoadConfiguration()
       this->pb1pin        = doc_brd["pb1pin"];
       this->pb2pin        = doc_brd["pb2pin"];
       this->irpin         = doc_brd["irpin"];
+      this->boardnumber   = doc_brd["brdnum"];
       this->stepsperrev   = doc_brd["stepsrev"];
       this->fixedstepmode = doc_brd["fixedsmode"];
       for (int i = 0; i < 4; i++)
@@ -285,9 +279,9 @@ void SetupData::SetFocuserDefaults(void)
 // Saves the configurations to files
 boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTravel)
 {
-  SetupData_DebugPrintln("SaveConfiguration:");
   if (this->fposition != currentPosition || this->focuserdirection != DirOfTravel)  // last focuser position
   {
+    SetupData_DebugPrintln("SaveConfiguration:");
     this->fposition = currentPosition;
     this->focuserdirection = DirOfTravel;
     this->ReqSaveData_var = true;
@@ -299,13 +293,13 @@ boolean SetupData::SaveConfiguration(unsigned long currentPosition, byte DirOfTr
   byte cstatus = false;
   unsigned long x = millis();
 
-  if( isMoving )
+  if ( isMoving )
   {
     // do not save to SPIFFS if focuser is moving
     cstatus = false;
     return cstatus;
   }
-  
+
   if ((SnapShotMillis + DEFAULTSAVETIME) < x || SnapShotMillis > x)    // 30s after snapshot
   {
     // save persistent data - focus controller data
@@ -1101,7 +1095,7 @@ void SetupData::StartDelayedUpdate(String & org_data, String new_data)
 // Focuser Persistent Data for Driver Board
 // ======================================================================
 
-boolean SetupData:: LoadBrdConfigStart(String brdfile)
+boolean SetupData::LoadBrdConfigStart(String brdfile)
 {
   delay(10);
   File bfile = SPIFFS.open(brdfile, "r");               // Open file for writing
@@ -1116,7 +1110,7 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
   else
   {
     // read file and deserialize
-    String fdata = bfile.readString();                  // read content of the text file
+    String fdata = bfile.readString();                            // read content of the text file
     SetupData_DebugPrint("LoadBrdConfigStart: Data= ");
     SetupData_DebugPrintln(fdata);                                // ... and print on serial
     bfile.close();
@@ -1135,7 +1129,7 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
     {
       // save the brd_data just read from board config file (brdfile) into board_config.jsn
       // Set the board values from doc_brd
-      this->board         = doc_brd["board"].as<char*>();
+      this->board         = doc_brd["board"].as<const char*>();
       this->maxstepmode   = doc_brd["maxstepmode"];
       this->stepmode      = doc_brd["stepmode"];
       this->sda           = doc_brd["sda"];
@@ -1150,36 +1144,9 @@ boolean SetupData:: LoadBrdConfigStart(String brdfile)
       this->pb1pin        = doc_brd["pb1pin"];
       this->pb2pin        = doc_brd["pb2pin"];
       this->irpin         = doc_brd["irpin"];
-      switch ( DefaultBoardNumber )
-      {
-        case PRO2EULN2003:
-        case PRO2ESP32ULN2003:
-        case PRO2EL298N:
-        case PRO2ESP32L298N:
-        case PRO2EL293DMINI:
-        case PRO2ESP32L293DMINI:
-        case PRO2EL9110S:
-        case PRO2ESP32L9110S:
-        case PRO2EL293DNEMA:
-        case PRO2EL293D28BYJ48:
-          this->stepsperrev = brdstepsperrev;         // override STEPSPERREVOLUTION from focuserconfig.h FIXEDSTEPMODE
-          break;
-        default:
-          this->stepsperrev = doc_brd["stepsperrev"];
-          break;
-      }
-      switch ( DefaultBoardNumber )
-      {
-        case WEMOSDRV8825H:
-        case WEMOSDRV8825:
-        case PRO2EDRV8825BIG:
-        case PRO2EDRV8825:
-          this->fixedstepmode = brdfixedstepmode;     // override fixedstepmode from focuserconfig.h FIXEDSTEPMODE
-          break;
-        default:
-          this->fixedstepmode = doc_brd["fixedsmode"];
-          break;
-      }
+      this->boardnumber   = doc_brd["brdnum"];
+      this->stepsperrev   = doc_brd["stepsrev"];
+      this->fixedstepmode = doc_brd["fixedsmode"];
       for (int i = 0; i < 4; i++)
       {
         this->boardpins[i] = doc_brd["brdpins"][i];
@@ -1198,13 +1165,13 @@ void SetupData::LoadDefaultBoardData()
   // we can load the default board configuration from DRVBRD defined - DefaultBoardName in .ino file
   // Focuser driver board data - Open specific board config .jsn file for reading
 
-  String brdfile = "/boards/" + String(DefaultBoardNumber) + ".jsn";
+  String brdfile = "/boards/" + String(this->boardnumber) + ".jsn";
   SetupData_DebugPrint("brdfile: " );
   SetupData_DebugPrintln(brdfile);
 
   if ( LoadBrdConfigStart(brdfile) == true )
   {
-    SetupData_DebugPrintln("LoadDefaultBoardData(): Loaded default DRV board: OK");
+    SetupData_DebugPrintln("LoadDefaultBoardData(): Load default DRV board: OK");
   }
   else
   {
@@ -1225,36 +1192,9 @@ void SetupData::LoadDefaultBoardData()
     this->pb1pin        = -1;
     this->pb1pin        = -1;
     this->irpin         = -1;
-    switch ( DefaultBoardNumber )
-    {
-      case PRO2EULN2003:
-      case PRO2ESP32ULN2003:
-      case PRO2EL298N:
-      case PRO2ESP32L298N:
-      case PRO2EL293DMINI:
-      case PRO2ESP32L293DMINI:
-      case PRO2EL9110S:
-      case PRO2ESP32L9110S:
-      case PRO2EL293DNEMA:
-      case PRO2EL293D28BYJ48:
-        this->stepsperrev = brdstepsperrev;         // override STEPSPERREVOLUTION from focuserconfig.h
-        break;
-      default:
-        this->stepsperrev = -1;
-        break;
-    }
-    switch ( DefaultBoardNumber )
-    {
-      case WEMOSDRV8825H:
-      case WEMOSDRV8825:
-      case PRO2EDRV8825BIG:
-      case PRO2EDRV8825:
-        this->fixedstepmode = brdfixedstepmode;     // override fixedstepmode from focuserconfig.h
-        break;
-      default:
-        this->fixedstepmode = -1;
-        break;
-    }
+    this->boardnumber   = STEPSPERREVOLUTION;
+    this->fixedstepmode = FIXEDSTEPMODE;
+    this->stepsperrev   = STEPSPERREVOLUTION;
     for (int i = 0; i < 4; i++)
     {
       this->boardpins[i] = -1;
@@ -1302,6 +1242,7 @@ boolean SetupData::SaveBoardConfiguration()
     doc_brd["pb1pin"]       = this->pb1pin;
     doc_brd["pb2pin"]       = this->pb2pin;
     doc_brd["irpin"]        = this->irpin;
+    doc_brd["brdnum"]       = this->boardnumber;
     doc_brd["stepsrev"]     = this->stepsperrev;
     doc_brd["fixedsmode"]   = this->fixedstepmode;
     for (int i = 0; i < 4; i++)
@@ -1351,10 +1292,10 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
     /*
       { "board":"PRO2ESP32DRV8825","maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,
       "dirpin":32,"temppin":13,"hpswpin":4,"inledpin":18,"outledpin":19,"pb1pin":34,"pb2pin":35,"irpin":15,
-      "stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
+      "brdnum":60,"stepsrev":-1,"fixedsmode":-1,"brdpins":[27,26,25,-1],"msdelay":4000 }
     */
     DebugPrintln("Deserialize board : OK");
-    this->board         = doc_brd["board"].as<char*>();
+    this->board         = doc_brd["board"].as<const char*>();
     this->maxstepmode   = doc_brd["maxstepmode"];
     this->stepmode      = doc_brd["stepmode"];
     this->sda           = doc_brd["sda"];
@@ -1369,6 +1310,7 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
     this->pb1pin        = doc_brd["pb1pin"];
     this->pb2pin        = doc_brd["pb2pin"];
     this->irpin         = doc_brd["irpin"];
+    this->boardnumber   = doc_brd["brdnum"];
     this->stepsperrev   = doc_brd["stepsrev"];
     this->fixedstepmode = doc_brd["fixedsmode"];
     for (int i = 0; i < 4; i++)
@@ -1454,6 +1396,11 @@ int SetupData::get_brdirpin()
 int SetupData::get_brdboardpins(int pinnum)
 {
   return this->boardpins[pinnum];
+}
+
+int SetupData::get_brdnumber()
+{
+  return this->boardnumber;
 }
 
 int SetupData::get_brdstepsperrev()
@@ -1552,14 +1499,19 @@ void SetupData::set_brdboardpins(int pinnum)
   this->StartBoardDelayedUpdate(this->boardpins[pinnum], pinnum);
 }
 
-void SetupData::set_brdstepsperrev(int stepsrev)
+void SetupData::set_brdnumber(int newval)
 {
-  this->StartBoardDelayedUpdate(this->stepsperrev, stepsrev);
+  this->StartBoardDelayedUpdate(this->boardnumber, newval);
 }
 
 void SetupData::set_brdfixedstepmode(int newval)
 {
   this->StartBoardDelayedUpdate(this->fixedstepmode, newval);
+}
+
+void SetupData::set_brdstepsperrev(int stepsrev)
+{
+  this->StartBoardDelayedUpdate(this->stepsperrev, stepsrev);
 }
 
 void SetupData::set_brdpb1pin(int newpin)
