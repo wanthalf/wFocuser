@@ -23,7 +23,7 @@
 // ESP8266 Boards
 //#define DRVBRD 	WEMOSDRV8825H                    // driver definition for Holger
 //#define DRVBRD 	WEMOSDRV8825
-//#define DRVBRD 	PRO2EULN2003
+#define DRVBRD 	PRO2EULN2003
 //#define DRVBRD 	PRO2EDRV8825
 //#define DRVBRD 	PRO2EL293DNEMA
 //#define DRVBRD 	PRO2EL293D28BYJ48
@@ -33,7 +33,7 @@
 //#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
 //#define DRVBRD 	PRO2ESP32DRV8825
-#define DRVBRD 	PRO2ESP32ULN2003
+//#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
 //#define DRVBRD 	PRO2ESP32L9110S
@@ -72,8 +72,8 @@
 // PRO2EL293DNEMA, PRO2EL293D28BYJ48
 
 #define STEPSPERREVOLUTION 		2048           // 28BYJ-48 stepper motor unipolar with ULN2003 board
-//#define STEPSPERREVOLUTION  	200        // NEMA17 FULL STEPPED
-//#define STEPSPERREVOLUTION  	400        // NEMA14HM11-0404S 0.9 motor FULL STEPPED
+//#define STEPSPERREVOLUTION   200        // NEMA17 FULL STEPPED
+//#define STEPSPERREVOLUTION   400        // NEMA14HM11-0404S 0.9 motor FULL STEPPED
 //#define STEPSPERREVOLUTION 	1028        // 17HS13-0404S-PG5
 //#define STEPSPERREVOLUTION 	5370        // NEMA17HS13-0404S-PG27
 //#define STEPSPERREVOLUTION 	1036        // NEMA14HS13-0804S-PG5
@@ -86,7 +86,7 @@
 // To enable the OLED_TEXT or OLED_GRAPHIC display uncomment the related line below. 
 
 //#define OLED_MODE 	OLED_TEXT       // OLED text only mode
-//#define OLED_MODE 	OLED_GRAPHIC    // OLED graphic mode
+#define OLED_MODE 	OLED_GRAPHIC    // OLED graphic mode
 
 // and
 // only uncomment one of the following USE_SSxxxx lines depending upon your lcd type

@@ -41,12 +41,12 @@ class DriverBoard
     bool hpsw_alert(void);                        // check for HPSW
     bool checkStall(void);                        // check for TMC2209 stall guard
     void end_move(void);                          // end a move
-    
+
     // getter
     unsigned long getposition(void);
-    byte getstallguard(void);    
+    byte getstallguard(void);
     int getboardnumber(void);
-     
+
     // setter
     void enablemotor(void);
     void releasemotor(void);
@@ -55,14 +55,16 @@ class DriverBoard
     void setstallguard(byte);
     void settmc2209current(int);
     void settmc2225current(int);
-    
+
   private:
     HalfStepper*  myhstepper;
     Stepper*      mystepper;
 #if (DRVBRD == PRO2ESP32TMC2225 )
+    // protection around mytmcstepper - it is not defined if not using tmc2209 or tmc2225
     TMC2208Stepper* mytmcstepper;
 #endif // #if (DRVBRD == PRO2ESP32TMC2225)
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+    // protection around mytmcstepper - it is not defined if not using tmc2209 or tmc2225
     TMC2209Stepper* mytmcstepper;
 #endif // DRVBRD == PRO2ESP32TMC2209  || DRVBRD == PRO2ESP32TMC2209P 
 

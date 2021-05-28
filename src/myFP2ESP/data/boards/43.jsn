@@ -1,1 +1,1 @@
-{ "board":"PRO2EL9110S","maxstepmode":2,"stepmode":1,"sda":5,"sck":4,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"brdnum":43,"stepsrev":200,"fixedsmode":1,"brdpins":[13,12,14,2],"msdelay":8000 }
+{ "board":"PRO2EL9110S","maxstepmode":2,"stepmode":1,"sda":4,"sck":5,"enpin":-1,"steppin":-1,"dirpin":-1,"temppin":10,"hpswpin":-1,"inledpin":-1,"outledpin":-1,"pb1pin":-1,"pb2pin":-1,"irpin":-1,"brdnum":43,"stepsrev":200,"fixedsmode":1,"brdpins":[13,12,14,2],"msdelay":8000 }

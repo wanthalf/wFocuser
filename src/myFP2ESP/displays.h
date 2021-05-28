@@ -61,10 +61,12 @@ class OLED_NON
     byte  linecount = 0;
 };
 
-class OLED_TEXT : public SSD1306AsciiWire, public OLED_NON
+#if (OLED_MODE == OLED_TEXT)
+class OLED_TEXT : public OLED_NON
 {
   public:
     OLED_TEXT();
+    void Update_Oled(const oled_state, const connection_status);
     void oledtextmsg(String , int , boolean , boolean);
     void update_oledtext_position(void);
     void update_oledtextdisplay(void);
@@ -75,13 +77,13 @@ class OLED_TEXT : public SSD1306AsciiWire, public OLED_NON
     void display_oledtext_page0(void);
     void display_oledtext_page1(void);
     void display_oledtext_page2(void);
-};
 
-#ifdef USE_SSD1306
-class OLED_GRAPHIC : public SSD1306Wire, public OLED_NON
-#else // Assume USE_SSH1106
-class OLED_GRAPHIC : public SH1106Wire, public OLED_NON
-#endif // #ifdef USE_SSD1306
+    SSD1306AsciiWire* myoled;
+};
+#endif
+
+#if (OLED_MODE == OLED_GRAPHIC)
+class OLED_GRAPHIC : public OLED_NON
 {
   public:
     OLED_GRAPHIC();
@@ -96,6 +98,13 @@ class OLED_GRAPHIC : public SH1106Wire, public OLED_NON
     void oled_draw_main_update(const connection_status);
     byte count_hb = 0;      // heart beat counter
     long timestamp;
+
+#ifdef USE_SSD1306
+    SSD1306Wire *myoled;
+#else // Assume USE_SSH1106
+    SH1106Wire *myoled;
+#endif // #ifdef USE_SSD1306
 };
+#endif
 
 #endif // #ifdef displays_h

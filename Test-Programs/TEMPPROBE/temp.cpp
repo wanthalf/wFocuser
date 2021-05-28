@@ -72,7 +72,7 @@ void TempProbe::start_temp_probe()
         {
           case 9: Temp_DebugPrintln("0.5");
             break;
-          case 10: Temp_DebugPrint("0.25");
+          case 10: Temp_DebugPrintln("0.25");
             break;
           case 11: Temp_DebugPrintln("0.125");
             break;
@@ -117,7 +117,7 @@ float TempProbe::read_temp(byte new_measurement)
   }
 
   float result = sensor1.getTempCByIndex(0);              // get temperature, always in celsius
-  Temp_DebugPrint("temp:");
+  Temp_DebugPrint("Temp: ");
   Temp_DebugPrintln(result);
   if (result > -40.0 && result < 80.0)                    // avoid erronous readings
   {

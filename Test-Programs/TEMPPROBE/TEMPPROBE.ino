@@ -104,20 +104,11 @@ void setup()
   // Basic assumption rule: If associated pin is -1 then cannot set enable
   Serial.print("Temp probe:");
   // In this test code the default is for tempprobe to be enabled
-  if ( mySetupData->get_temperatureprobestate() == 1)   // if temperature probe enabled then try to start new probe
+  if ( mySetupData->get_temperatureprobestate() == 1)     // if temperature probe enabled then try to start new probe
   {
     Setup_DebugPrintln("enabled");
-    myTempProbe = new TempProbe;                        // create temp probe - should set tprobe1=true if probe found
-  }
-  else
-  {
-    tprobe1 = 0;
-    Setup_DebugPrintln("disabled");
-  }
-
-  // Basic assumption rule: If associated pin is -1 then cannot set enable
-  if ( mySetupData->get_temperatureprobestate() == 1)     // if temp probe "enabled" state
-  {
+    myTempProbe = new TempProbe;                          // create temp probe - should set tprobe1=true if probe found
+    Setup_DebugPrintln("temperatureprobestate = 1");
     if ( tprobe1 != 0 )                                   // if a probe was found
     {
       Setup_DebugPrintln("tprobe1 != 0. read_temp");
@@ -127,8 +118,14 @@ void setup()
     {
       Setup_DebugPrintln("tprobe1 is 0");
       // disable temperature probe
+      Setup_DebugPrintln("set temperatureprobestate to 0");
       mySetupData->set_temperatureprobestate(0);
     }
+  }
+  else
+  {
+    tprobe1 = 0;
+    Setup_DebugPrintln("disabled");
   }
   delay(1000);
 }

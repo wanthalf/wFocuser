@@ -58,11 +58,9 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 
 // DISPLAY
 #define OLEDPAGETIMEMIN        2            // 2s minimum oled page display time
-#define OLEDPAGETIMEMAX        10           // 10s maximum oled page display time
-#define OLEDPGOPTIONALL       "111"         // oled page enable, ALL pages
+#define OLEDPAGETIMEMAX        8            // 8s maximum oled page display time
+#define OLEDPGOPTIONALL        7            // oled page enable, ALL pages "111"
 #define OLEDUPDATEONMOVE       15           // defines how many steps before refreshing position when moving if oledupdateonmove is 1
-#define MINOLEDPAGETIME       2000L
-#define MAXOLEDPAGETIME       10000L
 
 // DUCKDNS SERVICE
 #define DUCKDNS_REFRESHRATE   60000         // duck dns, check ip address every 60s for an update
@@ -236,12 +234,12 @@ extern const char* WRITEFILESUCCESSSTR;
 //#define HEAPDEBUG     1
 
 #ifdef  HEAPDEBUG
-#define HDebugPrint(...) Serial.print(__VA_ARGS__)      // HDebugPrint is a macro, serial print
-#define HDebugPrintln(...) Serial.println(__VA_ARGS__)  // HDebugPrintln is a macro, serial print with new line
-#define HDebugPrintf(...) Serial.printf(__VA_ARGS__)    // HDebugPrintf is a macro, serial printf
+#define HDebugPrint(...) Serial.print(__VA_ARGS__)              // HDebugPrint is a macro, serial print
+#define HDebugPrintln(...) Serial.println(__VA_ARGS__)          // HDebugPrintln is a macro, serial print with new line
+#define HDebugPrintf(...) Serial.printf(__VA_ARGS__)            // HDebugPrintf is a macro, serial printf
 #else
-#define HDebugPrint(...)                                // now defines a blank line
-#define HDebugPrintln(...)                              // now defines a blank line
+#define HDebugPrint(...)                                        // now defines a blank line
+#define HDebugPrintln(...)                                      // now defines a blank line
 #define HDebugPrintf(...)
 #endif
 
@@ -253,8 +251,9 @@ extern const char* WRITEFILESUCCESSSTR;
 
 //#define ASCOM_DEBUG       1                                   // for debugging ascomserver
 //#define BOARD_DEBUG       1                                   // for debugging myboards
-//#define COMMS_DEBUG       1                                   // for debugging comms
-//#define MANAGEMENT_DEBUG  1                                   // for debugging management server
+#define DISPLAY_DEBUG     1                                   // for debugging displays
+#define COMMS_DEBUG       1                                   // for debugging comms
+#define MANAGEMENT_DEBUG  1                                   // for debugging management server
 //#define SETUP_DEBUG       1                                   // for debugging setup()
 //#define SETUPDATA_DEBUG   1                                   // for debugging FocuserSetupData
 //#define TEMP_DEBUG        1                                   // for debugging temp probe
@@ -283,6 +282,14 @@ extern const char* WRITEFILESUCCESSSTR;
 #else
 #define Board_DebugPrint(...)                                   // now defines a blank line
 #define Board_DebugPrintln(...)                                 // now defines a blank line
+#endif
+
+#ifdef  DISPLAY_DEBUG                                           // for debugging displays.cpp
+#define Display_DebugPrint(...) Serial.print(__VA_ARGS__)       // DPRINT is a macro, debug print
+#define Display_DebugPrintln(...) Serial.println(__VA_ARGS__)   // DPRINTLN is a macro, debug print with new line
+#else
+#define Display_DebugPrint(...)                                 // now defines a blank line
+#define Display_DebugPrintln(...)                              // now defines a blank line
 #endif
 
 #ifdef  COMMS_DEBUG                                             // for debugging comms

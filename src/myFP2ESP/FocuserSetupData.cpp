@@ -76,9 +76,9 @@ byte SetupData::LoadConfiguration()
   else
   {
     delay(10);
-    String fdata = dfile.readString();                 // read content of the text file
+    String fdata = dfile.readString();                  // read content of the text file
     SetupData_DebugPrint("LoadConfiguration: Persistant SetupData= ");
-    SetupData_DebugPrintln(fdata);                               // ... and print on serial
+    SetupData_DebugPrintln(fdata);                      // ... and print on serial
     dfile.close();
 
     // Allocate a temporary JsonDocument
@@ -132,7 +132,7 @@ byte SetupData::LoadConfiguration()
       this->inoutledstate         = doc_per["leds"];
       this->showhpswmessages      = doc_per["hpswmsg"];
       this->forcedownload         = doc_per["fcdownld"];
-      this->oledpageoption        = doc_per["oledpg"].as<const char*>();
+      this->oledpageoption        = doc_per["oledpg"];
       this->motorspeed            = doc_per["mspeed"];                  // motorspeed slow, med, fast
       this->hpswitchenable        = doc_per["hpswen"];
       this->pbenable              = doc_per["pbenable"];
@@ -163,6 +163,9 @@ byte SetupData::LoadConfiguration()
     String board_data = bfile.readString();               // read content of the text file
     bfile.close();
 
+    SetupData_DebugPrint("loaded board_config file: ");
+    SetupData_DebugPrintln(board_data);
+    
     // Allocate a temporary JsonDocument
     DynamicJsonDocument doc_brd(DEFAULTBOARDSIZE);
 
@@ -769,7 +772,7 @@ byte SetupData::get_forcedownload()
   return this->forcedownload;
 }
 
-String SetupData::get_oledpageoption()
+byte SetupData::get_oledpageoption()
 {
   return this->oledpageoption;
 }
@@ -1001,7 +1004,7 @@ void SetupData::set_forcedownload(byte newval)
   this->StartDelayedUpdate(this->forcedownload, newval);
 }
 
-void SetupData::set_oledpageoption(String newval)
+void SetupData::set_oledpageoption(byte newval)
 {
   this->StartDelayedUpdate(this->oledpageoption, newval);
 }
@@ -1098,7 +1101,7 @@ void SetupData::StartDelayedUpdate(String & org_data, String new_data)
 boolean SetupData::LoadBrdConfigStart(String brdfile)
 {
   delay(10);
-  File bfile = SPIFFS.open(brdfile, "r");               // Open file for writing
+  File bfile = SPIFFS.open(brdfile, "r");                         // Open file for writing
   SetupData_DebugPrint("LoadBrdConfigStart: ");
   SetupData_DebugPrintln(brdfile);
   if (!bfile)
@@ -1111,9 +1114,9 @@ boolean SetupData::LoadBrdConfigStart(String brdfile)
   {
     // read file and deserialize
     String fdata = bfile.readString();                            // read content of the text file
+    bfile.close();
     SetupData_DebugPrint("LoadBrdConfigStart: Data= ");
     SetupData_DebugPrintln(fdata);                                // ... and print on serial
-    bfile.close();
 
     // Allocate a temporary JsonDocument
     DynamicJsonDocument doc_brd(DEFAULTBOARDSIZE);
@@ -1145,8 +1148,38 @@ boolean SetupData::LoadBrdConfigStart(String brdfile)
       this->pb2pin        = doc_brd["pb2pin"];
       this->irpin         = doc_brd["irpin"];
       this->boardnumber   = doc_brd["brdnum"];
-      this->stepsperrev   = doc_brd["stepsrev"];
-      this->fixedstepmode = doc_brd["fixedsmode"];
+      // brdstepsperrev comes from STEPSPERREVOLUTION and will be different so must override the default setting in the board files
+      switch ( myboardnumber )
+      {
+        case PRO2EULN2003:
+        case PRO2ESP32ULN2003:
+        case PRO2EL298N:
+        case PRO2ESP32L298N:
+        case PRO2EL293DMINI:
+        case PRO2ESP32L293DMINI:
+        case PRO2EL9110S:
+        case PRO2ESP32L9110S:
+        case PRO2EL293DNEMA:
+        case PRO2EL293D28BYJ48:
+          this->stepsperrev = mystepsperrev;         // override STEPSPERREVOLUTION from focuserconfig.h FIXEDSTEPMODE
+          break;
+        default:
+          this->stepsperrev = doc_brd["stepsperrev"];
+          break;
+      }
+      // myfixedstepmode comes from FIXEDSTEPMODE and will be different so must override the default setting in the board files
+      switch ( myboardnumber )
+      {
+        case WEMOSDRV8825H:
+        case WEMOSDRV8825:
+        case PRO2EDRV8825BIG:
+        case PRO2EDRV8825:
+          this->fixedstepmode = myfixedstepmode;     // override fixedstepmode from focuserconfig.h FIXEDSTEPMODE
+          break;
+        default:
+          this->fixedstepmode = doc_brd["fixedsmode"];
+          break;
+      }
       for (int i = 0; i < 4; i++)
       {
         this->boardpins[i] = doc_brd["brdpins"][i];
@@ -1165,7 +1198,8 @@ void SetupData::LoadDefaultBoardData()
   // we can load the default board configuration from DRVBRD defined - DefaultBoardName in .ino file
   // Focuser driver board data - Open specific board config .jsn file for reading
 
-  String brdfile = "/boards/" + String(this->boardnumber) + ".jsn";
+  // cannot use this->boardnumber because the value has not been set yet
+  String brdfile = "/boards/" + String(myboardnumber) + ".jsn";
   SetupData_DebugPrint("brdfile: " );
   SetupData_DebugPrintln(brdfile);
 
@@ -1175,6 +1209,7 @@ void SetupData::LoadDefaultBoardData()
   }
   else
   {
+    // a board config file was not found, so create a dummy one
     SetupData_DebugPrintln("LoadDefaultBoardData(): Loaded default DRV board: Fail");
     SetupData_DebugPrintln("LoadDefaultBoardData(): Create Unknown Board Config File");
     this->board         = "Unknown";
@@ -1192,9 +1227,9 @@ void SetupData::LoadDefaultBoardData()
     this->pb1pin        = -1;
     this->pb1pin        = -1;
     this->irpin         = -1;
-    this->boardnumber   = STEPSPERREVOLUTION;
-    this->fixedstepmode = FIXEDSTEPMODE;
-    this->stepsperrev   = STEPSPERREVOLUTION;
+    this->boardnumber   = myboardnumber;
+    this->fixedstepmode = myfixedstepmode;
+    this->stepsperrev   = mystepsperrev;
     for (int i = 0; i < 4; i++)
     {
       this->boardpins[i] = -1;
@@ -1283,7 +1318,7 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
   DeserializationError error = deserializeJson(doc_brd, jsonstr);
   if (error)
   {
-    SetupData_DebugPrintln("Deserializae board : Fail");
+    SetupData_DebugPrintln("Deserialize board : Fail");
     LoadDefaultBoardData();
     return false;
   }
@@ -1311,8 +1346,40 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
     this->pb2pin        = doc_brd["pb2pin"];
     this->irpin         = doc_brd["irpin"];
     this->boardnumber   = doc_brd["brdnum"];
-    this->stepsperrev   = doc_brd["stepsrev"];
-    this->fixedstepmode = doc_brd["fixedsmode"];
+    // brdstepsperrev comes from STEPSPERREVOLUTION and will be different so must override the default setting in the board files
+    switch ( myboardnumber )
+    {
+      case PRO2EULN2003:
+      case PRO2ESP32ULN2003:
+      case PRO2EL298N:
+      case PRO2ESP32L298N:
+      case PRO2EL293DMINI:
+      case PRO2ESP32L293DMINI:
+      case PRO2EL9110S:
+      case PRO2ESP32L9110S:
+      case PRO2EL293DNEMA:
+      case PRO2EL293D28BYJ48:
+        this->stepsperrev = mystepsperrev;         // override STEPSPERREVOLUTION from focuserconfig.h FIXEDSTEPMODE
+        break;
+      default:
+        this->stepsperrev = doc_brd["stepsperrev"];
+        break;
+    }
+    // myfixedstepmode comes from FIXEDSTEPMODE and will be different so must override the default setting in the board files
+    switch ( myboardnumber )
+    {
+      case WEMOSDRV8825H:
+      case WEMOSDRV8825:
+      case PRO2EDRV8825BIG:
+      case PRO2EDRV8825:
+        this->fixedstepmode = myfixedstepmode;     // override fixedstepmode from focuserconfig.h FIXEDSTEPMODE
+        break;
+      default:
+        this->fixedstepmode = doc_brd["fixedsmode"];
+        break;
+    }
+    //this->stepsperrev   = doc_brd["stepsrev"];
+    //this->fixedstepmode = doc_brd["fixedsmode"];
     for (int i = 0; i < 4; i++)
     {
       this->boardpins[i] = doc_brd["brdpins"][i];

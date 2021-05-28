@@ -5,6 +5,16 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+225
+// Correct spelling errors
+// Fix I2C pin number errors in ESP8266 board config files
+// Fix initialization of I2C interface for most boards
+// Fix for OLED_TEXT initialization
+// Fix for OLED_GRAPHIC
+// Additional debug messages added
+// Fix for display page option (Note: Only works with OLED_TEXT)
+// Fix for display page time (Note: Only works with OLED_TEXT)
+
 224
 // Requires Updated ArduinoJson 6-18-0 Libary - https://github.com/bblanchon/ArduinoJson
 // Move DefaultBoardNumber, brdfixedstepmode, brdstepsperrev into mySetupData

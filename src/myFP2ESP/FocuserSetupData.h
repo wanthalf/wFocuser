@@ -80,7 +80,7 @@ class SetupData
     byte    get_temperatureprobestate();
     byte    get_showhpswmsg();
     byte    get_forcedownload();
-    String  get_oledpageoption();
+    byte    get_oledpageoption();
     byte    get_hpswitchenable();
     byte    get_pbenable();
     byte    get_indi();
@@ -128,7 +128,7 @@ class SetupData
     void set_inoutledstate(byte);
     void set_showhpswmsg(byte);
     void set_forcedownload(byte);
-    void set_oledpageoption(String);
+    void set_oledpageoption(byte);
     void set_hpswitchenable(byte);
     void set_pbenable(byte);
     void set_irremoteenable(byte);
@@ -260,7 +260,7 @@ class SetupData
     byte    inoutledstate;             // if 1, in out leds are enabled [only if board supports them]
     byte    showhpswmessages;          // if 1, home position switch msg's show on display if enabled
     byte    forcedownload;             // if 1, in the MANAGEMENT SERVER, a file is downloaded instead of being displayed is web browser window
-    String  oledpageoption;
+    byte    oledpageoption;
     byte    hpswitchenable;
     byte    pbenable;
     byte    inoutledenable;
@@ -285,11 +285,16 @@ class SetupData
     int    pb1pin;
     int    pb2pin;
     int    irpin;
-    int    boardnumber   = DRVBRD;              // define in focuserconfig.h
-    int    fixedstepmode = FIXEDSTEPMODE;       // define in focuserconfig.h  
-    int    stepsperrev   = STEPSPERREVOLUTION;  // define in focuserconfig.h
+    int    boardnumber;
+    int    fixedstepmode;
+    int    stepsperrev;
     int    boardpins[4];
     unsigned long msdelay;
+    
+    // these capture compile time settings and are required to initialize a board correctly
+    int    myboardnumber   = DRVBRD;              // define in focuserconfig.h
+    int    myfixedstepmode = FIXEDSTEPMODE;       // define in focuserconfig.h  
+    int    mystepsperrev   = STEPSPERREVOLUTION;  // define in focuserconfig.h
 
     /*
       { "board":"PRO2ESP32DRV8825","brdnum":20,"maxstepmode":32,"stepmode":1,"sda":21,"sck":22,"enpin":14,"steppin":33,"dirpin":32,

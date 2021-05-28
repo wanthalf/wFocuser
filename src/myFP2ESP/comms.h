@@ -77,7 +77,6 @@ void SendMessage(const char *str)
 {
   Comms_DebugPrint("Send:");
   Comms_DebugPrintln(str);
-
 #if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )  // for Accesspoint or Station mode
   myclient.print(str);
   packetssent++;
@@ -339,38 +338,41 @@ void ESP_Communication()
     // Set driverboard->setstepmode(xx);                 // this sets the physical pins and saves new stepmode
     // ======================================================================
     case 30: // set step mode
-      WorkString = receiveString.substring(3, receiveString.length() - 1);
-      paramval = WorkString.toInt();
-      if (DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N || DRVBRD == PRO2EL293DMINI || DRVBRD == PRO2EL9110S)
       {
-        paramval = (int)(paramval & 3);      // STEP1 - STEP2
-      }
-      else if (DRVBRD == PRO2ESP32ULN2003 || DRVBRD == PRO2ESP32L298N || DRVBRD == PRO2ESP32L293DMINI || DRVBRD == PRO2ESP32L9110S)
-      {
-        paramval = (int)(paramval & 3);      // STEP1 - STEP2
-      }
-      else if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG)
-      {
-        paramval = (int) mySetupData->get_brdfixedstepmode();            // stepmopde set by jumpers
-      }
-      else if (DRVBRD == PRO2ESP32DRV8825 || DRVBRD == PRO2ESP32R3WEMOS)
-      {
-        paramval = (paramval < STEP1 ) ? STEP1 : paramval;
-        paramval = (paramval > STEP32) ? STEP32 : paramval;
-      }
-      else if (DRVBRD == PRO2EL293DNEMA || DRVBRD == PRO2EL293D28BYJ48)
-      {
-        paramval = STEP1;
-      }
-      else if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
-      {
-        paramval = (paramval < STEP1 )  ? STEP1   : paramval;
-        paramval = (paramval > STEP256) ? STEP256 : paramval;
-      }
-      else
-      {
-        DebugPrint("unknown DRVBRD: ");
-        DebugPrintln(DRVBRD);
+        WorkString = receiveString.substring(3, receiveString.length() - 1);
+        paramval = WorkString.toInt();
+        int brdnum = mySetupData->get_brdnumber();
+        if (brdnum == PRO2EULN2003 || brdnum == PRO2EL298N || brdnum == PRO2EL293DMINI || brdnum == PRO2EL9110S)
+        {
+          paramval = (int)(paramval & 3);      // STEP1 - STEP2
+        }
+        else if (brdnum == PRO2ESP32ULN2003 || brdnum == PRO2ESP32L298N || brdnum == PRO2ESP32L293DMINI || brdnum == PRO2ESP32L9110S)
+        {
+          paramval = (int)(paramval & 3);      // STEP1 - STEP2
+        }
+        else if (brdnum == WEMOSDRV8825 || brdnum == PRO2EDRV8825 || brdnum == PRO2EDRV8825BIG)
+        {
+          paramval = (int) mySetupData->get_brdfixedstepmode();            // stepmopde set by jumpers
+        }
+        else if (brdnum == PRO2ESP32DRV8825 || brdnum == PRO2ESP32R3WEMOS)
+        {
+          paramval = (paramval < STEP1 ) ? STEP1 : paramval;
+          paramval = (paramval > STEP32) ? STEP32 : paramval;
+        }
+        else if (brdnum == PRO2EL293DNEMA || brdnum == PRO2EL293D28BYJ48)
+        {
+          paramval = STEP1;
+        }
+        else if (brdnum == PRO2ESP32TMC2225 || brdnum == PRO2ESP32TMC2209 || brdnum == PRO2ESP32TMC2209P )
+        {
+          paramval = (paramval < STEP1 )  ? STEP1   : paramval;
+          paramval = (paramval > STEP256) ? STEP256 : paramval;
+        }
+        else
+        {
+          Comms_DebugPrint("unknown DRVBRD: ");
+          Comms_DebugPrintln(brdnum);
+        }
       }
       driverboard->setstepmode((int)paramval);
       break;
@@ -400,8 +402,14 @@ void ESP_Communication()
     case 35: // set length of time an oledpage is displayed for in seconds
       WorkString = receiveString.substring(3, receiveString.length() - 1);
       paramval = WorkString.toInt();
-      paramval = (paramval < OLEDPAGETIMEMIN ) ? OLEDPAGETIMEMIN : paramval;
-      paramval = (paramval > OLEDPAGETIMEMAX ) ? OLEDPAGETIMEMAX : paramval;
+      if ( paramval < OLEDPAGETIMEMIN )
+      {
+        paramval = OLEDPAGETIMEMIN;
+      }
+      if ( paramval > OLEDPAGETIMEMAX )
+      {
+        paramval = OLEDPAGETIMEMAX;
+      }
       mySetupData->set_oledpagetime((byte)paramval);
       break;
     case 36:
@@ -412,7 +420,7 @@ void ESP_Communication()
         WorkString = receiveString.substring(3, receiveString.length() - 1);
         paramval = (byte) WorkString.toInt();
         mySetupData->set_displayenabled((byte) (paramval));
-        if (mySetupData->get_displayenabled() == 1)
+        if (paramval == 1)
         {
           if ( displayfound == true )
           {
@@ -605,14 +613,61 @@ void ESP_Communication()
       }
       break;
     case 92: // Set OLED page display option
-      WorkString = receiveString.substring(3, receiveString.length() - 1);
-      mySetupData->set_oledpageoption(WorkString);
+      {
+        WorkString = receiveString.substring(3, receiveString.length() - 1);
+        if ( WorkString == "" )                                     // check for null
+        {
+          WorkString = String(OLEDPGOPTIONALL, BIN);
+        }
+        if ( WorkString.length() != 3  )                            // check for 3 digits
+        {
+          WorkString = String(OLEDPGOPTIONALL, BIN);
+        }
+        for ( unsigned int i = 0; i < WorkString.length(); i++)     // check for 0 or 1
+        {
+          if ( (WorkString[i] != '0') && (WorkString[i] != '1') )
+          {
+            WorkString = String(OLEDPGOPTIONALL, BIN);
+            break;
+          }
+        }
+        Comms_DebugPrint("Set: Display Page Option: ");
+        Comms_DebugPrintln(WorkString);
+        // Convert binary string tp to integer
+        int value = 0;
+        for (unsigned int i = 0; i < WorkString.length(); i++) // for every character in the string  strlen(s) returns the length of a char array
+        {
+          value *= 2; // double the result so far
+          if (WorkString[i] == '1')
+          {
+            value++;  // add 1 if needed
+          }
+        }
+        Comms_DebugPrint("Display Page Option (byte): ");
+        Comms_DebugPrintln(value);
+        mySetupData->set_oledpageoption((byte) value);
+      }
       break;
     case 93: // get OLED page display option
       {
-        char tempbuff[5];
-        mySetupData->get_oledpageoption().toCharArray(tempbuff, mySetupData->get_oledpageoption().length() + 1);
-        SendPaket('l', tempbuff);
+        // return as string of 01's
+        char buff[10];
+        memset(buff, 0, 10);
+        String answer = String( mySetupData->get_oledpageoption(), BIN );
+        // assign leading 0's if necessary
+        while( answer.length() < 3)
+        {
+          answer = "0" + answer;
+        }
+        unsigned int i;
+        for ( i = 0; i < answer.length(); i++ )
+        {
+          buff[i] = answer[i];
+        }
+        buff[i] = 0;
+        Comms_DebugPrint("Get: oled page option: ");
+        Comms_DebugPrintln(buff);
+        SendPaket('l', buff );
       }
       break;
     case 96: // Set management options
@@ -868,8 +923,8 @@ void send_boardconfig_file(void)
     delay(10);
     // Reading board_config.jsn
     board_data = bfile.readString();                                // read content of the text file
-    SetupData_DebugPrint("LoadConfiguration(): Board_data= ");
-    SetupData_DebugPrintln(board_data);                             // ... and print on serial
+    Comms_DebugPrint("LoadConfiguration(): Board_data= ");
+    Comms_DebugPrintln(board_data);                             // ... and print on serial
     bfile.close();
     board_data = board_data + EOFSTR;
     SendPaket('W', "null", true );

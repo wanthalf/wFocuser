@@ -36,28 +36,40 @@ extern bool TimeCheck(unsigned long, unsigned long);
 
 bool CheckOledConnected(void)
 {
+  Display_DebugPrint("I2C SDA: ");
+  Display_DebugPrintln(mySetupData->get_brdsda());
+  Display_DebugPrint("I2C SCK: ");
+  Display_DebugPrintln(mySetupData->get_brdsck());
+
 #if defined(ESP8266)
-#if (DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48)
-  Wire.begin(mySetupData->get_brdsda(), mySetupData->get_brdsck());        // l293d esp8266 shield
-  DebugPrintln("Setup PRO2EL293DNEMA/PRO2EL293D28BYJ48 I2C");
+  Display_DebugPrintln("Setup esp8266 I2C");
+  if ( mySetupData->get_brdnumber() == PRO2EL293DNEMA || mySetupData->get_brdnumber() == PRO2EL293D28BYJ48)
+  {
+    Display_DebugPrintln("Setup PRO2EL293DNEMA/PRO2EL293D28BYJ48 I2C");
+    Wire.begin(mySetupData->get_brdsda(), mySetupData->get_brdsck());        // l293d esp8266 shield
+  }
+  else
+  {
+    //SSD1306Wire display(0x3c, mySetupData->get_brdsda(), mySetupData->get_brdsck());
+    Wire.begin(mySetupData->get_brdsda(), mySetupData->get_brdsck());
+    //Wire.begin();
+  }
 #else
-  DebugPrintln("Setup esp8266 I2C");
-  Wire.begin();
-#endif
-#else
-  DebugPrintln("Setup esp32 I2C");
-//  Wire.begin(mySetupData->get_brdsda(), mySetupData->get_brdsck());          // esp32
-  Wire.begin();
+  // ESP32
+  // Wire.begin([SDA], [SCL])
+  // Wire.begin();
+  Wire.begin(mySetupData->get_brdsda(), mySetupData->get_brdsck() );          // esp32
 #endif
 
   Wire.setClock(400000L);                               // 400 kHZ max. speed on I2C
-  
+
   Wire.beginTransmission(OLED_ADDR);                    // check if OLED display is present
   if (Wire.endTransmission() != 0)
   {
-    DebugPrintln("Display not found");
+    Display_DebugPrintln("Display not found");
     return false;
   }
+  Display_DebugPrintln("Display found");
   return true;
 }
 
@@ -83,32 +95,29 @@ OLED_NON::OLED_NON()  {}
 // ======================================================================
 
 //__constructor
-// TODO HOLGER - THIS HAS TO BE CHANGED
-// I2CDATAPIN is actually mySetupData->get_brdsda()
-// I2CCLKPIN is actually mySetupData->get_brdsck()
-// These pins are not known at compile time so has to be setup inside the constructor
-
-// OLED_GRAPHIC::OLED_GRAPHIC(uint8_t _address, uint8_t _sda, uint8_t _scl) : SSD1306Wire(_address, _sda,_scl, GEOMETRY_128_64)
-#ifdef USE_SSD1306
-OLED_GRAPHIC::OLED_GRAPHIC()  :  SSD1306Wire(OLED_ADDR, 4, 5, GEOMETRY_128_64) , OLED_NON()
-#else // Assume USE_SSH1106
-OLED_GRAPHIC::OLED_GRAPHIC()  :  SH1106Wire(OLED_ADDR, 4, 5, GEOMETRY_128_64) , OLED_NON()
-#endif // #ifdef USE_SSD1306
+#if (OLED_MODE == OLED_GRAPHIC)
+OLED_GRAPHIC::OLED_GRAPHIC(void)
 {
-  DebugPrintln(F("start init()"));
-  this->init();             // init SSD1306Wire
+  Display_DebugPrintln("OLED_GRAPHIC");
+#ifdef USE_SSD1306
+  myoled = new SSD1306Wire(OLED_ADDR, mySetupData->get_brdsda(), mySetupData->get_brdsck(), GEOMETRY_128_64);
+#else
+  myoled = new SH1106Wire(OLED_ADDR, mySetupData->get_brdsda(), mySetupData->get_brdsck(), GEOMETRY_128_64);
+#endif
+
+  myoled->init();
   delay(1000);
 
-  flipScreenVertically();
-  setFont(ArialMT_Plain_10);
-  setTextAlignment(TEXT_ALIGN_LEFT);
-  clear();
+  myoled->flipScreenVertically();
+  myoled->setFont(ArialMT_Plain_10);
+  myoled->setTextAlignment(TEXT_ALIGN_LEFT);
+  myoled->clear();
   if (mySetupData->get_showstartscreen())
   {
-    drawString(0, 0, "myFocuserPro2 v:" + String(programVersion));
-    drawString(0, 12, ProgramAuthor);
+    myoled->drawString(0, 0, "myFocuserPro2 v:" + String(programVersion));
+    myoled->drawString(0, 12, ProgramAuthor);
   }
-  display();
+  myoled->display();
 
   timestamp = millis();
 }
@@ -125,43 +134,43 @@ void OLED_GRAPHIC::Update_Oled(const oled_state oled, const connection_status Co
     }
     else
     {
-      clear();
-      display();
+      myoled->clear();
+      myoled->display();
     }
   }
 }
 
 void OLED_GRAPHIC::oledgraphicmsg(String &str, int val, boolean clrscr)
 {
-  setTextAlignment(TEXT_ALIGN_LEFT);
-  setFont(ArialMT_Plain_10);
+  myoled->setTextAlignment(TEXT_ALIGN_LEFT);
+  myoled->setFont(ArialMT_Plain_10);
 
   if (clrscr == true)
   {
-    clear();
+    myoled->clear();
     linecount = 0;
   }
   if (val != -1)
   {
     str += String(val);
   }
-  drawString(0, linecount * 12, str);
-  display();
+  myoled->drawString(0, linecount * 12, str);
+  myoled->display();
   linecount++;
 }
 
 void OLED_GRAPHIC::oled_draw_Wifi(int j)
 {
-  clear();
-  setTextAlignment(TEXT_ALIGN_CENTER);
-  setFont(ArialMT_Plain_10);
-  drawString(64, 0, "SSID: " + String(mySSID));
-  drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits); // draw wifi logo
+  myoled->clear();
+  myoled->setTextAlignment(TEXT_ALIGN_CENTER);
+  myoled->setFont(ArialMT_Plain_10);
+  myoled->drawString(64, 0, "SSID: " + String(mySSID));
+  myoled->drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits); // draw wifi logo
 
   for (int i = 1; i < 10; i++)
-    drawXbm(12 * i, 56, 8, 8, (i == j) ? activeSymbol : inactiveSymbol);
+    myoled->drawXbm(12 * i, 56, 8, 8, (i == j) ? activeSymbol : inactiveSymbol);
 
-  display();
+  myoled->display();
 }
 
 const char heartbeat[] = { '-', '/' , '|', '\\'};
@@ -170,39 +179,38 @@ void OLED_GRAPHIC::oled_draw_main_update(const connection_status ConnectionStatu
 {
   char buffer[80];
 
-  clear();
-  setTextAlignment(TEXT_ALIGN_CENTER);
-  setFont(ArialMT_Plain_24);
+  myoled->clear();
+  myoled->setTextAlignment(TEXT_ALIGN_CENTER);
+  myoled->setFont(ArialMT_Plain_24);
 
   if (ConnectionStatus == disconnected)
   {
-    drawString(64, 28, F("offline"));
+    myoled->drawString(64, 28, F("offline"));
 
-    setFont(ArialMT_Plain_10);
-    //    drawString(64, 0, mySetupData->get_brdname());
-    drawString(64, 0, mySetupData->get_brdname());
+    myoled->setFont(ArialMT_Plain_10);
+    myoled->drawString(64, 0, mySetupData->get_brdname());
     snprintf(buffer, sizeof(buffer), "IP= %s", ipStr);
-    drawString(64, 14, buffer);
+    myoled->drawString(64, 14, buffer);
   }
   else
   {
     char dir = (mySetupData->get_focuserdirection() == moving_in ) ? '<' : '>';
     snprintf(buffer, sizeof(buffer), "%lu:%i %c", driverboard->getposition(), (int)(driverboard->getposition() % mySetupData->get_brdstepmode()), dir);
-    drawString(64, 28, buffer);
+    myoled->drawString(64, 28, buffer);
 
-    setFont(ArialMT_Plain_10);
+    myoled->setFont(ArialMT_Plain_10);
     snprintf(buffer, sizeof(buffer), "µSteps: %i MaxPos: %lu", mySetupData->get_brdstepmode(), mySetupData->get_maxstep());
-    drawString(64, 0, buffer);
+    myoled->drawString(64, 0, buffer);
     snprintf(buffer, sizeof(buffer), "TargetPos:  %lu", ftargetPosition);
-    drawString(64, 12, buffer);
+    myoled->drawString(64, 12, buffer);
   }
 
-  setTextAlignment(TEXT_ALIGN_LEFT);
+  myoled->setTextAlignment(TEXT_ALIGN_LEFT);
 
   if ( mySetupData->get_temperatureprobestate() == 1)
   {
     snprintf(buffer, sizeof(buffer), "TEMP: %.2f C", lasttemp);
-    drawString(54, 54, buffer);
+    myoled->drawString(54, 54, buffer);
   }
   else
   {
@@ -210,21 +218,21 @@ void OLED_GRAPHIC::oled_draw_main_update(const connection_status ConnectionStatu
   }
 
   snprintf(buffer, sizeof(buffer), "BL: %i", mySetupData->get_backlashsteps_out());
-  drawString(0, 54, buffer);
+  myoled->drawString(0, 54, buffer);
 
   snprintf(buffer, sizeof(buffer), "%c", heartbeat[++count_hb % 4]);
-  drawString(8, 14, buffer);
+  myoled->drawString(8, 14, buffer);
 
-  display();
+  myoled->display();
 }
 
 void OLED_GRAPHIC::oled_draw_reboot(void)
 {
-  clear();
-  setTextAlignment(TEXT_ALIGN_CENTER);
-  setFont(ArialMT_Plain_24);
-  drawString(64, 28, "REBOOT"); // Print currentPosition
-  display();
+  myoled->clear();
+  myoled->setTextAlignment(TEXT_ALIGN_CENTER);
+  myoled->setFont(ArialMT_Plain_24);
+  myoled->drawString(64, 28, "REBOOT"); // Print currentPosition
+  myoled->display();
 }
 
 void OLED_GRAPHIC::display_on(void)
@@ -236,278 +244,392 @@ void OLED_GRAPHIC::display_off(void)
 {
   // do nothing here - sort out code later
 }
-
+#endif
 
 // ======================================================================
 // Section OLED TEXT
 // ======================================================================
-
+#if (OLED_MODE == OLED_TEXT)
 OLED_TEXT::OLED_TEXT(void)
 {
-    // Setup the OLED
+  // Wire.begin();
+  // Wire.begin([SDA], [SCL])
+  // For ESP8266, sda":4,"sck":5,
+  // this should mot be needed
+  // Wire.begin(mySetupData->get_brdsda(), mySetupData->get_brdsck() );
+
+  // Setup the OLED, screen size is 128 x 64, so using characters at 6x8 this gives 21chars across and 8 lines down
+  myoled = new SSD1306AsciiWire();                      // instantiate the OLED object
 #ifdef USE_SSD1306
-    // For the OLED 128x64 0.96" display using the SSD1306 driver
-  begin(&Adafruit128x64, OLED_ADDR);
-#endif
+  // For the OLED 128x64 0.96" display using the SSD1306 driver
+  myoled->begin(&Adafruit128x64, OLED_ADDR);
+#endif // #ifdef USE_SSD1306
 #ifdef USE_SSH1106
-    // For the OLED 128x64 1.3" display using the SSH1106 driver
-  begin(&SH1106_128x64, OLED_ADDR);
-#endif
-  setFont(Adafruit5x7);
-//  setcolor(WHITE);                    // draw white text
-  clear();                              // clrscr OLED
+  // For the OLED 128x64 1.3" display using the SSH1106 driver
+  myoled->begin(&SH1106_128x64, OLED_ADDR);
+#endif // #ifdef USE_SSH1106
+  myoled->setFont(Adafruit5x7);
+  myoled->clear();                                      // clrscr OLED
 
   displaystate = true;
-  
-  Display_Normal();                     // black on white
-  InverseCharOff();
 
-  display_on();                         // display ON
-//  Display_Rotate(0);                  // portrait, not rotated
-//  Display_Bright();
+  myoled->Display_Normal();                             // black on white
+  myoled->InverseCharOff();
+  myoled->Display_On();                                 // display ON
+
+  Display_DebugPrint("Page time: ");
+  Display_DebugPrintln(mySetupData->get_oledpagetime());
 
   if ( mySetupData->get_showstartscreen() )
   {
-    println(mySetupData->get_brdname());  // print startup screen
-    println(programVersion);
-    println(ProgramAuthor);
-  }    
+    Display_DebugPrintln("Show start screen");
+    myoled->println(mySetupData->get_brdname());        // print startup screen
+    myoled->println(programVersion);
+    myoled->println(ProgramAuthor);
+  }
 }
 
 void OLED_TEXT::oledtextmsg(String str, int val, boolean clrscr, boolean nl)
 {
   if ( clrscr == true)                                  // clear the screen?
   {
-    clear();
-    setCursor(0, 0);
+    myoled->clear();
+    myoled->setCursor(0, 0);
   }
   if ( nl == true )                                     // need to print a new line?
   {
     if ( val != -1)                                     // need to print a value?
     {
-      print(str);
-      println(val);
+      myoled->print(str);
+      myoled->println(val);
     }
     else
     {
-      println(str);
+      myoled->println(str);
     }
   }
   else
   {
-    print(str);
+    myoled->print(str);
     if ( val != -1 )
     {
-      print(val);
+      myoled->print(val);
     }
   }
-  //  display();
 }
+
+/*
+  void OLED_TEXT::update_oledtextdisplay(void)
+  {
+  static int displaybitmask = 1;
+  static unsigned long currentMillis;
+  static unsigned long olddisplaytimestampNotMoving = millis();
+
+  currentMillis = millis();                               // see if the display needs updating
+  if (((currentMillis - olddisplaytimestampNotMoving) > ((int)mySetupData->get_oledpagetime() * 1000)) || (currentMillis < olddisplaytimestampNotMoving))
+  {
+    olddisplaytimestampNotMoving = currentMillis;         // update the timestamp
+    myoled->clear();                                      // clrscr OLED
+    int page = 0;
+    String mypage = String(mySetupData->get_oledpageoption(), BIN);
+    // assign leading 0's if necessary
+    while ( mypage.length() < 3)
+    {
+      mypage = "0" + mypage;
+    }
+    Display_DebugPrint("mypage option: ");
+    Display_DebugPrintln(mypage);
+    Display_DebugPrint("mypage length: ");
+    Display_DebugPrintln(mypage.length());
+    for (int i = 0; i < mypage.length(); i++)
+    {
+      page *= 2;
+      if (mypage[i] == '1')
+      {
+        page++;
+      }
+    }
+    // page now is a total of the string as int, string = 111, page = 7
+    // find the next page to display
+    while ( (page & displaybitmask) == 0 )          // mask off one bit at a time
+    {
+      displaybitmask *= 2;                          // skip this page as it is not enabled
+      if ( displaybitmask > 4 )                     // pages 1 to 3 [note: displaybitmask is multiples of 2]
+      {
+        displaybitmask = 1;
+        break;
+      }
+    } // while ( (page & displaybitmask) == 0 )
+
+    Display_DebugPrint("Bit Mask: ");
+    Display_DebugPrintln(displaybitmask);
+    switch (displaybitmask)                         // displaybitmask is now the page to display, 1=pg1, 2=pg2, 4=pg3, 8=pg4 etc
+    {
+      case 1:
+        Display_DebugPrintln("Show page 1");
+        display_oledtext_page1();
+        break;
+      case 2:
+        Display_DebugPrintln("Show page 2");
+        display_oledtext_page2();
+        break;
+      case 4:
+        Display_DebugPrintln("Show page 3");
+        display_oledtext_page3();
+        break;
+      default:
+        Display_DebugPrintln("err: Page 1");
+        display_oledtext_page1();
+        break;
+    }
+    displaybitmask *= 2;                            // next page
+  }
+  }
+*/
 
 void OLED_TEXT::update_oledtextdisplay(void)
 {
+  static int pagetodisplay = 0;
   static unsigned long currentMillis;
   static unsigned long olddisplaytimestampNotMoving = millis();
-  static byte displaypage = 0;
 
-  currentMillis = millis();                       // see if the display needs updating
+  currentMillis = millis();                               // see if the display needs updating
   if (((currentMillis - olddisplaytimestampNotMoving) > ((int)mySetupData->get_oledpagetime() * 1000)) || (currentMillis < olddisplaytimestampNotMoving))
   {
-    olddisplaytimestampNotMoving = currentMillis; // update the timestamp
-    clear();                              // clrscr OLED
-    switch (displaypage % 3)
+    olddisplaytimestampNotMoving = currentMillis;         // update the timestamp
+    myoled->clear();                                      // clrscr OLED
+
+    String mypage = String(mySetupData->get_oledpageoption(), BIN);
+    // assign leading 0's if necessary
+    while ( mypage.length() < 3)
     {
-      case 2:   display_oledtext_page2();
-        break;
-      case 1:   display_oledtext_page1();
-        break;
-      case 0:
-      default:  display_oledtext_page0();
-        break;
+      mypage = "0" + mypage;
     }
-    displaypage++;
+    Display_DebugPrint("mypage option: ");
+    Display_DebugPrintln(mypage);
+    Display_DebugPrint("pagetodisplay: ");
+    Display_DebugPrintln(pagetodisplay);
+    // the last element of mypage is actually page0, it is in reverse order
+    // mypage[0] = page 2
+    // mypage[1] = page 1
+    // mypage[2] = page 0
+    if ( mypage[pagetodisplay] == '1' )
+    {
+      // display the page
+      switch (pagetodisplay)
+      {
+        case 0:
+          Display_DebugPrintln("Show page 2");
+          display_oledtext_page2();
+          break;
+        case 1:
+          Display_DebugPrintln("Show page 1");
+          display_oledtext_page1();
+          break;
+        case 2:
+          Display_DebugPrintln("Show page 0");
+          display_oledtext_page0();
+          break;
+        default:
+          Display_DebugPrintln("err: Page 0");
+          display_oledtext_page0();
+          break;
+      }
+    }
+    pagetodisplay++;
+    if ( pagetodisplay > 2 )
+    {
+      pagetodisplay = 0;
+    }
   }
 }
 
 void OLED_TEXT::update_oledtext_position(void)
 {
-  setCursor(0, 0);
-  print(CURRENTPOSSTR);
-  print(driverboard->getposition());
-  clearToEOL();
-  println();
+  myoled->setCursor(0, 0);
+  myoled->print(CURRENTPOSSTR);
+  myoled->print(driverboard->getposition());
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(TARGETPOSSTR);
-  print(ftargetPosition);
-  clearToEOL();
-  println();
+  myoled->print(TARGETPOSSTR);
+  myoled->print(ftargetPosition);
+  myoled->clearToEOL();
+  myoled->println();
   //  display();
-}
-
-void OLED_TEXT::display_on(void)
-{
-  Display_On();
-}
-
-void OLED_TEXT::display_off(void)
-{
-  Display_Off();
 }
 
 void OLED_TEXT::display_oledtext_page0(void)           // display screen
 {
   char tempString[20];
 
-  home();
-  print(CURRENTPOSSTR);
-  print(driverboard->getposition());
-  clearToEOL();
+  myoled->home();
+  myoled->print(CURRENTPOSSTR);
+  myoled->print(driverboard->getposition());
+  myoled->clearToEOL();
 
-  println();
-  print(TARGETPOSSTR);
-  print(ftargetPosition);
-  clearToEOL();
-  println();
+  myoled->println();
+  myoled->print(TARGETPOSSTR);
+  myoled->print(ftargetPosition);
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(COILPWRSTR);
-  print(mySetupData->get_coilpower());
-  clearToEOL();
-  println();
+  myoled->print(COILPWRSTR);
+  myoled->print(mySetupData->get_coilpower());
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(REVDIRSTR);
-  print(mySetupData->get_reversedirection());
-  clearToEOL();
-  println();
+  myoled->print(REVDIRSTR);
+  myoled->print(mySetupData->get_reversedirection());
+  myoled->clearToEOL();
+  myoled->println();
 
   // stepmode setting
-  print(STEPMODESTR);
-  print(mySetupData->get_brdstepmode());
-  clearToEOL();
-  println();
+  myoled->print(STEPMODESTR);
+  myoled->print(mySetupData->get_brdstepmode());
+  myoled->clearToEOL();
+  myoled->println();
 
-  //Temperature
-  print(TEMPSTR);
-  print(String(lasttemp, 2));
-  print(" c");
-  clearToEOL();
-  println();
+  // Temperature
+  myoled->print(TEMPSTR);
+  myoled->print(String(lasttemp, 2));
+  myoled->print(" c");
+  myoled->clearToEOL();
+  myoled->println();
 
-  //Motor Speed
-  print(MOTORSPEEDSTR);
-  print(mySetupData->get_motorspeed());
-  clearToEOL();
-  println();
+  // Motor Speed
+  myoled->print(MOTORSPEEDSTR);
+  myoled->print(mySetupData->get_motorspeed());
+  myoled->clearToEOL();
+  myoled->println();
 
-  //MaxSteps
-  print(MAXSTEPSSTR);
+  // MaxSteps
+  myoled->print(MAXSTEPSSTR);
   ltoa(mySetupData->get_maxstep(), tempString, 10);
-  print(tempString);
-  clearToEOL();
-  println();
+  myoled->print(tempString);
+  myoled->clearToEOL();
+  myoled->println();
 }
 
 void OLED_TEXT::display_oledtext_page1(void)
 {
   // temperature compensation
-  print(TCOMPSTEPSSTR);
-  print(mySetupData->get_tempcoefficient());
-  clearToEOL();
-  println();
+  myoled->print(TCOMPSTEPSSTR);
+  myoled->print(mySetupData->get_tempcoefficient());
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(TCOMPSTATESTR);
-  print(mySetupData->get_tempcompenabled());
-  clearToEOL();
-  println();
+  myoled->print(TCOMPSTATESTR);
+  myoled->print(mySetupData->get_tempcompenabled());
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(TCOMPDIRSTR);
-  print(mySetupData->get_tcdirection());
-  clearToEOL();
-  println();
+  myoled->print(TCOMPDIRSTR);
+  myoled->print(mySetupData->get_tcdirection());
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(BACKLASHINSTR);
-  print(mySetupData->get_backlash_in_enabled());
-  clearToEOL();
-  println();
+  myoled->print(BACKLASHINSTR);
+  myoled->print(mySetupData->get_backlash_in_enabled());
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(BACKLASHOUTSTR);
-  print(mySetupData->get_backlash_out_enabled());
-  clearToEOL();
-  println();
+  myoled->print(BACKLASHOUTSTR);
+  myoled->print(mySetupData->get_backlash_out_enabled());
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(BACKLASHINSTEPSSTR);
-  print(mySetupData->get_backlashsteps_in());
-  clearToEOL();
-  println();
+  myoled->print(BACKLASHINSTEPSSTR);
+  myoled->print(mySetupData->get_backlashsteps_in());
+  myoled->clearToEOL();
+  myoled->println();
 
-  print(BACKLASHOUTSTEPSSTR);
-  print(mySetupData->get_backlashsteps_out());
-  clearToEOL();
-  println();
+  myoled->print(BACKLASHOUTSTEPSSTR);
+  myoled->print(mySetupData->get_backlashsteps_out());
+  myoled->clearToEOL();
+  myoled->println();
 }
 
 void OLED_TEXT::display_oledtext_page2(void)
 {
 #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
-  setCursor(0, 0);
+  myoled->setCursor(0, 0);
 #if (CONTROLLERMODE == ACCESSPOINT)
-  print("Access Point");
-  clearToEOL();
-  println();
+  myoled->print("Access Point");
+  myoled->clearToEOL();
+  myoled->println();
 #endif
 #if (CONTROLLERMODE == STATIONMODE)
-  print("Station mode");
-  clearToEOL();
-  println();
+  myoled->print("Station mode");
+  myoled->clearToEOL();
+  myoled->println();
 #endif
-  print("SSID:");
-  print(mySSID);
-  clearToEOL();
-  println();
-  print("IP  :");
-  print(ipStr);
-  clearToEOL();
-  println();
+  myoled->print("SSID:");
+  myoled->print(mySSID);
+  myoled->clearToEOL();
+  myoled->println();
+  myoled->print("IP  :");
+  myoled->print(ipStr);
+  myoled->clearToEOL();
+  myoled->println();
 #endif // #if ((CONTROLLERMODE == ACCESSPOINT) ||(CONTROLLERMODE == STATIONMODE) )
 
   if ( mySetupData->get_webserverstate() == 1)
   {
     //setCursor(0, 0);
-    print("Web Server");
-    clearToEOL();
-    println();
-    print("IP  :");
-    print(ipStr);
-    clearToEOL();
-    println();
-    print("Port:");
-    print(String(mySetupData->get_webserverport()));
-    clearToEOL();
-    println();
+    myoled->print("Web Server");
+    myoled->clearToEOL();
+    myoled->println();
+    myoled->print("IP  :");
+    myoled->print(ipStr);
+    myoled->clearToEOL();
+    myoled->println();
+    myoled->print("Port:");
+    myoled->print(String(mySetupData->get_webserverport()));
+    myoled->clearToEOL();
+    myoled->println();
   }
   if ( mySetupData->get_ascomserverstate() == 1)
   {
-    print("ASCOM REMOTE");
-    clearToEOL();
-    println();
-    print("IP  :");
-    print(ipStr);
-    clearToEOL();
-    println();
-    print("Port:");
-    print(mySetupData->get_ascomalpacaport());
-    clearToEOL();
-    println();
+    myoled->print("ASCOM REMOTE");
+    myoled->clearToEOL();
+    myoled->println();
+    myoled->print("IP  :");
+    myoled->print(ipStr);
+    myoled->clearToEOL();
+    myoled->println();
+    myoled->print("Port:");
+    myoled->print(mySetupData->get_ascomalpacaport());
+    myoled->clearToEOL();
+    myoled->println();
   }
 
 #if (CONTROLLERMODE == BLUETOOTHMODE)
-  setCursor(0, 0);
-  print("Bluetooth");
-  clearToEOL();
-  println();
+  myoled->setCursor(0, 0);
+  myoled->print("Bluetooth");
+  myoled->clearToEOL();
+  myoled->println();
 #endif
 
 #if (CONTROLLERMODE == LOCALSERIAL)
-  setCursor(0, 0);
-  println("Local Serial");
+  myoled->setCursor(0, 0);
+  myoled->println("Local Serial");
 #endif
 }
+
+void OLED_TEXT::Update_Oled(const oled_state oled, const connection_status ConnectionStatus)
+{
+  // do nothing
+}
+
+void OLED_TEXT::display_on()
+{
+  myoled->Display_On();
+}
+
+
+void OLED_TEXT::display_off()
+{
+  myoled->Display_Off();
+}
+#endif

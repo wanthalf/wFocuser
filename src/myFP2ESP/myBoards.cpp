@@ -147,7 +147,8 @@ inline void asm1uS()                  // 1uS on ESP8266, 1/3uS on ESP32
 
 // timer ISR  Interrupt Service Routine
 #if defined(ESP8266)
-ICACHE_RAM_ATTR void onTimer()
+//ICACHE_RAM_ATTR void onTimer()                        // DEPRECATED
+IRAM_ATTR void onTimer()
 {
   static bool mjob = false;                                     // motor job is running or not
   if (stepcount  && !(driverboard->hpsw_alert() && stepdir == moving_in))
@@ -593,20 +594,19 @@ void DriverBoard::setstepmode(int smode)
     }
     else if ( boardnum == PRO2ESP32TMC2225 || boardnum == PRO2ESP32TMC2209 || boardnum == PRO2ESP32TMC2209P )
     {
-#if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
       smode = (smode < STEP1)   ? STEP1   : smode;
       smode = (smode > STEP256) ? STEP256 : smode;
       // handle full stepmode
       smode = (smode == STEP1) ? 0 : smode;
+#if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+      // protection around mytmcstepper - it is not defined if not using tmc2209 or tmc2225
       mytmcstepper->microsteps(smode);
-      // update boardconfig.jsn
+#endif // #if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
       if (smode == 0)
       {
         smode = STEP1;
       }
       mySetupData->set_brdstepmode( smode );
-      //Serial.print("sMode= "); Serial.println(driver.microsteps());
-#endif // #if (DRVBRD == PRO2ESP32TMC2225 || DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
     }
   } while (0);
 }
@@ -889,6 +889,7 @@ void DriverBoard::initmove(bool mdir, unsigned long steps)
   }
   Board_DebugPrint("SG value to write: "); Board_DebugPrintln(sgval);
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  // protection around mytmcstepper - it is not defined if not using tmc2209 or tmc2225
   mytmcstepper->SGTHRS(sgval);
 #endif
   // Set alarm to call onTimer function every interval value curspd (value in microseconds).
@@ -912,6 +913,7 @@ byte DriverBoard::getstallguard(void)
 {
   byte sgval = STALL_VALUE;                     // we must set it to something in case the next lines are not enabled
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  // protection around mytmcstepper - it is not defined if not using tmc2209 or tmc2225
   sgval = mytmcstepper->SGTHRS();
 #endif
   return sgval;
@@ -920,6 +922,7 @@ byte DriverBoard::getstallguard(void)
 void DriverBoard::setstallguard(byte newval)
 {
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  // protection around mytmcstepper - it is not defined if not using tmc2209 or tmc2225
   mytmcstepper->SGTHRS(newval);
 #endif
   mySetupData->set_stallguard(newval);
@@ -928,6 +931,7 @@ void DriverBoard::setstallguard(byte newval)
 void DriverBoard::settmc2209current(int newval)
 {
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P )
+  // protection around mytmcstepper - it is not defined if not using tmc2209 or tmc2225
   mytmcstepper->rms_current(mySetupData->get_tmc2209current());     // Set driver current
 #endif
   mySetupData->set_tmc2209current(newval);
@@ -936,6 +940,7 @@ void DriverBoard::settmc2209current(int newval)
 void DriverBoard::settmc2225current(int newval)
 {
 #if (DRVBRD == PRO2ESP32TMC2225)
+  // protection around mytmcstepper - it is not defined if not using tmc2209 or tmc2225
   mytmcstepper->rms_current(mySetupData->get_tmc2225current());     // Set driver current
 #endif
   mySetupData->set_tmc2225current(newval);

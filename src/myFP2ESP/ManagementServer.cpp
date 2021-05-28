@@ -12,7 +12,6 @@
 #include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
 #include "myBoards.h"
 #include "FocuserSetupData.h"
-//#include "images.h"                         // ????? why included here???
 
 #if defined(ESP8266)                        // this "define(ESP8266)" comes from Arduino IDE
 #include <FS.h>                             // include the SPIFFS library  
@@ -20,7 +19,8 @@
 #include "SPIFFS.h"
 #endif
 
-#include "displays.h"
+#include "displays.h"                       // for myoled
+#include "temp.h"                           // for myTempProbe
 
 // ======================================================================
 // Extern Data
@@ -28,7 +28,6 @@
 extern SetupData     *mySetupData;
 extern DriverBoard   *driverboard;
 extern OLED_NON      *myoled;
-#include "temp.h"
 extern TempProbe     *myTempProbe;
 
 extern unsigned long ftargetPosition;
@@ -1396,7 +1395,7 @@ void MANAGEMENT_handleadminpg2(void)
       }
       else
       {
-        MSrvr_DebugPrintln("Attempt to change ascomalpaca port when ascomserver running");
+        MSrvr_DebugPrintln("Attempt to change ascom alpaca port when ascomserver running");
       }
     }
   }
@@ -1405,28 +1404,44 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("starttp");
   if ( msg != "" )
   {
-    if ( mySetupData->get_brdtemppin() == -1)
+    MSrvr_DebugPrintln("start temp probe");
+    if ( mySetupData->get_brdtemppin() == -1)                           // if brdpin for temperature is not defined
     {
-      MSrvr_DebugPrintln("temp pin is -1. Cannot enable pin");
+      MSrvr_DebugPrintln("brdtemppin is -1");                           // then cannot start temp probe so set probestate off
+      MSrvr_DebugPrintln("set temperatureprobestate(0)");
       mySetupData->set_temperatureprobestate(0);
+      MSrvr_DebugPrintln("set tprobe1=0");
       tprobe1 = 0;
     }
     else
     {
       // check if already enabled
-      if (mySetupData->get_temperatureprobestate() == 1)                // if probe is enabled
+      if (mySetupData->get_temperatureprobestate() == 1)                // brdpin for temp is not -1, so check if probe is already enabled
       {
+        MSrvr_DebugPrintln("temperatureprobestate() is 1");
         if ( tprobe1 == 0 )                                             // if probe not found
         {
+          MSrvr_DebugPrintln("tprobe=0, create new tempprobe");
           myTempProbe = new TempProbe;                                  // attempt to start probe and search for probe
+        }
+        else
+        {
+          MSrvr_DebugPrintln("tprobe is 1, do nothing");
         }
       }
       else
       {
+        // if temp probe state is disabled, then enable it and start a new probe
+        MSrvr_DebugPrintln("temperatureprobestate was 0, so enable it and start new probe");
         mySetupData->set_temperatureprobestate(1);                      // enable probe
         if ( tprobe1 == 0 )                                             // if probe not found
         {
+          MSrvr_DebugPrintln("tprobe is 0 so create new probe");
           myTempProbe = new TempProbe;                                  // attempt to start probe and search for probe
+        }
+        else
+        {
+          MSrvr_DebugPrintln("tprobe is 1 so do nothing");
         }
       }
     }
@@ -1434,26 +1449,9 @@ void MANAGEMENT_handleadminpg2(void)
   msg = mserver.arg("stoptp");
   if ( msg != "" )
   {
-    if ( mySetupData->get_brdtemppin() == -1)
-    {
-      MSrvr_DebugPrintln("temp pin is -1. Cannot enable pin");
-      mySetupData->set_temperatureprobestate(0);
-      tprobe1 = 0;
-    }
-    else
-    {
-      if ( mySetupData->get_temperatureprobestate() == 1 )
-      {
-        // there is no destructor call
-        tprobe1 = 0;
-        mySetupData->set_temperatureprobestate(0);
-      }
-      else
-      {
-        // do nothing, already disabled
-        tprobe1 = 0;
-      }
-    }
+    MSrvr_DebugPrint("Disable temp probe");
+    mySetupData->set_temperatureprobestate(0);
+    tprobe1 = 0;
   }
 
   // Temperature probe celsius/farentheit
@@ -1647,23 +1645,29 @@ void MANAGEMENT_buildadminpg1(void)
     {
       if ( mySetupData->get_displayenabled() == 1 )
       {
-        MSpg.replace("%OLE%", String(DISPLAYONSTR));                // checked already
+        MSpg.replace("%OLE%", String(DISPLAYONSTR));                      // checked already
       }
       else
       {
-        MSpg.replace("%OLE%", String(DISPLAYOFFSTR));               // not checked
+        MSpg.replace("%OLE%", String(DISPLAYOFFSTR));                     // not checked
       }
     }
     else
     {
-      MSpg.replace("%OLE%", "<b>DISPLAY: </b>" + String(NOTDEFINEDSTR)); // not checked
+      MSpg.replace("%OLE%", "<b>DISPLAY: </b>" + String(NOTDEFINEDSTR));  // not checked
     }
 
     // if oled display page group option update
     // %PG% is current page option, %PGO% is option binary string
-    MSpg.replace("%PG%", mySetupData->get_oledpageoption() );
+    String answer = String(mySetupData->get_oledpageoption(), BIN);
+    // assign leading 0's if necessary
+    while ( answer.length() < 3)
+    {
+      answer = "0" + answer;
+    }
+    MSpg.replace("%PG%", answer );
     String oled;
-    oled = "<form action=\"/\" method=\"post\"><input type=\"text\" name=\"pg\" size=\"12\" value=" + String(mySetupData->get_oledpageoption()) + "> <input type=\"submit\" name=\"setpg\" value=\"Set\"></form>";
+    oled = "<form action=\"/\" method=\"post\"><input type=\"text\" name=\"pg\" size=\"12\" value=" + answer + "> <input type=\"submit\" name=\"setpg\" value=\"Set\"></form>";
     MSpg.replace("%PGO%", oled );
 
     // page display time
@@ -1846,23 +1850,35 @@ void MANAGEMENT_handleadminpg1(void)
     String tp = mserver.arg("pg");
     if ( tp == "" )                                     // check for null
     {
-      tp = OLEDPGOPTIONALL;
+      tp = String(OLEDPGOPTIONALL, BIN);
     }
-    if ( tp.length() != 3  )                            // check for 3 digits
+    if ( tp.length() > 3  )                            // check for 3 digits
     {
-      tp = OLEDPGOPTIONALL;
+      tp = String(OLEDPGOPTIONALL, BIN);
     }
     for ( unsigned int i = 0; i < tp.length(); i++)     // check for 0 or 1
     {
       if ( (tp[i] != '0') && (tp[i] != '1') )
       {
-        tp = OLEDPGOPTIONALL;
+        tp = String(OLEDPGOPTIONALL, BIN);
         break;
       }
     }
-    MSrvr_DebugPrint(SETPGOPTIONSTR);
-    MSrvr_DebugPrintln(msg);
-    mySetupData->set_oledpageoption(tp);
+    MSrvr_DebugPrint("Display Page Option: ");
+    MSrvr_DebugPrintln(tp);
+    // Convert binary string tp to integer
+    int value = 0;
+    for (unsigned int i = 0; i < tp.length(); i++) // for every character in the string  strlen(s) returns the length of a char array
+    {
+      value *= 2; // double the result so far
+      if (tp[i] == '1')
+      {
+        value++;  // add 1 if needed
+      }
+    }
+    MSrvr_DebugPrint("Display Page Option (byte): ");
+    MSrvr_DebugPrintln(value);
+    mySetupData->set_oledpageoption((byte) value);
   }
 
   // if oled page time update
@@ -1873,13 +1889,13 @@ void MANAGEMENT_handleadminpg1(void)
     if ( tp != "" )
     {
       long pgtime = tp.toInt();
-      if ( pgtime < MINOLEDPAGETIME )
+      if ( pgtime < OLEDPAGETIMEMIN )
       {
-        pgtime = MINOLEDPAGETIME;                       // at least 2s
+        pgtime = OLEDPAGETIMEMIN;                       // at least 2s
       }
-      else if ( pgtime > MAXOLEDPAGETIME )
+      if ( pgtime > OLEDPAGETIMEMAX )
       {
-        pgtime = MAXOLEDPAGETIME;
+        pgtime = OLEDPAGETIMEMAX;
       }
       MSrvr_DebugPrint(SETPGTIMESTR);
       MSrvr_DebugPrintln(msg);
@@ -2856,7 +2872,7 @@ void MANAGEMENT_genbrd()
     // value = mserver.arg("brn");
     // do not allow user to change brn boardnumber - if they did then it will stuff things up big time
     jsonstr = jsonstr + "\"brdnum\":\"" + String(mySetupData->get_brdnumber()) + "\",";
-    
+
     value = mserver.arg("str");
     if ( value != "" )
     {
@@ -2932,7 +2948,7 @@ void MANAGEMENT_custombrd()
     MSpg.replace("%HEC%", hcol);
     MSpg.replace("%VER%", String(programVersion));
     MSpg.replace("%NAM%", mySetupData->get_brdname());
-  
+
     MSpg.replace("%STA%", "<form action=\"/genbrd\" method=\"post\"><table><tr>");
     MSpg.replace("%BRD%", "<td>Board Name : </td><td><input type=\"text\" name=\"brd\" value=\"" + mySetupData->get_brdname() + "\"></td></tr><tr>");
     MSpg.replace("%MAX%", "<td>MaxStepMode: </td><td><input type=\"text\" name=\"max\" value=\"" + String(mySetupData->get_brdmaxstepmode()) + "\"></td></tr><tr>");

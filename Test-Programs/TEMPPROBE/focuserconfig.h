@@ -20,9 +20,20 @@
 // ======================================================================
 // Uncomment only your board - ONLY ONE BOARD SHOULD BE UNCOMMENTED
 
+// ESP8266 Boards
+//#define DRVBRD   WEMOSDRV8825H                    // driver definition for Holger
+//#define DRVBRD  WEMOSDRV8825
+//#define DRVBRD  PRO2EULN2003
+//#define DRVBRD  PRO2EDRV8825
+//#define DRVBRD  PRO2EL293DNEMA
+//#define DRVBRD  PRO2EL293D28BYJ48
+//#define DRVBRD  PRO2EL298N
+//#define DRVBRD  PRO2EL293DMINI
+//#define DRVBRD  PRO2EL9110S
+//#define DRVBRD  CUSTOMBRD
 // ESP32 Boards
-//#define DRVBRD 	PRO2ESP32DRV8825
-#define DRVBRD 	PRO2ESP32ULN2003
+#define DRVBRD 	PRO2ESP32DRV8825
+//#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
 //#define DRVBRD 	PRO2ESP32L9110S

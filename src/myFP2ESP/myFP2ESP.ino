@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 224
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 225
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -225,7 +225,6 @@ TempProbe *myTempProbe;
 
 #include "displays.h"
 OLED_NON *myoled;
-
 
 // ======================================================================
 // GLOBAL DATA -- DO NOT CHANGE
@@ -578,7 +577,7 @@ void update_pushbuttons(void)
     // check to see if push buttons are enabled
     if ( mySetupData->get_pbenable() == 1)
     {
-      // PB are active high - pins are low by virtue of oull down resistors through J16 and J17 jumpers
+      // PB are active high - pins are low by virtue of pull down resistors through J16 and J17 jumpers
       // read from the board pin number, and compare the return pin value - if 1 then button is pressed
       if ( digitalRead(mySetupData->get_brdpb1pin()) == 1 )
       {
@@ -1041,7 +1040,7 @@ void setup()
   myoled = new OLED_NON;
   displaystate = false;
 #endif // #ifdef OLED_MODE
-  Setup_DebugPrintln("Display state:");
+  Setup_DebugPrint("Display state:");
   Setup_DebugPrintln(displaystate);
 
   heapmsg();
@@ -1055,7 +1054,8 @@ void setup()
   Setup_DebugPrint("Temp probe:");
   if ( mySetupData->get_temperatureprobestate() == 1)   // if temperature probe enabled then try to start new probe
   {
-    Setup_DebugPrintln("enabled");
+    Setup_DebugPrint("mySetupData->get_temperatureprobestate() == 1");
+    Setup_DebugPrintln("enabled, make new instance of probe");
     myTempProbe = new TempProbe;                        // create temp probe - should set tprobe1=true if probe found
   }
   else
@@ -1227,12 +1227,18 @@ void setup()
   delay(5);
   heapmsg();
 
-  // Range check focuser variables
+  // Range check some focuser variables
   mySetupData->set_brdstepmode((mySetupData->get_brdstepmode() < 1 ) ? 1 : mySetupData->get_brdstepmode());
   mySetupData->set_coilpower((mySetupData->get_coilpower() >= 1) ?  1 : 0);
   mySetupData->set_reversedirection((mySetupData->get_reversedirection() >= 1) ?  1 : 0);
-  mySetupData->set_oledpagetime((mySetupData->get_oledpagetime() < OLEDPAGETIMEMIN) ? mySetupData->get_oledpagetime() : OLEDPAGETIMEMIN);
-  mySetupData->set_oledpagetime((mySetupData->get_oledpagetime() > OLEDPAGETIMEMAX) ? OLEDPAGETIMEMAX : mySetupData->get_oledpagetime());
+  if( mySetupData->get_oledpagetime() < OLEDPAGETIMEMIN)
+  {
+     mySetupData->set_oledpagetime(OLEDPAGETIMEMIN);
+  }
+  if( mySetupData->get_oledpagetime() > OLEDPAGETIMEMAX)
+  {
+    mySetupData->set_oledpagetime(OLEDPAGETIMEMAX);
+  }
   mySetupData->set_maxstep((mySetupData->get_maxstep() < FOCUSERLOWERLIMIT) ? FOCUSERLOWERLIMIT : mySetupData->get_maxstep());
   mySetupData->set_stepsize((float)(mySetupData->get_stepsize() < 0.0 ) ? 0 : mySetupData->get_stepsize());
   mySetupData->set_stepsize((float)(mySetupData->get_stepsize() > MAXIMUMSTEPSIZE ) ? MAXIMUMSTEPSIZE : mySetupData->get_stepsize());
@@ -1279,17 +1285,22 @@ void setup()
   // Basic assumption rule: If associated pin is -1 then cannot set enable
   if ( mySetupData->get_temperatureprobestate() == 1)     // if temp probe "enabled" state
   {
+    Setup_DebugPrintln("mySetupData->get_temperatureprobestate() = 1");
     if ( tprobe1 != 0 )                                   // if a probe was found
     {
-      Setup_DebugPrintln("tprobe1 != 0. read_temp");
+      Setup_DebugPrintln("tprobe1 != 0");
+      Setup_DebugPrintln("myTempProbe->read_temp(1)");
       myTempProbe->read_temp(1);                          // read the temperature
     }
     else
     {
       Setup_DebugPrintln("tprobe1 is 0");
-      // disable temperature probe
-      mySetupData->set_temperatureprobestate(0);
+      mySetupData->set_temperatureprobestate(0);          // disable temperature probe
     }
+  }
+  else
+  {
+    Setup_DebugPrintln("mySetupData->get_temperatureprobestate() != 1");
   }
 
 #if (CONTROLLERMODE == STATIONMODE)
@@ -1402,6 +1413,8 @@ void loop()
       {
         DebugPrintln("tcp client connected");
         ConnectionStatus = connected;
+        // a client has connected, start oled display again
+        // oled = oled_on;
       }
     }
   }
@@ -1413,6 +1426,8 @@ void loop()
       if (myclient.available())
       {
         ESP_Communication(); // Wifi communication
+        // client has sent a request, turn display on
+        // oled = olen_on;
       }
     }
     else
@@ -1420,7 +1435,8 @@ void loop()
       DebugPrintln("tcp client disconnectd");
       myclient.stop();
       ConnectionStatus = disconnected;
-      oled = oled_on;
+      // client has disconnected, turn display off
+      oled = oled_off;
     }
   }
 #endif // #if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )
@@ -1488,6 +1504,8 @@ void loop()
     case State_Idle:
       if (driverboard->getposition() != ftargetPosition)
       {
+        // we are going to move focuser, enable display
+        // oled = oled_on;
         isMoving = 1;
         driverboard->enablemotor();
         MainStateMachine = State_InitMove;
@@ -1502,6 +1520,7 @@ void loop()
         // focuser stationary. isMoving is 0
         if (mySetupData->SaveConfiguration(driverboard->getposition(), DirOfTravel)) // save config if needed
         {
+          // we have waited 30s after move has ended so turn off display
           oled = oled_off;
           DebugPrint("Save config");
         }
