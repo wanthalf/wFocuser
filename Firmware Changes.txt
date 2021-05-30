@@ -5,6 +5,9 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+226
+// Add moonlite protocol option
+
 225
 // Correct spelling errors
 // Fix I2C pin number errors in ESP8266 board config files

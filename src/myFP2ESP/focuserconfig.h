@@ -23,7 +23,7 @@
 // ESP8266 Boards
 //#define DRVBRD 	WEMOSDRV8825H                    // driver definition for Holger
 //#define DRVBRD 	WEMOSDRV8825
-#define DRVBRD 	PRO2EULN2003
+//#define DRVBRD 	PRO2EULN2003
 //#define DRVBRD 	PRO2EDRV8825
 //#define DRVBRD 	PRO2EL293DNEMA
 //#define DRVBRD 	PRO2EL293D28BYJ48
@@ -33,7 +33,7 @@
 //#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
 //#define DRVBRD 	PRO2ESP32DRV8825
-//#define DRVBRD 	PRO2ESP32ULN2003
+#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
 //#define DRVBRD 	PRO2ESP32L9110S
@@ -86,7 +86,7 @@
 // To enable the OLED_TEXT or OLED_GRAPHIC display uncomment the related line below. 
 
 //#define OLED_MODE 	OLED_TEXT       // OLED text only mode
-#define OLED_MODE 	OLED_GRAPHIC    // OLED graphic mode
+//#define OLED_MODE 	OLED_GRAPHIC    // OLED graphic mode
 
 // and
 // only uncomment one of the following USE_SSxxxx lines depending upon your lcd type
@@ -118,13 +118,13 @@
 // The following controller modes are MUTUALLY EXCLUSIVE and cannot be combined
 
 // to work as an access point, define accesspoint - cannot use DUCKDNS
-#define CONTROLLERMODE  ACCESSPOINT
+//#define CONTROLLERMODE  ACCESSPOINT
 
 // to work as a station accessing a AP, define stationmode
 //#define CONTROLLERMODE  STATIONMODE
 
 // to work only via USB cable as Serial port, uncomment the next line
-//#define CONTROLLERMODE  LOCALSERIAL
+#define CONTROLLERMODE  LOCALSERIAL
 
 // to enable Bluetooth mode, uncomment the next line [ESP32 only]
 //#define CONTROLLERMODE  BLUETOOTHMODE
@@ -140,7 +140,7 @@
 //#define MDNSSERVER 	8
 
 // Management Server Control Interface [Port 6060] - DO NOT CHANGE
-#define MANAGEMENT 	9
+//#define MANAGEMENT 	9
 
 // Cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
 // To enable DUCKDNS [STATIONMODE only]
@@ -151,12 +151,30 @@
 //#define READWIFICONFIG 	1
 
 // ======================================================================
+// 8: CONTROLLER PROTOCOL
+// ======================================================================
+// Enable ONE of the following NOT BOTH
+// to talk to a myFocuserPro2, myFP2M, myFP2N or myFP2ESP controller
+// uncomment the next line
+//#define PROTOCOL  MYFP2ESP_PROTOCOL
+
+// to talk to a myFocuserPro or Moonlite controller
+// uncomment the next line
+#define PROTOCOL  MOONLITE_PROTOCOL
+
+// ======================================================================
 // DO NOT CHANGE:
 // ======================================================================
 
 // ======================================================================
 // CHECK BOARD AND HW OPTIONS
 // ======================================================================
+//#if (PROTOCOL == MOONLITE_PROTOCOL)
+//#if (CONTROLLERMODE == ACCESSPOINT || CONTROLLERMODE == STATIONMODE)
+//#halt // ERROR you must have LOCALSERIAL defined to use MOONLITE Protocol
+//#endif
+//#endif
+
 #ifndef DRVBRD
 #halt // ERROR you must have DRVBRD defined in myBoards.h
 #endif

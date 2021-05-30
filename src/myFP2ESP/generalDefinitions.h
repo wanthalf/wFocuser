@@ -23,6 +23,10 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define ACCESSPOINT           2
 #define STATIONMODE           3
 #define LOCALSERIAL           4
+#define OLED_TEXT             1
+#define OLED_GRAPHIC          2
+#define MYFP2ESP_PROTOCOL     1
+#define MOONLITE_PROTOCOL     2
 
 // INTERFACE SETTINGS
 #define EOFSTR                '#'
@@ -76,6 +80,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 
 // SERIAL PORT
 #define SERIALPORTSPEED       57600         // 9600, 14400, 19200, 28800, 38400, 57600, 115200
+#define MOONLITESERIALPORTSPEED 9600
 
 // TCP/IP SERVICE
 #define SERVERPORT            2020          // TCPIP port for myFP2ESP
@@ -252,7 +257,7 @@ extern const char* WRITEFILESUCCESSSTR;
 //#define ASCOM_DEBUG       1                                   // for debugging ascomserver
 //#define BOARD_DEBUG       1                                   // for debugging myboards
 //#define DISPLAY_DEBUG     1                                   // for debugging displays
-//#define COMMS_DEBUG       1                                   // for debugging comms
+#define COMMS_DEBUG       1                                   // for debugging comms
 //#define MANAGEMENT_DEBUG  1                                   // for debugging management server
 //#define SETUP_DEBUG       1                                   // for debugging setup()
 //#define SETUPDATA_DEBUG   1                                   // for debugging FocuserSetupData
