@@ -41,6 +41,7 @@
 //#define DRVBRD  PRO2ESP32TMC2225
 //#define DRVBRD  PRO2ESP32TMC2209
 //#define DRVBRD  PRO2ESP32TMC2209P              // this is for Paul using TMC2209 - 58.jsn
+//#define DRVBRD  PRO2ESP32ST6128                // This is board for CLOSED LOOP ST6128 driver
 //#define DRVBRD 	CUSTOMBRD
 
 // On bootup following a controller firmware update, a default driver board file 

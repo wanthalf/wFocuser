@@ -7,6 +7,8 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 
 226
 // Add moonlite protocol option
+// Add board PRO2ESP32ST6128 for closed loop (59.jsn)
+// Fix duplication of remove() in mySetupData.cpp
 
 225
 // Correct spelling errors
