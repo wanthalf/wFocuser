@@ -8,7 +8,7 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 226
 // Add moonlite protocol option
 // Add board PRO2ESP32ST6128 for closed loop (59.jsn)
-// Fix duplication of remove() in mySetupData.cpp
+// Fix duplication of remove() in FocuserSetupData.cpp
 
 225
 // Correct spelling errors
@@ -22,7 +22,7 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 
 224
 // Requires Updated ArduinoJson 6-18-0 Libary - https://github.com/bblanchon/ArduinoJson
-// Move DefaultBoardNumber, brdfixedstepmode, brdstepsperrev into mySetupData
+// Move DefaultBoardNumber, brdfixedstepmode, brdstepsperrev into FocuserSetupData
 // Fix circular reference between driverboard and mySetupData when controller boots
 // Fix for DEBUG errors in myBoards.cpp if BOARD_DEBUG defined
 // Add "brdnum" to every board definition file in /data/boards

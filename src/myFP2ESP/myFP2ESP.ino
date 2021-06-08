@@ -108,7 +108,7 @@
 // OTAUPDATES, MDNSSERVER, MANAGEMENT, USEDUCKDNS and READWIFICONFIG
 
 // ======================================================================
-// 8: SPECIFY CONTROLLER PROTOCOL in 78: focuserconfig.h
+// 8: SPECIFY CONTROLLER PROTOCOL in 8: focuserconfig.h
 // ======================================================================
 // Please specify the controller protocol in focuserconfig.h, such as
 // MYFP2ESP_PROTOCOL or MOONLITE_PROTOCOL
@@ -163,7 +163,7 @@ IPAddress subnet(255, 255, 255, 0);
 // BLUETOOTH MODE NAME
 // ======================================================================
 #if (CONTROLLERMODE == BLUETOOTHMODE)
-String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth controller, this name you can change
+String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth controller
 #endif // #ifdef BLUETOOTHMODE
 
 
