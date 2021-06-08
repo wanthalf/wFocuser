@@ -44,6 +44,26 @@ extern void  software_Reboot(int);
 // LOCAL DATA
 // ======================================================================
 
+// ======================================================================
+// NOTES
+// ======================================================================
+// Moonlite uses a command sequence based on :AD# where 
+// : is the beginning of the command
+// AD are two alphabetic chars (A-Z) representing the command
+// # is the end of command teminator
+// + and - and C are exceptions and are only one character commands
+// numeric values in receive commands and responses are in base 16
+//
+// in MOONLITE, one specifies MaxStep on the SetupDialog form of the ASCOM driver
+// and the driver uses that value as a check for every move. MaxStep is not
+// sent to the driver.
+// there is no get/set maxstep or get/set maxincrement command
+// 
+// This moonlite protocol file will ignore all myFP2ESP commands
+// It will not work with the myFP2ESP Windows Application 
+// or myFP2ESP ASCOM driver
+// In INDI/KSTARS you can select the Moonlite driver
+// IN Windows you can select the Moonlitw ASCOM driver
 
 // ======================================================================
 // CODE
@@ -109,19 +129,19 @@ void ESP_Communication()
   Comms_DebugPrint("raw receive string=");
   Comms_DebugPrintln(receiveString);
 
-  receiveString = receiveString.substring(1, receiveString.length());    // leading :
+  receiveString = receiveString.substring(1, receiveString.length());    // remove leading :
   Comms_DebugPrint("receive string=");
   Comms_DebugPrintln(receiveString);
 
   if ( receiveString.length() < 2 )
   {
-    cmdString = receiveString.substring(0, 1);            // take care of :C#
+    cmdString = receiveString.substring(0, 1);                  // take care of :C#
     cmdval = (int) cmdString[0];
   }
   else
   {
-    cmdString = receiveString.substring(0, 2);
-    cmdval = (int) cmdString[0] + ((int) cmdString[1] * 256);
+    cmdString = receiveString.substring(0, 2);                  // commands are always 2 chars
+    cmdval = (int) cmdString[0] + ((int) cmdString[1] * 256);   // for moonlite get first two chars and generate a value
   }
   Comms_DebugPrint("cmdstr=");
   Comms_DebugPrintln(cmdString);
@@ -398,7 +418,7 @@ void ESP_Communication()
       {
         short byteval;
         WorkString.toCharArray(tempCharArray, sizeof(WorkString));
-        sscanf(tempCharArray, "%hd", &byteval);     // h is half or short, signed
+        sscanf(tempCharArray, "%hd", &byteval);       // h is half or short, signed
         mySetupData->set_tempcoefficient((byte)byteval);
         if ( byteval < 0 )
         {
@@ -406,7 +426,7 @@ void ESP_Communication()
         }
         else
         {
-          mySetupData->set_tcdirection(0);      // positive temperature coefficient, focuser tube moves in
+          mySetupData->set_tcdirection(0);            // positive temperature coefficient, focuser tube moves in
         }
       }
       break;
@@ -416,11 +436,6 @@ void ESP_Communication()
     case 45: // - disable temperature compensation focusing
       mySetupData->set_tempcompenabled(0);
       break;
-
-    // there does not seem to be a get maxsteps command
-    // mySetupData->get_maxstep()
-
-    // there does not seem to be a get maxincrement command
 
     default:
       Comms_DebugPrintln("Unknown command");
