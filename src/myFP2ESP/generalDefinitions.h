@@ -257,7 +257,7 @@ extern const char* WRITEFILESUCCESSSTR;
 //#define ASCOM_DEBUG       1                                   // for debugging ascomserver
 //#define BOARD_DEBUG       1                                   // for debugging myboards
 //#define DISPLAY_DEBUG     1                                   // for debugging displays
-#define COMMS_DEBUG       1                                   // for debugging comms
+//#define COMMS_DEBUG       1                                   // for debugging comms
 //#define MANAGEMENT_DEBUG  1                                   // for debugging management server
 //#define SETUP_DEBUG       1                                   // for debugging setup()
 //#define SETUPDATA_DEBUG   1                                   // for debugging FocuserSetupData

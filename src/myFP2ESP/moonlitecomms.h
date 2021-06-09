@@ -13,9 +13,12 @@
 
 #include <Arduino.h>
 #include "generalDefinitions.h"
-#include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
+#include "focuserconfig.h"                      // boarddefs.h included as part of focuserconfig.h"
 
 #if (PROTOCOL == MOONLITE_PROTOCOL)
+
+#undef  FOCUSERUPPERLIMIT
+#define FOCUSERUPPERLIMIT     32000L    // arbitary focuser limit up to 32000 for moonlite
 
 // ======================================================================
 // EXTERNALS
@@ -41,13 +44,16 @@ extern TempProbe     *myTempProbe;
 extern void  software_Reboot(int);
 
 // ======================================================================
-// LOCAL DATA
+// LOCAL DATA [for moonlite code]
 // ======================================================================
+int THRESHOLD = 200;             // position at which stepper slows down at it approaches target position
+int motorspeedchange = 1;        // should motor speed change if nearing THRESHOLD
+int savedmotorSpeed;
 
 // ======================================================================
 // NOTES
 // ======================================================================
-// Moonlite uses a command sequence based on :AD# where 
+// Moonlite uses a command sequence based on :AD# where
 // : is the beginning of the command
 // AD are two alphabetic chars (A-Z) representing the command
 // # is the end of command teminator
@@ -58,12 +64,13 @@ extern void  software_Reboot(int);
 // and the driver uses that value as a check for every move. MaxStep is not
 // sent to the driver.
 // there is no get/set maxstep or get/set maxincrement command
-// 
+//
 // This moonlite protocol file will ignore all myFP2ESP commands
-// It will not work with the myFP2ESP Windows Application 
+// It will not work with the myFP2ESP Windows Application
 // or myFP2ESP ASCOM driver
-// In INDI/KSTARS you can select the Moonlite driver
-// IN Windows you can select the Moonlitw ASCOM driver
+// It will work with myFocuserPro application and ASCOM driver
+// In INDI/KSTARS you select the Moonlite driver
+// IN Windows you select the Moonlite ASCOM driver
 
 // ======================================================================
 // CODE
@@ -109,13 +116,14 @@ void SendPacket(const char *str)
 
 void ESP_Communication()
 {
+  int    tmpint;
   int    cmdval;
   long   paramval = 0;
   String cmdString = "";
   String receiveString = "";
   String WorkString = "";
   String replystr = "";
-  char   tempCharArray[12];
+  char   tempCharArray[32];
   static unsigned long newtargetPosition;
   static boolean newtargetpositionset = false;
   static float   mtempoffsetval = 0.0;
@@ -150,6 +158,8 @@ void ESP_Communication()
   if ( receiveString.length() > 2)
   {
     WorkString = receiveString.substring(2, receiveString.length() ); // extract any parameters associated with the command
+    WorkString.toCharArray(tempCharArray, sizeof(WorkString));
+    paramval = hexstr2long(tempCharArray);
   }
   Comms_DebugPrint("WorkString = ");
   Comms_DebugPrintln(WorkString);
@@ -221,20 +231,18 @@ void ESP_Communication()
       replystr.toCharArray(tempCharArray, replystr.length() + 1);
       SendPacket(tempCharArray);
       break;
-    // GB   XX    The current RED Led Backlight value, Unsigned Hexadecimal
+    // GB   Get the current RED Led Backlight value, Unsigned Hexadecimal
     case 16967:
       // not implemented in INDI driver
       SendPacket("00");
       break;
-    // GV   XX    Code for current firmware version
+    // GV   Get current firmware version
     case 22087:
       SendPacket("10");
       break;
     // :SPxxxx# Set current position to received position - no move SPXXXX
     case 20563:
       // in INDI driver, only used to set to 0 SP0000 in reset()
-      WorkString.toCharArray(tempCharArray, sizeof(WorkString));
-      paramval = hexstr2long(tempCharArray);
       paramval = (paramval < 0) ? 0 : paramval;
       if ( paramval > mySetupData->get_maxstep())
       {
@@ -247,8 +255,6 @@ void ESP_Communication()
     // :SNxxxx# set new target position SNXXXX - this is a move command
     // but must be followed by a FG command to start the move
     case 20051:
-      WorkString.toCharArray(tempCharArray, sizeof(WorkString));
-      paramval = hexstr2long(tempCharArray);
       paramval = (paramval < 0) ? 0 : paramval;
       if ( paramval > mySetupData->get_maxstep())
       {
@@ -274,9 +280,8 @@ void ESP_Communication()
     // correspond to a stepping delay of 250, 125, 63, 32 and 16 steps
     // per second respectively. Moonlite only
     case 17491:
-      WorkString.toCharArray(tempCharArray, sizeof(WorkString));
-      paramval = hexstr2long(tempCharArray);
-      switch (paramval)
+      tmpint = (int) paramval;
+      switch (tmpint)
       {
         case 2:
           mySetupData->set_motorspeed(FAST);
@@ -311,7 +316,7 @@ void ESP_Communication()
       varEXIT_CRITICAL(&halt_alertMux);
       Comms_DebugPrintln("FQ: halt_alert = true");
       break;
-    // :PO# temperature calibration offset POXX in 0.5 degree increments (hex)
+    // :PO# SET temperature calibration offset POXX in 0.5 degree increments (hex)
     case 20304:
       {
         // this adds/subtracts an offset from the temperature reading in 1/2 degree C steps
@@ -319,46 +324,71 @@ void ESP_Communication()
         mtempoffsetval = 0.0;
         // param is a char []
         String parm1 = WorkString;
-        if ( parm1 == "FA" )
+        if ( WorkString == "FA" )
+        {
           mtempoffsetval = -3.0;
-        else if ( parm1 == "FB")
+        }
+        else if ( WorkString == "FB")
+        {
           mtempoffsetval = -2.5;
-        else if ( parm1 == "FC")
+        }
+        else if ( WorkString == "FC")
+        {
           mtempoffsetval = -2.0;
-        else if ( parm1 == "FD")
+        }
+        else if ( WorkString == "FD")
+        {
           mtempoffsetval = -1.5;
-        else if ( parm1 == "FE")
+        }
+        else if ( WorkString == "FE")
+        {
           mtempoffsetval = -1.0;
-        else if ( parm1 == "FF")
+        }
+        else if ( WorkString == "FF")
+        {
           mtempoffsetval = -0.5;
-        else if ( parm1 == "00")
+        }
+        else if ( WorkString == "00")
+        {
           mtempoffsetval = 0.0;
-        else if ( parm1 == "01")
+        }
+        else if ( WorkString == "01")
+        {
           mtempoffsetval = 0.5;
-        else if ( parm1 == "02")
+        }
+        else if ( WorkString == "02")
+        {
           mtempoffsetval = 1.0;
-        else if ( parm1 == "03")
+        }
+        else if ( WorkString == "03")
+        {
           mtempoffsetval = 1.5;
-        else if ( parm1 == "04")
+        }
+        else if ( WorkString == "04")
+        {
           mtempoffsetval = 2.0;
-        else if ( parm1 == "05")
+        }
+        else if ( WorkString == "05")
+        {
           mtempoffsetval = 2.5;
-        else if ( parm1 == "06")
+        }
+        else if ( WorkString == "06")
+        {
           mtempoffsetval = 3.0;
+        }
       }
       break;
     // PS   xx    Adjust Temperature Scale, Signed Hexadecimal
     case 21328: // :PS    Set temperature precision (9-12 = 0.5, 0.25, 0.125, 0.0625)
-      paramval = WorkString.toInt();
-      paramval = (paramval < 9) ? 9 : paramval;
-      paramval = (paramval > 12) ? 12 : paramval;
-      mySetupData->set_tempresolution((byte) paramval);
+      tmpint = (int)(paramval);
+      tmpint = (tmpint < 9) ? 9 : tmpint;
+      tmpint = (tmpint > 12) ? 12 : tmpint;
       if ( mySetupData->get_temperatureprobestate() == 1 )    // if temp probe is enabled
       {
         if ( tprobe1 != 0 )                                   // if probe was found
         {
-          myTempProbe->temp_setresolution((byte) paramval);   // set probe resolution
-          mySetupData->set_tempresolution((byte) paramval);   // and save for future use
+          myTempProbe->temp_setresolution(tmpint);           // set probe resolution
+          mySetupData->set_tempresolution(tmpint);           // and save for future use
         }
         else
         {
@@ -370,64 +400,43 @@ void ESP_Communication()
         Comms_DebugPrintln("Probe not enabled");
       }
       break;
-    // PR   xx    Adjust Red Backlight Brightness
-    case 21072:
-      Comms_DebugPrintln(":PR# ignored");
-      break;
-    // PG   xx    Adjust Green Backlight Brightness
-    case 18256:
-      Comms_DebugPrintln(":PG# ignored");
-      break;
 
-    // PB   xx    Adjust Blue Backlight Brightness
-    case 16976:
+    //case 21072: // PR   xx    Adjust Red Backlight Brightness
+    //  Comms_DebugPrintln(":PR# ignored");
+    //  break;
+    //case 18256: // PG Adjust Green Backlight Brightness
+    //  Comms_DebugPrintln(":PG# ignored");
+    //  break;
+    case 16976: // PB Adjust Blue Backlight Brightness
       Comms_DebugPrintln(":PB# ignored");
       break;
-
-    // PC   xx    Adjust LCD Contrast
-    case 17232:
+    case 17232: // PC Adjust LCD Contrast
       Comms_DebugPrintln(":PC# ignored");
       break;
-
-    // PX   xxxx    Adjust the Scale for Motor 1
-    case 22608:
+    case 22608: // PX Adjust the Scale for Motor 1
       Comms_DebugPrintln(":PX# ignored");
       break;
-
-    // PH   xx    Find home for Motor, valid options are "01", "02"
-    case 18512:
+    case 18512: // PH Find home for Motor, valid options are "01", "02"
       // not implemented in INDI driver
       ftargetPosition = 0;
       break;
-
     // :C#  N/A   Initiate a temperature conversion
     case 67:
       Comms_DebugPrintln(":C# ignored");
       break;
-
     // :GC# XX#   Returns the temperature coefficient where XX is a two-digit signed (2’s complement)
     case 17223:
       sprintf(tempCharArray, "%02X", mySetupData->get_tempcoefficient());
       SendPacket(tempCharArray);
       break;
-
     case 17235: // :SCxx# set temperature co-efficient XX
       // Set the new temperature coefficient where XX is a two-digit, signed (2’s complement) hex number
       // MSB = 1 is negative, MSB = 0 number is positive
       // The two's complement is calculated by inverting the digits and adding one
       {
-        short byteval;
-        WorkString.toCharArray(tempCharArray, sizeof(WorkString));
-        sscanf(tempCharArray, "%hd", &byteval);       // h is half or short, signed
-        mySetupData->set_tempcoefficient((byte)byteval);
-        if ( byteval < 0 )
-        {
-          mySetupData->set_tcdirection(1);            // negative temperature coefficient, focuser tube moves out
-        }
-        else
-        {
-          mySetupData->set_tcdirection(0);            // positive temperature coefficient, focuser tube moves in
-        }
+        short int tcval = (short int)(paramval);
+        sscanf(tempCharArray, "%hd", &tcval);         // h is half or short, signed
+        mySetupData->set_tempcoefficient((byte) tcval);
       }
       break;
     case 43: // + activate temperature compensation focusing
@@ -436,6 +445,179 @@ void ESP_Communication()
     case 45: // - disable temperature compensation focusing
       mySetupData->set_tempcompenabled(0);
       break;
+
+    // now list the myFocuserPro extensions to Moonlite
+    case 17991: // :GF# get firmware value
+      {
+        String reply = "myFP2ESP-M\r" + String(programVersion);
+        reply.toCharArray(tempCharArray, reply.length() + 1);
+        SendPacket(tempCharArray);
+      }
+      break;
+    case 19783: // :GM# get the MaxSteps
+    case 22855: // :GY# get the maxIncrement - set to MaxSteps
+      sprintf(tempCharArray, "%04X", (unsigned int) mySetupData->get_maxstep());
+      SendPacket(tempCharArray);
+      break;
+    case 21319: // get stepmode
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_brdstepmode());
+      SendPacket(tempCharArray);
+      break;
+    case 20295: // :GO# get the coilPwr setting
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_coilpower());
+      SendPacket(tempCharArray);
+      break;
+    case 21063: // :GR# get the Reverse Direction setting
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_reversedirection());
+      SendPacket(tempCharArray);
+      break;
+    case 21069: // :MR# get Motor Speed
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_motorspeed());
+      SendPacket(tempCharArray);
+      break;
+    case 21837: // :MU# get the MotorSpeed Threshold
+      sprintf(tempCharArray, "%02d", THRESHOLD);
+      SendPacket(tempCharArray);
+      break;
+    case 22349: // :MW# get if motorspeedchange enabled/disabled
+      sprintf(tempCharArray, "%02d", (int) motorspeedchange);
+      SendPacket(tempCharArray);
+      break;
+    case 18244: // :DG# get display state on or off
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_displayenabled());
+      SendPacket(tempCharArray);
+      break;
+    case 22599: // :GX# get the time that an LCD screen is displayed for (in milliseconds, eg 2500 = 2.5seconds
+      sprintf(tempCharArray, "%02X", (int) mySetupData->get_oledpagetime());
+      SendPacket(tempCharArray);
+      break;
+    case 18256: // :PG get temperature precision (9-12)
+      sprintf(tempCharArray, "%02d",(int)mySetupData->get_tempresolution() );
+      SendPacket(tempCharArray);
+      break;
+    case 20048: // :PN# get update of position on lcd when moving (00=disable, 01=enable)
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_oledupdateonmove());
+      SendPacket(tempCharArray);
+      break;
+    case 20816: // :PQ# get if stepsize is enabled in controller (1 or 0, 0/1)
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_stepsizeenabled());
+      SendPacket(tempCharArray);
+      break;
+    case 21072: // :PR# get step size in microns (if enabled by controller)
+      sprintf(tempCharArray, "%02f", mySetupData->get_stepsize());
+      SendPacket(tempCharArray);
+      break;
+    case 19782: // :FM# get Display temp mode (Celsius=1, Fahrenheit=0)
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_tempmode());
+      SendPacket(tempCharArray);
+      break;
+    case 21331: // set stepmode
+      tmpint = (int)(paramval);
+      driverboard->setstepmode(tmpint);
+      break;
+    case 20307: // :SOxxxx# set the coilPwr setting
+      tmpint = (int)(paramval & 0x01);
+      mySetupData->set_coilpower(tmpint);
+      break;
+    case 21075: // :SRxx# set the Reverse Direction setting
+      tmpint = (int)(paramval & 0x01);
+      mySetupData->set_reversedirection(tmpint);
+      break;
+    case 19780: // :DMx# set displaystate C or F
+      tmpint = (int)(paramval & 0x01);
+      mySetupData->set_tempmode(tmpint);
+      break;
+    case 21325: // set motorSpeed - time delay between pulses, acceptable values are 00, 01 and 02 which
+      // correspond to a slow, med, high
+      // myfocuser command
+      tmpint = (int)(paramval & 0x03);
+      savedmotorSpeed = tmpint;           // remember the speed setting
+      mySetupData->set_motorspeed(tmpint);
+      break;
+    case 21581: // :MTxxx# set the MotorSpeed Threshold
+      // myfocuser command
+      tmpint = (int)(paramval);
+      if ( tmpint < 50 )
+      {
+        tmpint = 50;
+      }
+      else if ( tmpint > 200 )
+      {
+        tmpint = 200;
+      }
+      THRESHOLD = tmpint;
+      break;
+    case 22093: // :MVx# Set Enable/Disable motorspeed change when moving
+      tmpint = (int)(paramval & 0x01);
+      motorspeedchange = tmpint;
+      break;
+    case 22605: // :MX# Save settings to EEPROM
+      // copy current settings and write the data to EEPROM
+      mySetupData->set_fposition(driverboard->getposition());       // need to save setting
+      mySetupData->SaveNow();
+      break;
+    case 19795: // :SMxxx# set new maxSteps position SMXXXX
+      // check to make sure not above largest value for maxstep
+      paramval = (paramval > FOCUSERUPPERLIMIT) ? FOCUSERUPPERLIMIT : paramval;
+      // check if below lowest set value for maxstep
+      paramval = (paramval < FOCUSERLOWERLIMIT) ? FOCUSERLOWERLIMIT : paramval;
+      // check to make sure its not less than current focuser position
+      paramval = (paramval < driverboard->getposition()) ? driverboard->getposition() : paramval;
+      // for NEMA17 at 400 steps this would be 5 full rotations of focuser knob
+      // for 28BYG-28 this would be less than 1/2 a revolution of focuser knob
+      mySetupData->set_maxstep(paramval);
+      break;
+    case 22867: // :SYxxxx# set new maxIncrement SYXXXX
+      // myfocuser command
+      // ignore
+      break;
+    case 21316: // :DSx# disable or enable the display setting
+      if ( displaystate == true )
+      {
+        tmpint = (int)(paramval & 0x01);
+        if ( tmpint == 0 )
+        {
+          mySetupData->set_displayenabled(0);
+          if ( displayfound == true )
+          {
+            myoled->display_off();
+          }
+        }
+        else
+        {
+          mySetupData->set_displayenabled(1);
+          if ( displayfound == true )
+          {
+            myoled->display_on();
+          }
+        }
+      }
+      break;
+    case 22611: // :SXxxxx# None    Set updatedisplayNotMoving (length of time an LCD page is displayed for in milliseconds
+      if ( paramval < OLEDPAGETIMEMIN )
+      {
+        paramval = OLEDPAGETIMEMIN;
+      }
+      if ( paramval > OLEDPAGETIMEMAX )
+      {
+        paramval = OLEDPAGETIMEMAX;
+      }
+      mySetupData->set_oledpagetime(paramval);
+      break;
+    case 16724: // :TA#  Reboot Arduino
+      software_Reboot(2000);
+      break;
+    case 19792: // :PMxx# set update of position on lcd when moving (00=disable, 01=enable)
+      tmpint = (int)(paramval & 0x01);
+      mySetupData->set_oledupdateonmove(tmpint);
+      break;
+    case 23111: // :GZ# get the current temperature
+      dtostrf(lasttemp, 4, 3, tempCharArray);
+      SendPacket(tempCharArray);
+      break;
+
+
+
 
     default:
       Comms_DebugPrintln("Unknown command");

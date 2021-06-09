@@ -949,7 +949,9 @@ void setup()
   //Serial.begin(115200);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
-#if (PROTOCOL == MYFP2ESP_PROTOCOL)
+#if (PROTOCOL == MOONLITE_PROTOCOL)
+  Serial.begin(MOONLITESERIALPORTSPEED);        // assume moonlite protocol
+#else
   Serial.begin(SERIALPORTSPEED);                // assume myFP2ESP protocol
 #endif
   serialline = "";
