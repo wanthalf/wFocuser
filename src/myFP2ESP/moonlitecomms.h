@@ -41,14 +41,11 @@ extern SetupData     *mySetupData;
 extern DriverBoard   *driverboard;
 extern TempProbe     *myTempProbe;
 
-extern void  software_Reboot(int);
+extern void software_Reboot(int);
 
 // ======================================================================
 // LOCAL DATA [for moonlite code]
 // ======================================================================
-int THRESHOLD = 200;             // position at which stepper slows down at it approaches target position
-int motorspeedchange = 1;        // should motor speed change if nearing THRESHOLD
-int savedmotorSpeed;
 
 // ======================================================================
 // NOTES
@@ -116,10 +113,9 @@ void SendPacket(const char *str)
 
 void ESP_Communication()
 {
-  int    tmpint;
-  int    cmdval;
-  long   paramval = 0;
-  String cmdString = "";
+  int    cmdval;                                    // the CMD not as "AD" but as integer value
+  long   paramval = 0;                              // holds the parameter associated with the command
+
   String receiveString = "";
   String WorkString = "";
   String replystr = "";
@@ -137,67 +133,68 @@ void ESP_Communication()
   Comms_DebugPrint("raw receive string=");
   Comms_DebugPrintln(receiveString);
 
-  receiveString = receiveString.substring(1, receiveString.length());    // remove leading :
+  receiveString = receiveString.substring(1, receiveString.length()); // remove leading :
   Comms_DebugPrint("receive string=");
   Comms_DebugPrintln(receiveString);
 
   if ( receiveString.length() < 2 )
   {
-    cmdString = receiveString.substring(0, 1);                  // take care of :C#
-    cmdval = (int) cmdString[0];
+    cmdval = (int) receiveString[0];                                  // take care of :C#
   }
   else
   {
-    cmdString = receiveString.substring(0, 2);                  // commands are always 2 chars
-    cmdval = (int) cmdString[0] + ((int) cmdString[1] * 256);   // for moonlite get first two chars and generate a value
+    // a TWO char command
+    cmdval = (int) receiveString[0] + ((int) receiveString[1] * 256); // for moonlite get first two chars and generate a value
   }
-  Comms_DebugPrint("cmdstr=");
-  Comms_DebugPrintln(cmdString);
-  Comms_DebugPrint("cmdval=");
+  Comms_DebugPrint("cmdval = ");
   Comms_DebugPrintln(cmdval);
-  if ( receiveString.length() > 2)
+
+  if ( receiveString.length() > 2)                                    // if the command has arguments
   {
     WorkString = receiveString.substring(2, receiveString.length() ); // extract any parameters associated with the command
-    WorkString.toCharArray(tempCharArray, sizeof(WorkString));
-    paramval = hexstr2long(tempCharArray);
+    WorkString.toCharArray(tempCharArray, sizeof(WorkString));        // convert to char array
+    paramval = hexstr2long(tempCharArray);                            // convert from Base 16 to long
   }
-  Comms_DebugPrint("WorkString = ");
+  Comms_DebugPrint("Arguments = ");
   Comms_DebugPrintln(WorkString);
 
   switch (cmdval)
   {
-    // :GP# get the current focuser position
+    // GP get the current focuser position
     case 20551:
       sprintf(tempCharArray, "%04X", (unsigned int) driverboard->getposition());
       SendPacket(tempCharArray);
       break;
-    // :GN# get the new motor position (target)
+
+    // GN get the new motor position (target)
     case 20039:
       // not implemented in INDI driver
       sprintf(tempCharArray, "%04X", (unsigned int) newtargetPosition);
       SendPacket(tempCharArray);
       break;
-    // :GT# get the current temperature
-    // Do not forget to apply temperature offset (mtempoffsetval = 0.0)
+
+    // GT get the current temperature
     case 21575:
       {
-        float tmp = ((lasttemp + mtempoffsetval) * 2);
+        float tmp = ((lasttemp + mtempoffsetval) * 2);  // Do not forget to apply temperature offset (mtempoffsetval = 0.0)
         sprintf(tempCharArray, "%04X", (int) tmp);
         SendPacket(tempCharArray);
       }
       break;
-    // :GD# Get the Motor 1 speed, valid options are "02, 04, 08, 10, 20"
+
+    // GD get the Motor 1 step delay, valid options are "02, 04, 08, 10, 20"
+    // which correspond to a stepping delay of 250, 125, 63, 32 and 16 steps per second respectively
     case 17479:
-      switch (mySetupData->get_motorspeed() )
+      switch ( mySetupData->get_motorspeed() )
       {
-        case SLOW:
-          sprintf(tempCharArray, "%02X", 8);      // slow
+        case 0:
+          sprintf(tempCharArray, "%02X", 2);
           break;
-        case MED:
-          sprintf(tempCharArray, "%02X", 4);      // medium
+        case 1:
+          sprintf(tempCharArray, "%02X", 4);
           break;
-        case FAST:
-          sprintf(tempCharArray, "%02X", 2);      // fast
+        case 2:
+          sprintf(tempCharArray, "%02X", 8);
           break;
         default:
           sprintf(tempCharArray, "%02X", 2);
@@ -205,46 +202,55 @@ void ESP_Communication()
       }
       SendPacket(tempCharArray);
       break;
-    // GH   XX    "FF" if half step is set, otherwise "00"
+
+    // GH "FF" if half step is set, otherwise "00"
     case 18503:
       if ( mySetupData->get_brdstepmode() == STEP2 )
       {
-        replystr = "FF";
+        //replystr = "FF";
+        SendPacket("FF");
       }
       else
       {
-        replystr = "00";
+        //replystr = "00";
+        SendPacket("00");
       }
-      replystr.toCharArray(tempCharArray, replystr.length() + 1);
-      SendPacket(tempCharArray);
+      //replystr.toCharArray(tempCharArray, replystr.length() + 1);
+      //SendPacket(tempCharArray);
       break;
-    // GI   XX    "01" if the motor is moving, otherwise "00"
+
+    // GI "01" if the motor is moving, otherwise "00"
     case 18759:
       if ( isMoving == 1 )
       {
-        replystr = "01";
+        //replystr = "01";
+        SendPacket("01");
       }
       else
       {
-        replystr = "00";
+        //replystr = "00";
+        SendPacket("00");
       }
-      replystr.toCharArray(tempCharArray, replystr.length() + 1);
-      SendPacket(tempCharArray);
+      //replystr.toCharArray(tempCharArray, replystr.length() + 1);
+      //SendPacket(tempCharArray);
       break;
-    // GB   Get the current RED Led Backlight value, Unsigned Hexadecimal
+
+    // GB get the current RED Led Backlight value, Unsigned Hexadecimal
     case 16967:
       // not implemented in INDI driver
       SendPacket("00");
       break;
-    // GV   Get current firmware version
+
+    // GV get current firmware version
     case 22087:
       SendPacket("10");
       break;
-    // :SPxxxx# Set current position to received position - no move SPXXXX
+
+    // SP set current position to received position - THIS IS NOT A MOVE
+    // in INDI driver, only used to set to 0 SP0000 in reset()
     case 20563:
-      // in INDI driver, only used to set to 0 SP0000 in reset()
-      paramval = (paramval < 0) ? 0 : paramval;
-      if ( paramval > mySetupData->get_maxstep())
+      paramval = (paramval < 0) ? 0 : paramval;               // we cannot have a negative position
+      if ( paramval > mySetupData->get_maxstep())             // check against maxstep
       {
         paramval = mySetupData->get_maxstep();
       }
@@ -252,36 +258,38 @@ void ESP_Communication()
       mySetupData->set_fposition(ftargetPosition);
       driverboard->setposition(ftargetPosition);
       break;
-    // :SNxxxx# set new target position SNXXXX - this is a move command
+
+    // SN set new target position SNXXXX - this is a move command
     // but must be followed by a FG command to start the move
     case 20051:
-      paramval = (paramval < 0) ? 0 : paramval;
-      if ( paramval > mySetupData->get_maxstep())
+      paramval = (paramval < 0) ? 0 : paramval;               // we cannot have a negative position
+      if ( paramval > mySetupData->get_maxstep())             // check against maxstep
       {
         paramval = mySetupData->get_maxstep();
       }
       newtargetPosition = paramval;
       newtargetpositionset = true;
       break;
+
     // Basic rule for setting stepmode in this order
     // 1. Set mySetupData->set_brdstepmode(xx);       // this saves config setting
     // 2. Set driverboard->setstepmode(xx);           // this sets the physical pins
-    // SF       Set Motor 1 to Full Step
-    case 18003:
+    case 18003: // SF set Motor 1 to Full Step
       mySetupData->set_brdstepmode(STEP1);
       driverboard->setstepmode(STEP1);
       break;
-    // SH       Set Motor 1 to Half Step
+
+    // SH set Motor 1 to Half Step
     case 18515:
       mySetupData->set_brdstepmode(STEP2);
       driverboard->setstepmode(STEP2);
       break;
-    // SD   xx    Set the Motor 1 speed, valid options are "02, 04, 08, 10, 20"
+
+    // SD set the Motor 1 speed, valid options are "02, 04, 08, 10, 20"
     // correspond to a stepping delay of 250, 125, 63, 32 and 16 steps
     // per second respectively. Moonlite only
     case 17491:
-      tmpint = (int) paramval;
-      switch (tmpint)
+      switch (paramval)
       {
         case 2:
           mySetupData->set_motorspeed(FAST);
@@ -294,9 +302,11 @@ void ESP_Communication()
           break;
         default:
           mySetupData->set_motorspeed(FAST);
+          break;
       }
       break;
-    // FG        Start a Motor 1 move, moves the motor to the New Position.
+
+    // FG Start a Motor 1 move, moves the motor to the New Position.
     case 18246:
       if ( newtargetpositionset == true)
       {
@@ -309,21 +319,21 @@ void ESP_Communication()
         Comms_DebugPrintln("FG invalid - target position not set");
       }
       break;
-    // FQ       Halt Motor 1 move, position is retained, motor is stopped.
+
+    // FQ Halt Motor 1 move, position is retained, motor is stopped.
     case 20806:
       varENTER_CRITICAL(&halt_alertMux);
       halt_alert = true;
       varEXIT_CRITICAL(&halt_alertMux);
       Comms_DebugPrintln("FQ: halt_alert = true");
       break;
-    // :PO# SET temperature calibration offset POXX in 0.5 degree increments (hex)
+
+    // PO SET temperature calibration offset POXX in 0.5 degree increments (hex)
     case 20304:
       {
         // this adds/subtracts an offset from the temperature reading in 1/2 degree C steps
         // FA -3, FB -2.5, FC -2, FD -1.5, FE -1, FF -.5, 00 0, 01 0.5, 02 1.0, 03 1.5, 04 2.0, 05 2.5, 06 3.0
         mtempoffsetval = 0.0;
-        // param is a char []
-        String parm1 = WorkString;
         if ( WorkString == "FA" )
         {
           mtempoffsetval = -3.0;
@@ -378,17 +388,20 @@ void ESP_Communication()
         }
       }
       break;
-    // PS   xx    Adjust Temperature Scale, Signed Hexadecimal
-    case 21328: // :PS    Set temperature precision (9-12 = 0.5, 0.25, 0.125, 0.0625)
-      tmpint = (int)(paramval);
-      tmpint = (tmpint < 9) ? 9 : tmpint;
-      tmpint = (tmpint > 12) ? 12 : tmpint;
+
+    // PS Adjust Temperature Scale, Signed Hexadecimal
+    // PS set temperature precision (9-12 = 0.5, 0.25, 0.125, 0.0625)
+    case 21328:
+      paramval = (paramval < 9) ? 9 : paramval;
+      paramval = (paramval > 12) ? 12 : paramval;
+      Comms_DebugPrintln("Probe precision: ");
+      Comms_DebugPrintln(paramval);
       if ( mySetupData->get_temperatureprobestate() == 1 )    // if temp probe is enabled
       {
         if ( tprobe1 != 0 )                                   // if probe was found
         {
-          myTempProbe->temp_setresolution(tmpint);           // set probe resolution
-          mySetupData->set_tempresolution(tmpint);           // and save for future use
+          myTempProbe->temp_setresolution((byte)paramval);    // set probe resolution
+          mySetupData->set_tempresolution((byte)paramval);    // and save for future use
         }
         else
         {
@@ -401,35 +414,48 @@ void ESP_Communication()
       }
       break;
 
-    //case 21072: // PR   xx    Adjust Red Backlight Brightness
+    //case 21072: // PR Adjust Red Backlight Brightness
     //  Comms_DebugPrintln(":PR# ignored");
     //  break;
     //case 18256: // PG Adjust Green Backlight Brightness
     //  Comms_DebugPrintln(":PG# ignored");
     //  break;
-    case 16976: // PB Adjust Blue Backlight Brightness
+
+    // PB Adjust Blue Backlight Brightness
+    case 16976:
       Comms_DebugPrintln(":PB# ignored");
       break;
-    case 17232: // PC Adjust LCD Contrast
+
+    // PC Adjust LCD Contrast
+    case 17232:
       Comms_DebugPrintln(":PC# ignored");
       break;
-    case 22608: // PX Adjust the Scale for Motor 1
+
+    // PX Adjust the Scale for Motor 1
+    case 22608:
       Comms_DebugPrintln(":PX# ignored");
       break;
-    case 18512: // PH Find home for Motor, valid options are "01", "02"
+
+    // PH Find home for Motor, valid options are "01", "02"
+    case 18512:
       // not implemented in INDI driver
       ftargetPosition = 0;
       break;
-    // :C#  N/A   Initiate a temperature conversion
+
+    // C Initiate a temperature conversion
     case 67:
       Comms_DebugPrintln(":C# ignored");
       break;
-    // :GC# XX#   Returns the temperature coefficient where XX is a two-digit signed (2’s complement)
+
+    // GC get the temperature coefficient where XX is a two-digit signed (2’s complement)
     case 17223:
       sprintf(tempCharArray, "%02X", mySetupData->get_tempcoefficient());
       SendPacket(tempCharArray);
       break;
-    case 17235: // :SCxx# set temperature co-efficient XX
+
+    // SC set temperature co-efficient XX
+    // this does not work as a myfocuserpro controller does not support temperature compensation
+    case 17235:
       // Set the new temperature coefficient where XX is a two-digit, signed (2’s complement) hex number
       // MSB = 1 is negative, MSB = 0 number is positive
       // The two's complement is calculated by inverting the digits and adding one
@@ -439,124 +465,169 @@ void ESP_Communication()
         mySetupData->set_tempcoefficient((byte) tcval);
       }
       break;
-    case 43: // + activate temperature compensation focusing
-      mySetupData->set_tempcompenabled(1);
+
+    // + activate temperature compensation focusing
+    // a myfocuserpro controller does not support temperature compensation
+    case 43:
+      //mySetupData->set_tempcompenabled(1);
       break;
-    case 45: // - disable temperature compensation focusing
-      mySetupData->set_tempcompenabled(0);
+
+    // - disable temperature compensation focusing
+    // a myfocuserpro controller does not support temperature compensation
+    case 45:
+      //mySetupData->set_tempcompenabled(0);
       break;
 
     // now list the myFocuserPro extensions to Moonlite
-    case 17991: // :GF# get firmware value
+
+    // GF get firmware value
+    case 17991:
       {
         String reply = "myFP2ESP-M\r" + String(programVersion);
         reply.toCharArray(tempCharArray, reply.length() + 1);
         SendPacket(tempCharArray);
       }
       break;
-    case 19783: // :GM# get the MaxSteps
-    case 22855: // :GY# get the maxIncrement - set to MaxSteps
+
+    // GM get the MaxSteps
+    // GY get the maxIncrement - set to MaxSteps
+    case 19783:
+    case 22855:
       sprintf(tempCharArray, "%04X", (unsigned int) mySetupData->get_maxstep());
       SendPacket(tempCharArray);
       break;
-    case 21319: // get stepmode
+
+    // GS get stepmode
+    case 21319:
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_brdstepmode());
       SendPacket(tempCharArray);
       break;
-    case 20295: // :GO# get the coilPwr setting
+
+    // GO get the coilPwr setting
+    case 20295:
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_coilpower());
       SendPacket(tempCharArray);
       break;
-    case 21063: // :GR# get the Reverse Direction setting
+
+    // GR get the Reverse Direction setting
+    case 21063:
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_reversedirection());
       SendPacket(tempCharArray);
       break;
-    case 21069: // :MR# get Motor Speed
+
+    // MR get Motor Speed
+    case 21069:
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_motorspeed());
       SendPacket(tempCharArray);
       break;
-    case 21837: // :MU# get the MotorSpeed Threshold
-      sprintf(tempCharArray, "%02d", THRESHOLD);
-      SendPacket(tempCharArray);
+
+    // MU get the MotorSpeed Threshold
+    case 21837:
+      //sprintf(tempCharArray, "%02d", THRESHOLD);
+      SendPacket("00");
       break;
-    case 22349: // :MW# get if motorspeedchange enabled/disabled
-      sprintf(tempCharArray, "%02d", (int) motorspeedchange);
-      SendPacket(tempCharArray);
+
+    // MW get if motorspeedchange enabled/disabled
+    case 22349:
+      //sprintf(tempCharArray, "%02d", (int) motorspeedchange);
+      SendPacket("00");
       break;
-    case 18244: // :DG# get display state on or off
+
+    // DG get display state on or off
+    case 18244:
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_displayenabled());
       SendPacket(tempCharArray);
       break;
-    case 22599: // :GX# get the time that an LCD screen is displayed for (in milliseconds, eg 2500 = 2.5seconds
+
+    // GX get the time that an LCD screen is displayed for (in milliseconds, eg 2500 = 2.5seconds
+    case 22599:
       sprintf(tempCharArray, "%02X", (int) mySetupData->get_oledpagetime());
       SendPacket(tempCharArray);
       break;
-    case 18256: // :PG get temperature precision (9-12)
-      sprintf(tempCharArray, "%02d",(int)mySetupData->get_tempresolution() );
+
+    // PG get temperature precision (9-12)
+    case 18256:
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_tempresolution() );
       SendPacket(tempCharArray);
       break;
-    case 20048: // :PN# get update of position on lcd when moving (00=disable, 01=enable)
+
+    // PN get update of position on lcd when moving (00=disable, 01=enable)
+    case 20048:
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_oledupdateonmove());
       SendPacket(tempCharArray);
       break;
-    case 20816: // :PQ# get if stepsize is enabled in controller (1 or 0, 0/1)
+
+    // PQ get if stepsize is enabled in controller (1 or 0, 0/1)
+    case 20816:
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_stepsizeenabled());
       SendPacket(tempCharArray);
       break;
-    case 21072: // :PR# get step size in microns (if enabled by controller)
+
+    // PR get step size in microns (if enabled by controller)
+    case 21072:
       sprintf(tempCharArray, "%02f", mySetupData->get_stepsize());
       SendPacket(tempCharArray);
       break;
-    case 19782: // :FM# get Display temp mode (Celsius=1, Fahrenheit=0)
+
+    // FM get Display temp mode (Celsius=1, Fahrenheit=0)
+    case 19782:
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_tempmode());
       SendPacket(tempCharArray);
       break;
-    case 21331: // set stepmode
-      tmpint = (int)(paramval);
-      driverboard->setstepmode(tmpint);
+
+    // SS set stepmode
+    // Basic rule for setting stepmode in this order
+    // 1. Set mySetupData->set_brdstepmode(xx);       // this saves config setting
+    // 2. Set driverboard->setstepmode(xx);           // this sets the physical pins
+    case 21331:
+      Comms_DebugPrint("set stepmode : ");
+      Comms_DebugPrintln(paramval);
+      mySetupData->set_brdstepmode((int)(paramval));
+      driverboard->setstepmode((int)(paramval));
       break;
-    case 20307: // :SOxxxx# set the coilPwr setting
-      tmpint = (int)(paramval & 0x01);
-      mySetupData->set_coilpower(tmpint);
+
+    // SO set the coilPwr setting
+    case 20307:
+      mySetupData->set_coilpower((byte)(paramval & 0x01));
       break;
-    case 21075: // :SRxx# set the Reverse Direction setting
-      tmpint = (int)(paramval & 0x01);
-      mySetupData->set_reversedirection(tmpint);
+
+    // SR set the Reverse Direction setting
+    case 21075:
+      mySetupData->set_reversedirection((byte)(paramval & 0x01));
       break;
-    case 19780: // :DMx# set displaystate C or F
-      tmpint = (int)(paramval & 0x01);
-      mySetupData->set_tempmode(tmpint);
+
+    // DM set displaystate C or F
+    case 19780:
+      mySetupData->set_tempmode((byte)(paramval & 0x01));
       break;
-    case 21325: // set motorSpeed - time delay between pulses, acceptable values are 00, 01 and 02 which
-      // correspond to a slow, med, high
+
+    // MS set motorSpeed - time delay between pulses, acceptable values are 00, 01 and 02 which
+    // correspond to a slow, med, high
+    case 21325:
       // myfocuser command
-      tmpint = (int)(paramval & 0x03);
-      savedmotorSpeed = tmpint;           // remember the speed setting
-      mySetupData->set_motorspeed(tmpint);
+      mySetupData->set_motorspeed((byte)(paramval & 0x03));
       break;
-    case 21581: // :MTxxx# set the MotorSpeed Threshold
+
+    // MT set the MotorSpeed Threshold
+    case 21581:
       // myfocuser command
-      tmpint = (int)(paramval);
-      if ( tmpint < 50 )
-      {
-        tmpint = 50;
-      }
-      else if ( tmpint > 200 )
-      {
-        tmpint = 200;
-      }
-      THRESHOLD = tmpint;
+      // ignore, motorspeedchange not implemented
       break;
-    case 22093: // :MVx# Set Enable/Disable motorspeed change when moving
-      tmpint = (int)(paramval & 0x01);
-      motorspeedchange = tmpint;
+
+    // MV Set Enable/Disable motorspeed change when moving
+    case 22093:
+      // ignore, motorspeedchange not implemented
       break;
-    case 22605: // :MX# Save settings to EEPROM
-      // copy current settings and write the data to EEPROM
+
+    // MX Save settings to File System
+    case 22605:
+      // copy current settings and write the data to file
       mySetupData->set_fposition(driverboard->getposition());       // need to save setting
       mySetupData->SaveNow();
       break;
-    case 19795: // :SMxxx# set new maxSteps position SMXXXX
+
+    // SM set new maxSteps position SMXXXX
+    case 19795:
       // check to make sure not above largest value for maxstep
       paramval = (paramval > FOCUSERUPPERLIMIT) ? FOCUSERUPPERLIMIT : paramval;
       // check if below lowest set value for maxstep
@@ -567,15 +638,18 @@ void ESP_Communication()
       // for 28BYG-28 this would be less than 1/2 a revolution of focuser knob
       mySetupData->set_maxstep(paramval);
       break;
-    case 22867: // :SYxxxx# set new maxIncrement SYXXXX
+
+    // SY set new maxIncrement SYXXXX
+    case 22867:
       // myfocuser command
       // ignore
       break;
-    case 21316: // :DSx# disable or enable the display setting
+
+    // DS disable or enable the display setting
+    case 21316:
       if ( displaystate == true )
       {
-        tmpint = (int)(paramval & 0x01);
-        if ( tmpint == 0 )
+        if ( (int)(paramval & 0x01) == 0 )
         {
           mySetupData->set_displayenabled(0);
           if ( displayfound == true )
@@ -593,7 +667,9 @@ void ESP_Communication()
         }
       }
       break;
-    case 22611: // :SXxxxx# None    Set updatedisplayNotMoving (length of time an LCD page is displayed for in milliseconds
+
+    // SX set updatedisplayNotMoving (length of time an LCD page is displayed for in milliseconds
+    case 22611:
       if ( paramval < OLEDPAGETIMEMIN )
       {
         paramval = OLEDPAGETIMEMIN;
@@ -604,20 +680,22 @@ void ESP_Communication()
       }
       mySetupData->set_oledpagetime(paramval);
       break;
-    case 16724: // :TA#  Reboot Arduino
+      
+    // TA  Reboot Arduino  
+    case 16724: 
       software_Reboot(2000);
       break;
-    case 19792: // :PMxx# set update of position on lcd when moving (00=disable, 01=enable)
-      tmpint = (int)(paramval & 0x01);
-      mySetupData->set_oledupdateonmove(tmpint);
+      
+    // PM set update of position on lcd when moving (00=disable, 01=enable)  
+    case 19792: 
+      mySetupData->set_oledupdateonmove((int)(paramval & 0x01));
       break;
-    case 23111: // :GZ# get the current temperature
+
+    // GZ get the current temperature  
+    case 23111: 
       dtostrf(lasttemp, 4, 3, tempCharArray);
       SendPacket(tempCharArray);
       break;
-
-
-
 
     default:
       Comms_DebugPrintln("Unknown command");
