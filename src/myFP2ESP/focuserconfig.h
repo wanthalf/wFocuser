@@ -32,8 +32,8 @@
 //#define DRVBRD 	PRO2EL9110S
 //#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
-//#define DRVBRD 	PRO2ESP32DRV8825
-#define DRVBRD 	PRO2ESP32ULN2003
+#define DRVBRD 	PRO2ESP32DRV8825
+//#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
 //#define DRVBRD 	PRO2ESP32L9110S
@@ -119,13 +119,13 @@
 // The following controller modes are MUTUALLY EXCLUSIVE and cannot be combined
 
 // to work as an access point, define accesspoint - cannot use DUCKDNS
-//#define CONTROLLERMODE  ACCESSPOINT
+#define CONTROLLERMODE  ACCESSPOINT
 
 // to work as a station accessing a AP, define stationmode
 //#define CONTROLLERMODE  STATIONMODE
 
 // to work only via USB cable as Serial port, uncomment the next line
-#define CONTROLLERMODE  LOCALSERIAL
+//#define CONTROLLERMODE  LOCALSERIAL
 
 // to enable Bluetooth mode, uncomment the next line [ESP32 only]
 //#define CONTROLLERMODE  BLUETOOTHMODE
@@ -141,14 +141,14 @@
 //#define MDNSSERVER 	8
 
 // Management Server Control Interface [Port 6060] - DO NOT CHANGE
-//#define MANAGEMENT 	9
+#define MANAGEMENT 	9
 
 // Cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
 // To enable DUCKDNS [STATIONMODE only]
 //#define USEDUCKDNS 	1
 
-// to enable reading SSID and PASSWORD 
-// from SPIFFS file wificonfig at boot time, uncomment the following file
+// to enable reading SSID and PASSWORD from SPIFFS file wificonfig at 
+// boot time, uncomment the following file
 //#define READWIFICONFIG 	1
 
 // ======================================================================
@@ -157,10 +157,10 @@
 // Enable ONE of the following NOT BOTH
 // to talk to a myFocuserPro2, myFP2M, myFP2N or myFP2ESP controller
 // uncomment the next line
-//#define PROTOCOL  MYFP2ESP_PROTOCOL
+#define PROTOCOL  MYFP2ESP_PROTOCOL
 
 // to talk to a myFocuserPro or Moonlite controller uncomment the next line
-#define PROTOCOL  MOONLITE_PROTOCOL
+//#define PROTOCOL  MOONLITE_PROTOCOL
 
 // ======================================================================
 // DO NOT CHANGE:
@@ -169,6 +169,14 @@
 // ======================================================================
 // CHECK BOARD AND HW OPTIONS
 // ======================================================================
+#ifndef DRVBRD
+#error No DRVBRD defined
+#endif
+
+#if !defined(PROTOCOL)
+#error Protocol has not been defined, must be MYFP2ESP_PROTOCOL or MOONLITE_PROTOCOL
+#endif
+
 #if (PROTOCOL == MOONLITE_PROTOCOL)
 #if (CONTROLLERMODE == ACCESSPOINT || CONTROLLERMODE == STATIONMODE)
 #error You cannot use ACCESSPOINT or STATIONMODE with the MOONLITE Protocol
@@ -177,10 +185,6 @@
 #error MOONLITE Protocol requires LOCALSERIAL
 #endif // #if (CONTROLLERMODE != LOCALSERIAL)
 #endif // #if (PROTOCOL == MOONLITE_PROTOCOL)
-
-#ifndef DRVBRD
-#error No DRVBRD defined
-#endif
 
 #if defined(USE_SSD1306) && defined(USE_SSH1106)
 #error Define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
