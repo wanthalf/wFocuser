@@ -69,6 +69,20 @@ extern void software_Reboot(int);
 // In INDI/KSTARS you select the Moonlite driver
 // IN Windows you select the Moonlite ASCOM driver
 
+
+// ======================================================================
+// DEBUGGING : DO NOT CHANGE
+// ======================================================================
+//#define COMMS_DEBUG       1                                   // for debugging comms
+
+#ifdef  COMMS_DEBUG                                             // for debugging comms
+#define Comms_DebugPrint(...) Serial.print(__VA_ARGS__)         // DPRINT is a macro, debug print
+#define Comms_DebugPrintln(...) Serial.println(__VA_ARGS__)     // DPRINTLN is a macro, debug print with new line
+#else
+#define Comms_DebugPrint(...)                                   // now defines a blank line
+#define Comms_DebugPrintln(...)                                 // now defines a blank line
+#endif
+
 // ======================================================================
 // CODE
 // ======================================================================
@@ -97,10 +111,10 @@ void SendMessage(const char *str)
 #if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )  // for Accesspoint or Station mode
   myclient.print(str);
   packetssent++;
-#elif (CONTROLLERMODE == BLUETOOTHMODE)  // for bluetooth
+#elif (CONTROLLERMODE == BLUETOOTHMODE)             // for bluetooth
   SerialBT.print(str);
 #elif (CONTROLLERMODE == LOCALSERIAL)
-  Serial.print(str);
+  Comms_DebugPrint(str);
 #endif
 }
 
@@ -118,11 +132,10 @@ void ESP_Communication()
 
   String receiveString = "";
   String WorkString = "";
-  String replystr = "";
   char   tempCharArray[32];
-  static unsigned long newtargetPosition;
-  static boolean newtargetpositionset = false;
-  static float   mtempoffsetval = 0.0;
+  static unsigned long newtargetPosition;           // used in moonlite to set a target position without moving
+  static boolean newtargetpositionset = false;      // used in moonlite to to indicate if a new target has been set
+  static float   mtempoffsetval = 0.0;              // used in moonlite to set a temperature correction value
 
 #if (CONTROLLERMODE == BLUETOOTHMODE)
   receiveString = STARTCMDSTR + queue.pop();
@@ -139,11 +152,10 @@ void ESP_Communication()
 
   if ( receiveString.length() < 2 )
   {
-    cmdval = (int) receiveString[0];                                  // take care of :C#
+    cmdval = (int) receiveString[0];                                  // take care of :C# :+# and :-#
   }
-  else
+  else                                                                // it is a TWO char command
   {
-    // a TWO char command
     cmdval = (int) receiveString[0] + ((int) receiveString[1] * 256); // for moonlite get first two chars and generate a value
   }
   Comms_DebugPrint("cmdval = ");
@@ -207,32 +219,24 @@ void ESP_Communication()
     case 18503:
       if ( mySetupData->get_brdstepmode() == STEP2 )
       {
-        //replystr = "FF";
         SendPacket("FF");
       }
       else
       {
-        //replystr = "00";
         SendPacket("00");
-      }
-      //replystr.toCharArray(tempCharArray, replystr.length() + 1);
-      //SendPacket(tempCharArray);
+      };
       break;
 
     // GI "01" if the motor is moving, otherwise "00"
     case 18759:
       if ( isMoving == 1 )
       {
-        //replystr = "01";
         SendPacket("01");
       }
       else
       {
-        //replystr = "00";
         SendPacket("00");
       }
-      //replystr.toCharArray(tempCharArray, replystr.length() + 1);
-      //SendPacket(tempCharArray);
       break;
 
     // GB get the current RED Led Backlight value, Unsigned Hexadecimal
@@ -272,9 +276,10 @@ void ESP_Communication()
       break;
 
     // Basic rule for setting stepmode in this order
-    // 1. Set mySetupData->set_brdstepmode(xx);       // this saves config setting
-    // 2. Set driverboard->setstepmode(xx);           // this sets the physical pins
-    case 18003: // SF set Motor 1 to Full Step
+    // 1. Set mySetupData->set_brdstepmode(xx);               // this saves config setting
+    // 2. Set driverboard->setstepmode(xx);                   // this sets the physical pins
+    // SF set Motor 1 to Full Step
+    case 18003: 
       mySetupData->set_brdstepmode(STEP1);
       driverboard->setstepmode(STEP1);
       break;
@@ -390,29 +395,9 @@ void ESP_Communication()
       break;
 
     // PS Adjust Temperature Scale, Signed Hexadecimal
-    // PS set temperature precision (9-12 = 0.5, 0.25, 0.125, 0.0625)
-    case 21328:
-      paramval = (paramval < 9) ? 9 : paramval;
-      paramval = (paramval > 12) ? 12 : paramval;
-      Comms_DebugPrintln("Probe precision: ");
-      Comms_DebugPrintln(paramval);
-      if ( mySetupData->get_temperatureprobestate() == 1 )    // if temp probe is enabled
-      {
-        if ( tprobe1 != 0 )                                   // if probe was found
-        {
-          myTempProbe->temp_setresolution((byte)paramval);    // set probe resolution
-          mySetupData->set_tempresolution((byte)paramval);    // and save for future use
-        }
-        else
-        {
-          Comms_DebugPrintln("Probe not found");
-        }
-      }
-      else
-      {
-        Comms_DebugPrintln("Probe not enabled");
-      }
-      break;
+    //case 21328:
+    // ignore
+    //  break;
 
     //case 21072: // PR Adjust Red Backlight Brightness
     //  Comms_DebugPrintln(":PR# ignored");
@@ -469,184 +454,38 @@ void ESP_Communication()
     // + activate temperature compensation focusing
     // a myfocuserpro controller does not support temperature compensation
     case 43:
+      Comms_DebugPrintln(":+# ignored");
       //mySetupData->set_tempcompenabled(1);
       break;
 
     // - disable temperature compensation focusing
     // a myfocuserpro controller does not support temperature compensation
     case 45:
+      Comms_DebugPrintln(":-# ignored");
       //mySetupData->set_tempcompenabled(0);
       break;
 
     // now list the myFocuserPro extensions to Moonlite
 
-    // GF get firmware value
-    case 17991:
-      {
-        String reply = "myFP2ESP-M\r" + String(programVersion);
-        reply.toCharArray(tempCharArray, reply.length() + 1);
-        SendPacket(tempCharArray);
-      }
-      break;
-
-    // GM get the MaxSteps
-    // GY get the maxIncrement - set to MaxSteps
-    case 19783:
-    case 22855:
-      sprintf(tempCharArray, "%04X", (unsigned int) mySetupData->get_maxstep());
-      SendPacket(tempCharArray);
-      break;
-
-    // GS get stepmode
-    case 21319:
-      sprintf(tempCharArray, "%02d", (int) mySetupData->get_brdstepmode());
-      SendPacket(tempCharArray);
-      break;
-
-    // GO get the coilPwr setting
-    case 20295:
-      sprintf(tempCharArray, "%02d", (int) mySetupData->get_coilpower());
-      SendPacket(tempCharArray);
-      break;
-
-    // GR get the Reverse Direction setting
-    case 21063:
-      sprintf(tempCharArray, "%02d", (int) mySetupData->get_reversedirection());
-      SendPacket(tempCharArray);
-      break;
-
-    // MR get Motor Speed
-    case 21069:
-      sprintf(tempCharArray, "%02d", (int) mySetupData->get_motorspeed());
-      SendPacket(tempCharArray);
-      break;
-
-    // MU get the MotorSpeed Threshold
-    case 21837:
-      //sprintf(tempCharArray, "%02d", THRESHOLD);
-      SendPacket("00");
-      break;
-
-    // MW get if motorspeedchange enabled/disabled
-    case 22349:
-      //sprintf(tempCharArray, "%02d", (int) motorspeedchange);
-      SendPacket("00");
-      break;
-
     // DG get display state on or off
     case 18244:
+      Comms_DebugPrint("Get Display State : ");
+      Comms_DebugPrintln((int) mySetupData->get_displayenabled());
       sprintf(tempCharArray, "%02d", (int) mySetupData->get_displayenabled());
       SendPacket(tempCharArray);
       break;
 
-    // GX get the time that an LCD screen is displayed for (in milliseconds, eg 2500 = 2.5seconds
-    case 22599:
-      sprintf(tempCharArray, "%02X", (int) mySetupData->get_oledpagetime());
-      SendPacket(tempCharArray);
-      break;
-
-    // PG get temperature precision (9-12)
-    case 18256:
-      sprintf(tempCharArray, "%02d", (int) mySetupData->get_tempresolution() );
-      SendPacket(tempCharArray);
-      break;
-
-    // PN get update of position on lcd when moving (00=disable, 01=enable)
-    case 20048:
-      sprintf(tempCharArray, "%02d", (int) mySetupData->get_oledupdateonmove());
-      SendPacket(tempCharArray);
-      break;
-
-    // PQ get if stepsize is enabled in controller (1 or 0, 0/1)
-    case 20816:
-      sprintf(tempCharArray, "%02d", (int) mySetupData->get_stepsizeenabled());
-      SendPacket(tempCharArray);
-      break;
-
-    // PR get step size in microns (if enabled by controller)
-    case 21072:
-      sprintf(tempCharArray, "%02f", mySetupData->get_stepsize());
-      SendPacket(tempCharArray);
-      break;
-
-    // FM get Display temp mode (Celsius=1, Fahrenheit=0)
-    case 19782:
-      sprintf(tempCharArray, "%02d", (int) mySetupData->get_tempmode());
-      SendPacket(tempCharArray);
-      break;
-
-    // SS set stepmode
-    // Basic rule for setting stepmode in this order
-    // 1. Set mySetupData->set_brdstepmode(xx);       // this saves config setting
-    // 2. Set driverboard->setstepmode(xx);           // this sets the physical pins
-    case 21331:
-      Comms_DebugPrint("set stepmode : ");
-      Comms_DebugPrintln(paramval);
-      mySetupData->set_brdstepmode((int)(paramval));
-      driverboard->setstepmode((int)(paramval));
-      break;
-
-    // SO set the coilPwr setting
-    case 20307:
-      mySetupData->set_coilpower((byte)(paramval & 0x01));
-      break;
-
-    // SR set the Reverse Direction setting
-    case 21075:
-      mySetupData->set_reversedirection((byte)(paramval & 0x01));
-      break;
-
     // DM set displaystate C or F
     case 19780:
+      Comms_DebugPrint("Set Display Temp Mode : ");
+      Comms_DebugPrintln((byte)(paramval & 0x01));
       mySetupData->set_tempmode((byte)(paramval & 0x01));
-      break;
-
-    // MS set motorSpeed - time delay between pulses, acceptable values are 00, 01 and 02 which
-    // correspond to a slow, med, high
-    case 21325:
-      // myfocuser command
-      mySetupData->set_motorspeed((byte)(paramval & 0x03));
-      break;
-
-    // MT set the MotorSpeed Threshold
-    case 21581:
-      // myfocuser command
-      // ignore, motorspeedchange not implemented
-      break;
-
-    // MV Set Enable/Disable motorspeed change when moving
-    case 22093:
-      // ignore, motorspeedchange not implemented
-      break;
-
-    // MX Save settings to File System
-    case 22605:
-      // copy current settings and write the data to file
-      mySetupData->set_fposition(driverboard->getposition());       // need to save setting
-      mySetupData->SaveNow();
-      break;
-
-    // SM set new maxSteps position SMXXXX
-    case 19795:
-      // check to make sure not above largest value for maxstep
-      paramval = (paramval > FOCUSERUPPERLIMIT) ? FOCUSERUPPERLIMIT : paramval;
-      // check if below lowest set value for maxstep
-      paramval = (paramval < FOCUSERLOWERLIMIT) ? FOCUSERLOWERLIMIT : paramval;
-      // check to make sure its not less than current focuser position
-      paramval = (paramval < driverboard->getposition()) ? driverboard->getposition() : paramval;
-      // for NEMA17 at 400 steps this would be 5 full rotations of focuser knob
-      // for 28BYG-28 this would be less than 1/2 a revolution of focuser knob
-      mySetupData->set_maxstep(paramval);
-      break;
-
-    // SY set new maxIncrement SYXXXX
-    case 22867:
-      // myfocuser command
-      // ignore
       break;
 
     // DS disable or enable the display setting
     case 21316:
+      Comms_DebugPrint("Set Display State : ");
+      Comms_DebugPrintln((int)(paramval & 0x01));
       if ( displaystate == true )
       {
         if ( (int)(paramval & 0x01) == 0 )
@@ -668,8 +507,251 @@ void ESP_Communication()
       }
       break;
 
+    // FM get Display temp mode (Celsius=1, Fahrenheit=0)
+    case 19782:
+      Comms_DebugPrint("Get Display Temp Mode : ");
+      Comms_DebugPrintln((int) mySetupData->get_tempmode());
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_tempmode());
+      SendPacket(tempCharArray);
+      break;
+
+    // GF get firmware value
+    case 17991:
+      {
+        String reply = "myFP2ESP-M\r" + String(programVersion);
+        reply.toCharArray(tempCharArray, reply.length() + 1);
+        SendPacket(tempCharArray);
+      }
+      break;
+
+    // GM get the MaxSteps
+    // GY get the maxIncrement - set to MaxSteps
+    case 19783:
+    case 22855:
+      Comms_DebugPrint("Get Max Step : ");
+      Comms_DebugPrintln((unsigned int) mySetupData->get_maxstep());
+      sprintf(tempCharArray, "%04X", (unsigned int) mySetupData->get_maxstep());
+      SendPacket(tempCharArray);
+      break;
+
+    // GO get the coilPwr setting
+    case 20295:
+      Comms_DebugPrint("Get Coil Power : ");
+      Comms_DebugPrintln( (int) mySetupData->get_coilpower());
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_coilpower());
+      SendPacket(tempCharArray);
+      break;
+
+    // GR get the Reverse Direction setting
+    case 21063:
+      Comms_DebugPrint("Set Reverse Direction : ");
+      Comms_DebugPrintln((int) mySetupData->get_reversedirection());
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_reversedirection());
+      SendPacket(tempCharArray);
+      break;
+
+    // GS get stepmode
+    case 21319:
+      Comms_DebugPrint("get step mode : ");
+      Comms_DebugPrintln((int) mySetupData->get_brdstepmode());
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_brdstepmode());
+      SendPacket(tempCharArray);
+      break;
+
+    // GX get the time that an LCD screen is displayed for (in seconds, eg 2seconds
+    case 22599:
+      Comms_DebugPrint("Get Page Display Time : ");
+      Comms_DebugPrintln((int) mySetupData->get_oledpagetime());
+      sprintf(tempCharArray, "%02X", (int) mySetupData->get_oledpagetime());
+      SendPacket(tempCharArray);
+      break;
+
+    // GZ get the current temperature
+    case 23111:
+      dtostrf(lasttemp, 4, 3, tempCharArray);
+      SendPacket(tempCharArray);
+      break;
+
+    // MR get Motor Speed
+    case 21069:
+      Comms_DebugPrint("Set Motor Speed : ");
+      Comms_DebugPrintln((int) mySetupData->get_motorspeed());
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_motorspeed());
+      SendPacket(tempCharArray);
+      break;
+
+    // MS set motorSpeed - time delay between pulses, acceptable values are 00, 01 and 02 which
+    // correspond to a slow, med, high
+    case 21325:
+      // myfocuser command
+      Comms_DebugPrint("Set Motor Speed : ");
+      Comms_DebugPrintln((byte)(paramval & 0x03));
+      mySetupData->set_motorspeed((byte)(paramval & 0x03));
+      break;
+
+    // MT set the MotorSpeed Threshold
+    case 21581:
+      // myfocuser command
+      Comms_DebugPrintln(":MT# not implemented");
+      // ignore, motorspeedchange not implemented
+      break;
+
+    // MU get the MotorSpeed Threshold
+    case 21837:
+      Comms_DebugPrintln(":MU# not implemented");
+      //sprintf(tempCharArray, "%02d", THRESHOLD);
+      SendPacket("00");
+      break;
+
+    // MV Set Enable/Disable motorspeed change when moving
+    case 22093:
+      Comms_DebugPrintln(":MV# not implemented");
+      // ignore, motorspeedchange not implemented
+      break;
+
+    // MW get if motorspeedchange enabled/disabled
+    case 22349:
+      Comms_DebugPrintln(":MW# not implemented");
+      //sprintf(tempCharArray, "%02d", (int) motorspeedchange);
+      SendPacket("00");
+      break;
+
+    // MX Save settings to File System
+    case 22605:
+      // copy current settings and write the data to file
+      mySetupData->set_fposition(driverboard->getposition());       // need to save setting
+      mySetupData->SaveNow();
+      break;
+
+    // PG get temperature precision (9-12)
+    case 18256:
+      Comms_DebugPrint("get temperature precision : ");
+      Comms_DebugPrintln((int) mySetupData->get_tempresolution());
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_tempresolution() );
+      SendPacket(tempCharArray);
+      break;
+
+    // PN get update of position on lcd when moving (00=disable, 01=enable)
+    case 20048:
+      Comms_DebugPrint("get update of position on lcd when moving : ");
+      Comms_DebugPrintln((int) mySetupData->get_oledupdateonmove());
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_oledupdateonmove());
+      SendPacket(tempCharArray);
+      break;
+
+    // PM set update of position on lcd when moving (00=disable, 01=enable)
+    case 19792:
+      Comms_DebugPrint("set update of position on lcd when moving : ");
+      Comms_DebugPrintln((int)(paramval & 0x01));
+      mySetupData->set_oledupdateonmove((int)(paramval & 0x01));
+      break;
+
+    // PP set the step size value - double type, eg 2.1
+    case 20560:
+      {
+        Comms_DebugPrint("set stepsize : ");
+        Comms_DebugPrintln(WorkString);
+        float tempstepsize = (float)WorkString.toFloat();
+        tempstepsize = (tempstepsize < MINIMUMSTEPSIZE ) ? MINIMUMSTEPSIZE : tempstepsize;
+        tempstepsize = (tempstepsize > MAXIMUMSTEPSIZE ) ? MAXIMUMSTEPSIZE : tempstepsize;
+        mySetupData->set_stepsize(tempstepsize);
+      }
+      break;
+
+    // PQ get if stepsize is enabled in controller (1 or 0, 0/1)
+    case 20816:
+      Comms_DebugPrint("get if stepsize is enabled : ");
+      Comms_DebugPrintln((int) mySetupData->get_stepsizeenabled());
+      sprintf(tempCharArray, "%02d", (int) mySetupData->get_stepsizeenabled());
+      SendPacket(tempCharArray);
+      break;
+
+    // PR get step size in microns (if enabled by controller)
+    case 21072:
+      Comms_DebugPrint("get step size in microns : ");
+      Comms_DebugPrintln(mySetupData->get_stepsize());
+      sprintf(tempCharArray, "%02f", mySetupData->get_stepsize());
+      SendPacket(tempCharArray);
+      break;
+
+    // PS set temperature precision (9-12 = 0.5, 0.25, 0.125, 0.0625)
+    case 21328:
+      Comms_DebugPrint("set temperature precision : ");
+      Comms_DebugPrintln(paramval);
+      // Note paramval is in hex, 9, A, B, C is 9,10,11,12
+      paramval = (paramval < 9) ? 9 : paramval;
+      paramval = (paramval > 12) ? 12 : paramval;
+      Comms_DebugPrint("Probe precision: ");
+      Comms_DebugPrintln(paramval);
+      if ( mySetupData->get_temperatureprobestate() == 1 )    // if temp probe is enabled
+      {
+        if ( tprobe1 != 0 )                                   // if probe was found
+        {
+          myTempProbe->temp_setresolution((byte)paramval);    // set probe resolution
+          mySetupData->set_tempresolution((byte)paramval);    // and save for future use
+        }
+        else
+        {
+          Comms_DebugPrintln("Probe not found");
+        }
+      }
+      else
+      {
+        Comms_DebugPrintln("Probe not enabled");
+      }
+      break;
+
+    // PZ set stepsize enabled to be OFF - default (0) or ON (1)
+    case 23120:
+      Comms_DebugPrint("Set step size enabled : ");
+      Comms_DebugPrintln((byte)(paramval & 0x01));
+      mySetupData->set_stepsizeenabled((byte)(paramval & 0x01));
+      break;
+          
+    // SO set the coilPwr setting
+    case 20307:
+      Comms_DebugPrint("Set Coil Power : ");
+      Comms_DebugPrintln((byte)(paramval & 0x01));
+      mySetupData->set_coilpower((byte)(paramval & 0x01));
+      break;
+
+    // SR set the Reverse Direction setting
+    case 21075:
+      Comms_DebugPrint("Set reverse direction : ");
+      Comms_DebugPrintln((byte)(paramval & 0x01));
+      mySetupData->set_reversedirection((byte)(paramval & 0x01));
+      break;
+
+    // SS set stepmode
+    // Basic rule for setting stepmode in this order
+    // 1. Set mySetupData->set_brdstepmode(xx);       // this saves config setting
+    // 2. Set driverboard->setstepmode(xx);           // this sets the physical pins
+    case 21331:
+      Comms_DebugPrint("Set Step Mode : ");
+      Comms_DebugPrintln((int)paramval);
+      mySetupData->set_brdstepmode((int)(paramval));
+      driverboard->setstepmode((int)(paramval));
+      break;
+
+    // SM set new maxSteps position SMXXXX
+    case 19795:
+      Comms_DebugPrint("Set Maxstep : ");
+      Comms_DebugPrintln(paramval);
+      // check to make sure not above largest value for maxstep
+      paramval = (paramval > FOCUSERUPPERLIMIT) ? FOCUSERUPPERLIMIT : paramval;
+      // check if below lowest set value for maxstep
+      paramval = (paramval < FOCUSERLOWERLIMIT) ? FOCUSERLOWERLIMIT : paramval;
+      // check to make sure its not less than current focuser position
+      paramval = (paramval < driverboard->getposition()) ? driverboard->getposition() : paramval;
+      // for NEMA17 at 400 steps this would be 5 full rotations of focuser knob
+      // for 28BYG-28 this would be less than 1/2 a revolution of focuser knob
+      mySetupData->set_maxstep(paramval);
+      break;
+
     // SX set updatedisplayNotMoving (length of time an LCD page is displayed for in milliseconds
     case 22611:
+      Comms_DebugPrint("Set page display time : ");
+      Comms_DebugPrintln(paramval);
       if ( paramval < OLEDPAGETIMEMIN )
       {
         paramval = OLEDPAGETIMEMIN;
@@ -680,21 +762,18 @@ void ESP_Communication()
       }
       mySetupData->set_oledpagetime(paramval);
       break;
-      
-    // TA  Reboot Arduino  
-    case 16724: 
-      software_Reboot(2000);
-      break;
-      
-    // PM set update of position on lcd when moving (00=disable, 01=enable)  
-    case 19792: 
-      mySetupData->set_oledupdateonmove((int)(paramval & 0x01));
+
+    // SY set new maxIncrement SYXXXX
+    case 22867:
+      Comms_DebugPrintln(":SY# not implemented");
+      // myfocuser command
+      // ignore
       break;
 
-    // GZ get the current temperature  
-    case 23111: 
-      dtostrf(lasttemp, 4, 3, tempCharArray);
-      SendPacket(tempCharArray);
+    // TA  Reboot Arduino
+    case 16724:
+    Comms_DebugPrintln(":TA# reboot controller");
+      software_Reboot(2000);
       break;
 
     default:
