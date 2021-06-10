@@ -86,6 +86,7 @@
 #define PRO2ESP32TMC2225      56
 #define PRO2ESP32TMC2209      57
 #define PRO2ESP32TMC2209P     58          // This is board for Paul using TMC2209 for testing
+#define PRO2ESP32ST6128       59          // This is board for CLOSED LOOP ST6128 driver
 
 // myFP2M boards
 #define PRO2MDRV8825          52

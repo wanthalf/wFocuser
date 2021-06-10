@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 225
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 226 [10-June-2021]
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -65,9 +65,10 @@
 // 4. Enable Display type [if fitted[ in focuserconfig.h
 // 5. Set hardware options for JoyStick/IRRemote [esp32 only] in focuserconfig.h
 // 6. Set the controller mode in focuserconfig.h
-// 7. Set your target CPU to match the correct CPU for your board
-// 8. Compile and upload to your controller
-// 9. Upload the sketch data files
+// 7. Set the controller protocol in focuserconfig.h
+// 8. Set your target CPU to match the correct CPU for your board
+// 9. Compile and upload to your controller
+// 10. Upload the sketch data files
 
 // ======================================================================
 // 1: SPECIFY DRIVER BOARD in 1: focuserconfig.h
@@ -107,7 +108,13 @@
 // OTAUPDATES, MDNSSERVER, MANAGEMENT, USEDUCKDNS and READWIFICONFIG
 
 // ======================================================================
-// 8: WIFI NETWORK CREDENTIALS: SSID AND PASSWORD
+// 8: SPECIFY CONTROLLER PROTOCOL in 8: focuserconfig.h
+// ======================================================================
+// Please specify the controller protocol in focuserconfig.h, such as
+// MYFP2ESP_PROTOCOL or MOONLITE_PROTOCOL
+
+// ======================================================================
+// WIFI NETWORK CREDENTIALS: SSID AND PASSWORD
 // ======================================================================
 // 1. For access point mode this is the network you connect to
 // 2. For station mode, change mySSID and myPASSWORD to match your network details
@@ -121,7 +128,7 @@ char myPASSWORD_1[64] = "AllYeWhoEnter";      // alternate network id
 
 
 // ======================================================================
-// 9: STATIC IP ADDRESS CONFIGURATION
+// STATIC IP ADDRESS CONFIGURATION
 // ======================================================================
 // must use static IP if using duckdns or as an Access Point
 #ifndef STATICIPON
@@ -153,15 +160,15 @@ IPAddress subnet(255, 255, 255, 0);
 
 
 // ======================================================================
-// 10: BLUETOOTH MODE NAME
+// BLUETOOTH MODE NAME
 // ======================================================================
 #if (CONTROLLERMODE == BLUETOOTHMODE)
-String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth controller, this name you can change
+String BLUETOOTHNAME = "MYFP3ESP32BT";      // default name for Bluetooth controller
 #endif // #ifdef BLUETOOTHMODE
 
 
 // ======================================================================
-// 11: mDNS NAME: Name must be alphabetic chars only, lowercase
+// mDNS NAME: Name must be alphabetic chars only, lowercase
 // ======================================================================
 #ifdef MDNSSERVER
 char mDNSNAME[] = "myfp2eap";               // mDNS name will be myfp2eap.local
@@ -169,7 +176,7 @@ char mDNSNAME[] = "myfp2eap";               // mDNS name will be myfp2eap.local
 
 
 // ======================================================================
-// 12: OTAUPDATES (OVER THE AIR UPDATE) SSID AND PASSWORD CONFIGURATION
+// OTAUPDATES (OVER THE AIR UPDATE) SSID AND PASSWORD CONFIGURATION
 // ======================================================================
 // You can change the values for OTANAME and OTAPassword if required
 #ifdef OTAUPDATES
@@ -180,7 +187,7 @@ const char *OTAPassword = "esp8266";
 
 
 // ======================================================================
-// 13: DUCKDNS DOMAIN AND TOKEN CONFIGURATION
+// DUCKDNS DOMAIN AND TOKEN CONFIGURATION
 // ======================================================================
 // if using DuckDNS you need to set these next two parameters, duckdnsdomain
 // and duckdnstoken, BUT you cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE
@@ -206,7 +213,7 @@ String btline;                                // buffer for serial data
 #endif // BLUETOOTHMODE
 
 // Project specific includes - DO NOT CHANGE
-#if (CONTROLLERMODE == LOCALSERIAL)
+#if (CONTROLLERMODE == LOCALSERIAL || PROTOCOL == MOONLITE_PROTOCOL)
 #include "ESPQueue.h"                         // by Steven de Salas
 Queue queue(QUEUELENGTH);                     // receive serial queue of commands
 String serialline;                            // buffer for serial data
@@ -293,7 +300,11 @@ extern void start_webserver(void);
 // ======================================================================
 // FIRMWARE CODE START - CHANGE AT YOUR OWN PERIL
 // ======================================================================
+#if (PROTOCOL == MYFP2ESP_PROTOCOL)
 #include "comms.h"                                // do not change or move
+#else
+#include "moonlitecomms.h"
+#endif
 
 // ======================================================================
 // INFRARED REMOTE CONTROLLER - CHANGE AT YOUR OWN PERIL
@@ -935,10 +946,14 @@ void stop_tcpipserver()
 
 void setup()
 {
-  Serial.begin(115200);
+  //Serial.begin(115200);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
-  Serial.begin(SERIALPORTSPEED);
+#if (PROTOCOL == MOONLITE_PROTOCOL)
+  Serial.begin(MOONLITESERIALPORTSPEED);        // assume moonlite protocol
+#else
+  Serial.begin(SERIALPORTSPEED);                // assume myFP2ESP protocol
+#endif
   serialline = "";
   clearSerialPort();
 #endif // #if (CONTROLLERMODE == LOCALSERIAL)
@@ -1231,11 +1246,11 @@ void setup()
   mySetupData->set_brdstepmode((mySetupData->get_brdstepmode() < 1 ) ? 1 : mySetupData->get_brdstepmode());
   mySetupData->set_coilpower((mySetupData->get_coilpower() >= 1) ?  1 : 0);
   mySetupData->set_reversedirection((mySetupData->get_reversedirection() >= 1) ?  1 : 0);
-  if( mySetupData->get_oledpagetime() < OLEDPAGETIMEMIN)
+  if ( mySetupData->get_oledpagetime() < OLEDPAGETIMEMIN)
   {
-     mySetupData->set_oledpagetime(OLEDPAGETIMEMIN);
+    mySetupData->set_oledpagetime(OLEDPAGETIMEMIN);
   }
-  if( mySetupData->get_oledpagetime() > OLEDPAGETIMEMAX)
+  if ( mySetupData->get_oledpagetime() > OLEDPAGETIMEMAX)
   {
     mySetupData->set_oledpagetime(OLEDPAGETIMEMAX);
   }

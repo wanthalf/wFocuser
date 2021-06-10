@@ -382,8 +382,8 @@ byte SetupData::SaveVariableConfiguration()
   {
     SPIFFS.remove(filename_variable);
   }
-  delay(10);
-  SPIFFS.remove(filename_variable);
+  //delay(10);
+  //SPIFFS.remove(filename_variable);
   delay(10);
   // Open file for writing
   File file = SPIFFS.open(this->filename_variable, "w");

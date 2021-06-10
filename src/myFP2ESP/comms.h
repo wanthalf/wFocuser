@@ -8,7 +8,7 @@
 #define comms_h
 
 #include "generalDefinitions.h"
-#include "focuserconfig.h"                  // boarddefs.h included as part of focuserconfig.h"
+#include "focuserconfig.h"                      // boarddefs.h included as part of focuserconfig.h"
 
 // ======================================================================
 // EXTERNS
@@ -30,19 +30,23 @@ extern int           tprobe1;
 extern float         lasttemp;
 extern char          mySSID[64];
 extern const char*   programVersion;
-extern unsigned long ftargetPosition;          // target position
+extern unsigned long ftargetPosition;           // target position
 extern bool          displaystate;
 extern SetupData     *mySetupData;
 extern DriverBoard   *driverboard;
 extern TempProbe     *myTempProbe;
 
+#if ((CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE))
+extern WiFiClient myclient;                     // only one client supported, multiple connections denied
+#endif // #if ((CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE))
+
+// extern functions
 extern void  software_Reboot(int);
 extern void  start_ascomremoteserver(void);
 extern void  stop_ascomremoteserver(void);
 extern void  start_webserver();
 extern void  stop_webserver();
 extern long  getrssi(void);
-extern void  software_Reboot(int);
 extern bool  init_leds(void);
 extern bool  init_pushbuttons(void);
 
@@ -156,7 +160,7 @@ void ESP_Communication()
   receiveString = STARTCMDSTR + queue.pop();
 #else   // for Accesspoint or Station mode
   packetsreceived++;
-  receiveString = myclient.readStringUntil(EOFSTR);    // read until terminator
+  receiveString = myclient.readStringUntil(EOFSTR);       // read until terminator
 #endif
 
   receiveString += EOFSTR;                                // put back terminator
@@ -439,7 +443,7 @@ void ESP_Communication()
     case 37: // get displaystatus
       SendPaket('D', mySetupData->get_displayenabled());
       break;
-    case 38: // :38#   Dxx#      Get Temperature mode 1=Celsius, 0=Fahrenheight
+    case 38: // get Temperature mode 1=Celsius, 0=Fahrenheight
       SendPaket('b', mySetupData->get_tempmode());
       break;
     case 39: // get the new motor position (target) XXXXXX

@@ -23,6 +23,10 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define ACCESSPOINT           2
 #define STATIONMODE           3
 #define LOCALSERIAL           4
+#define OLED_TEXT             1
+#define OLED_GRAPHIC          2
+#define MYFP2ESP_PROTOCOL     1
+#define MOONLITE_PROTOCOL     2
 
 // INTERFACE SETTINGS
 #define EOFSTR                '#'
@@ -57,10 +61,10 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define MAXASCOMPAGESIZE      2200          // largest = /setuppage = 2042
 
 // DISPLAY
-#define OLEDPAGETIMEMIN        2            // 2s minimum oled page display time
-#define OLEDPAGETIMEMAX        8            // 8s maximum oled page display time
-#define OLEDPGOPTIONALL        7            // oled page enable, ALL pages "111"
-#define OLEDUPDATEONMOVE       15           // defines how many steps before refreshing position when moving if oledupdateonmove is 1
+#define OLEDPAGETIMEMIN       2             // 2s minimum oled page display time
+#define OLEDPAGETIMEMAX       8             // 8s maximum oled page display time
+#define OLEDPGOPTIONALL       7             // oled page enable, ALL pages "111"
+#define OLEDUPDATEONMOVE      15            // defines how many steps before refreshing position when moving if oledupdateonmove is 1
 
 // DUCKDNS SERVICE
 #define DUCKDNS_REFRESHRATE   60000         // duck dns, check ip address every 60s for an update
@@ -76,6 +80,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 
 // SERIAL PORT
 #define SERIALPORTSPEED       57600         // 9600, 14400, 19200, 28800, 38400, 57600, 115200
+#define MOONLITESERIALPORTSPEED 9600
 
 // TCP/IP SERVICE
 #define SERVERPORT            2020          // TCPIP port for myFP2ESP

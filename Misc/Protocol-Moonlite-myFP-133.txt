@@ -1,0 +1,101 @@
+v1.32
+18th November 2017
+
+Moonlite uses a command sequence based on :AD# where 
+    : is the beginning of the command
+    AD are two alphabetic chars (A-Z) representing the command
+    # is the end of command teminator
+
++ and - and C are exceptions and are only one character commands
+numeric values in receive commands and responses are in base 16
+
+In MOONLITE, one specifies MaxStep on the SetupDialog form of the 
+ASCOM driver and the driver uses that value as a check for every 
+move. MaxStep is not sent to the driver.
+
+Standard Moonlite Protocol + myFocuserPro extensions
+Command Protocol, commands begin with : and end with #
+:C#     67      None    is a temperature conversion, no response
+:+#     43  None        Activate temperature compensation focusing
+:-#     45  None         Disable temperature compensation focusing
+
+:GB#    16967   00#     LED backlight value, always return "00"
+:GC#    17223   02#     Get the temperature coefficient, hard-coded in our example 02
+:GD#    17479   xx#     Get the current step delay, only values of 02, 04, 08, 10, 20
+:GH#    18503   xx#     Get if the focus motor is half-stepped (FF#) otherwise return "00#"
+:GI#    18759   xx#     Get motor is moving - 01 if moving, 00 otherwise
+:GN#    20039   xxxx#   Get the new motor position (target) XXXX in unsigned hex
+:GP#    20551   xxxx#   Get the current motor position XXXX in unsigned hex
+:GT#    21575   xxxx#   Returns the current temperature where YYYY# is a four-digit signed 
+                         (2’s complement) hex number. It is multiplied by 2 by the controller
+:GV#    22087   10#     firmware value, always return "10"
+
+:FG#	18246	None	Go to the new position as set by the ":SNYYYY#" command
+:FQ#	20806	None	Stop a move - like a Halt
+
+:PH# 	18512	None	home the motor to position 0
+:POXX#  20304   None    Temperature calibration offset, XX is a two-digit signed hex number, 
+                         in half degree increments.
+                         Example 1: :PO02# offset of +1°C, Example 2: :POFB# offset of -2.5°C
+
+:SCXX#  17235   None    Set the new temperature coefficient where XX is a two-digit, \
+                        signed (2’s complement) hex number
+:SDXX#	17491	xx#	    Set the new stepping delay where XX is a two-digit, unsigned hex number. 
+        			    Valid values to send are 02, 04, 08, 10 and 20, which correspond to a 
+        			    stepping delay of 250, 125, 63, 32 and 16 steps per second respectively
+:SF#    18003	None	Set full step mode
+:SH#    18515	None	Set half step mode
+:SN#    20051	None	Set new target position to nnnn (requires FG to move to target)
+:SPXXXX# 20563	None	set current motor position to nnnn (does not move, updates 
+        			    currentpos and targetpos to nnnn)
+
+ENHANCEMENTS FOR myFocuser
+not supported by moonlite 
+Supported by myFocuser ASCOM driver
+Supported by myFocuser Application
+MaxStep is the maximum position of the focuser
+MaxIncrement is the maximum number of steps per one move
+
+:DG#      18244		xx#		    Get Display LCD returns state (0=disabled, 1=enabled)
+:DMx#	  19780		None		Set Display in Celcius (:DM1#) or display in Fahrenheit (:DM0#)
+:DS0#	  21316		None		Set Display LCD disable
+:DS1#     21316		None		Set Display LCD enable
+
+:FM#	  19782		x#		    Get Display temp mode (Celsius=1, Fahrenheit=0)
+
+:GF#	  17991		str#		Get firmware version string#
+:GM#      19783		xxxx#		Get MaxStep, returns XXXX#
+:GO#      20295		xx#		    Get coils pwr setting (GO0# = coils released after move, GO1# = coil pwr on after move
+:GR#      21063		xx#		    Get reverse direction setting, GRX#
+:GS#	  21319		xx#		    Get stepmode (DRV8825 driver), returns XX#
+:GXxxxxx#    22599				Get the time that an LCD screen is displayed for (in milliseconds, eg 2500 = 2.5seconds
+:GY#      22855		xxxx#		Get MaxIncrement, returns XXXX#
+:GZ#      23111		xxxxx#		Get temperature as a double GZXXXX#:
+
+:MR#	  21069		xx#		    Get Motorspeed
+:MSXX#    21325		None		Set MotorSpeed, 00 = Slow, 01 = Med, 02 = Fast
+:MTxxx#	  21581		None		Set Motorspeed threshold value
+:MU#	  21837		xxx#		Get Motorspeed threshold value
+:MVx#     22093		None	    Set Enable/Disable motorspeed change when moving
+:MW#      22349		xxx#	   	Get if motorspeedchange enabled/disabled
+:MX#      22605		None  	    Save settings to EEPROM
+
+:PG#	  18256		xx#         Get temperature precision (9-12)
+:PMxx#	  19792		None		Set update of position on lcd when moving (00=disable, 01=enable)
+:PN#	  20048		xx#		    Get update of position on lcd when moving (00=disable, 01=enable)
+:PPxxxx#  20560		None        Set the step size value - double type, eg 2.1
+:PQ#	  20816		x#		    Get if stepsize is enabled in controller (true or false, 0/1)
+:PR#	  21072		xxxxx#		Get step size in microns (if enabled by controller)
+:PSxx#	  21328		None		Set temperature precision (9-12 = 0.5, 0.25, 0.125, 0.0625)
+:PZxx#	  23120		None		Set stepsize enabled to be OFF - default (0) or ON (1)
+
+:SMXXXX#  19795		None		Set MaxStep between 2048 and 32000
+:SOxx#    20307		None		Set coil pwr 0=release pwr after move, 1=keep power on after move
+:SRxx#    21075		None		Set reverse direction setting 0=normal, 1=reverse
+:SSxx#	  21331		None		Set stepmode (1=Full, 2=Half, 4=1/4, 8=1/8, 16=1/16, 32=1/32 - DRV2866 ONLY)
+:SXxxxx#  22611		None		Set the length of time an LCD page is displayed for in milliseconds
+:SYXXXX#  22867		None		Set MaxIncrement (anywhere between 10 and 2048)
+
+:TA#	  16724		None		Arduino reset()
+
+:XZ#	  23128		None		Reset the controller settings to default values
