@@ -69,20 +69,6 @@ extern void software_Reboot(int);
 // In INDI/KSTARS you select the Moonlite driver
 // IN Windows you select the Moonlite ASCOM driver
 
-
-// ======================================================================
-// DEBUGGING : DO NOT CHANGE
-// ======================================================================
-//#define COMMS_DEBUG       1                                   // for debugging comms
-
-#ifdef  COMMS_DEBUG                                             // for debugging comms
-#define Comms_DebugPrint(...) Serial.print(__VA_ARGS__)         // DPRINT is a macro, debug print
-#define Comms_DebugPrintln(...) Serial.println(__VA_ARGS__)     // DPRINTLN is a macro, debug print with new line
-#else
-#define Comms_DebugPrint(...)                                   // now defines a blank line
-#define Comms_DebugPrintln(...)                                 // now defines a blank line
-#endif
-
 // ======================================================================
 // CODE
 // ======================================================================
@@ -114,7 +100,7 @@ void SendMessage(const char *str)
 #elif (CONTROLLERMODE == BLUETOOTHMODE)             // for bluetooth
   SerialBT.print(str);
 #elif (CONTROLLERMODE == LOCALSERIAL)
-  Comms_DebugPrint(str);
+  Serial.print(str);
 #endif
 }
 
@@ -253,14 +239,14 @@ void ESP_Communication()
     // SP set current position to received position - THIS IS NOT A MOVE
     // in INDI driver, only used to set to 0 SP0000 in reset()
     case 20563:
-      paramval = (paramval < 0) ? 0 : paramval;               // we cannot have a negative position
-      if ( paramval > mySetupData->get_maxstep())             // check against maxstep
       {
-        paramval = mySetupData->get_maxstep();
+        paramval = (paramval < 0) ? 0 : paramval;               // we cannot have a negative position
+        unsigned long tmppos = ((unsigned long) paramval > mySetupData->get_maxstep()) ? mySetupData->get_maxstep() : (unsigned long) paramval;
+        ftargetPosition = tmppos;
+        driverboard->setposition(tmppos);
+        mySetupData->set_fposition(tmppos);
+        mySetupData->SaveNow();
       }
-      ftargetPosition = paramval;
-      mySetupData->set_fposition(ftargetPosition);
-      driverboard->setposition(ftargetPosition);
       break;
 
     // SN set new target position SNXXXX - this is a move command
@@ -279,7 +265,7 @@ void ESP_Communication()
     // 1. Set mySetupData->set_brdstepmode(xx);               // this saves config setting
     // 2. Set driverboard->setstepmode(xx);                   // this sets the physical pins
     // SF set Motor 1 to Full Step
-    case 18003: 
+    case 18003:
       mySetupData->set_brdstepmode(STEP1);
       driverboard->setstepmode(STEP1);
       break;
@@ -518,7 +504,7 @@ void ESP_Communication()
     // GF get firmware value
     case 17991:
       {
-        String reply = "myFP2ESP-M\r" + String(programVersion);
+        String reply = "myFP2ESP-M\r\n" + String(programVersion);
         reply.toCharArray(tempCharArray, reply.length() + 1);
         SendPacket(tempCharArray);
       }
@@ -707,7 +693,7 @@ void ESP_Communication()
       Comms_DebugPrintln((byte)(paramval & 0x01));
       mySetupData->set_stepsizeenabled((byte)(paramval & 0x01));
       break;
-          
+
     // SO set the coilPwr setting
     case 20307:
       Comms_DebugPrint("Set Coil Power : ");
@@ -772,7 +758,7 @@ void ESP_Communication()
 
     // TA  Reboot Arduino
     case 16724:
-    Comms_DebugPrintln(":TA# reboot controller");
+      Comms_DebugPrintln(":TA# reboot controller");
       software_Reboot(2000);
       break;
 

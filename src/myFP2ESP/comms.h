@@ -443,7 +443,7 @@ void ESP_Communication()
     case 37: // get displaystatus
       SendPaket('D', mySetupData->get_displayenabled());
       break;
-    case 38: // :38#   Dxx#      Get Temperature mode 1=Celsius, 0=Fahrenheight
+    case 38: // get Temperature mode 1=Celsius, 0=Fahrenheight
       SendPaket('b', mySetupData->get_tempmode());
       break;
     case 39: // get the new motor position (target) XXXXXX
