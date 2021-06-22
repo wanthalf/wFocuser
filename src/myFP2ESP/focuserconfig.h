@@ -46,8 +46,9 @@
 
 // On bootup following a controller firmware update, a default driver board file 
 // is created based on your board selection above.
-// In the MANAGEMENT server you can edit the board pin numbers and save the config [only if you know what you are doing].
-
+// In the MANAGEMENT server you can edit the board pin numbers and save the 
+// config [only if you know what you are doing].
+// No changes are necessary if you are using one of the available PCBoards for this project
 // ======================================================================
 // 2: SPECIFY FIXEDSTEPMODE
 // ======================================================================
@@ -163,14 +164,42 @@
 //#define PROTOCOL  MOONLITE_PROTOCOL
 
 // ======================================================================
-// DO NOT CHANGE:
+// TMC2209 HOMEPOSITIONSWITCH OPTIONS
 // ======================================================================
+// If your DRVBRD is NOT TMC2209 or TMC2209P THEN DO NOT ENABLE THESE OPTIONS
+// If using STALLGUARD or HOMEPOSITIONSWITCH, uncomment one of the following (not both)
+//#define USE_STALL_GUARD 1
+
+//#define USE_PHYSICAL_SWITCH 2
+// A physical home switch for TMC2209 requires different jumper settings on the PCB
+// Please refer to documentation PDF for wiring and other options
 
 // ======================================================================
+// DO NOT CHANGE
 // CHECK BOARD AND HW OPTIONS
 // ======================================================================
 #ifndef DRVBRD
 #error No DRVBRD defined
+#endif
+
+#if defined(USE_STALL_GUARD) && defined(USE_PHYSICAL_SWITCH)
+#halt // ERROR you cannot have both USE_STALL_GUARD and USE_PHYSICAL SWITCH defined - must be one or the other
+#endif
+
+#if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
+#if !defined(USE_STALL_GUARD) && !defined(USE_PHYSICAL_SWITCH)
+#error You must define either USE_STALL_GUARD or USE_PHYSICAL_SWITCH when using a board with TMC2209 driver
+#endif
+#endif
+
+#if (DRVBRD == WEMOSDRV8825H     || DRVBRD == WEMOSDRV8825     || DRVBRD == PRO2EULN2003      || DRVBRD == PRO2EDRV8825 \
+  || DRVBRD == PRO2EDRV8825BIG   || DRVBRD == PRO2EL293DNEMA   || DRVBRD == PRO2EL293D28BYJ48 || DRVBRD == PRO2EL298N \
+  || DRVBRD == PRO2EL293DMINI    || DRVBRD == PRO2EL9110S      || DRVBRD == PRO2EL9110S       || DRVBRD == CUSTOMBRD \
+  || DRVBRD == PRO2ESP32DRV8825  || DRVBRD == PRO2ESP32ULN2003 || DRVBRD == PRO2ESP32L298N    || DRVBRD == PRO2ESP32L293DMINI \
+  || DRVBRD == PRO2ESP32L9110S   || DRVBRD == PRO2ESP32R3WEMOS || DRVBRD == PRO2ESP32TMC2225  || DRVBRD == PRO2ESP32ST6128 )
+#if defined(USE_STALL_GUARD) || defined(USE_PHYSICAL_SWITCH)
+#error You cannot use USE_STALL_GUARD or USE_PHYSICAL_SWITCH with your Board
+#endif
 #endif
 
 #if !defined(PROTOCOL)
@@ -199,7 +228,7 @@
 // DO NOT CHANGE
 #if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
   || DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N   || DRVBRD == PRO2EL293DMINI \
-  || DSRVBRD == PRO2EL9110S || DRVBRD == PRO2EL293D   || DRVBRD == PRO2ESP32R3WEMOS )
+  || DRVBRD == PRO2EL9110S  || DRVBRD == PRO2EL293D   || DRVBRD == PRO2ESP32R3WEMOS )
 // no support for pushbuttons, inout leds, irremote
 #ifdef PUSHBUTTONS
 #error PUSHBUTTONS not supported for WEMOS or NODEMCUV1 ESP8266 chips
@@ -215,7 +244,7 @@
 // Check board availability for a specific controller mode
 #if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
   || DRVBRD == PRO2EULN2003 || DRVBRD == PRO2EL298N   || DRVBRD == PRO2EL293DMINI \
-  || DSRVBRD == PRO2EL9110S || DRVBRD == PRO2EL293D )
+  || DRVBRD == PRO2EL9110S  || DRVBRD == PRO2EL293D )
 // no support for bluetooth mode
 #if (CONTROLLERMODE == BLUETOOTHMODE)
 #error BLUETOOTHMODE not supported for WEMOS or NODEMCUV1 ESP8266 chips
