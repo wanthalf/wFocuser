@@ -5,6 +5,9 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+227
+// Add PHYSICALHPSW option to TMC2209 board as an alternative to STALLGUARD
+
 226
 // Add moonlite protocol option
 // Add board PRO2ESP32ST6128 for closed loop (59.jsn)
