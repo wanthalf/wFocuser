@@ -67,7 +67,6 @@ extern portMUX_TYPE  stepcountMux;
 // ======================================================================
 bool stepdir;                                 // direction of steps to move
 
-
 // ======================================================================
 // timer Interrupt
 // ======================================================================
@@ -496,8 +495,13 @@ bool DriverBoard::hpsw_alert(void)
     // check tmc2209 boards for stall guard
     if ( boardnum == PRO2ESP32TMC2209 || boardnum == PRO2ESP32TMC2209P )
     {
+#if defined(USE_STALL_GUARD)
       // DIAG pin, High if stall guard is detected
       return ( (bool) digitalRead(mySetupData->get_brdhpswpin()) );
+#else
+      // USE_PHYSICAL_SWITCH
+      return !( (bool)digitalRead(mySetupData->get_brdhpswpin()) );
+#endif
     }
     // check physical HOMEPOSITIONSWITCH for all other boards
     else
