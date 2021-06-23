@@ -363,9 +363,10 @@ DriverBoard::DriverBoard(unsigned long startposition)
       this->init_tmc2209();                                     // set step mode handled by init_tmc2209()
 #endif // #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
     }
+    
     // For all boards do the following
     this->focuserposition = startposition;                      // set default focuser position to same as mySetupData
-    if ( init_homepositionswitch() == true )                    // initialize home position switch
+    if ( init_hpsw() == true )                                  // initialize home position switch
     {
       Board_DebugPrintln("hpswpin enabled");
     }
@@ -397,13 +398,13 @@ DriverBoard::~DriverBoard()
   }
 }
 
-bool DriverBoard::init_homepositionswitch(void)
+bool DriverBoard::init_hpsw(void)
 {
   // Basic assumption rule: If associated pin is -1 then cannot set enable
   Board_DebugPrintln("init_homepositionswitch");
   if ( mySetupData->get_hpswitchenable() == 1)
   {
-    pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);       // initialize the pin as
+    pinMode(mySetupData->get_brdhpswpin(), INPUT_PULLUP);       // initialize the pin - should work for both methods
     return true;
   }
   return false;
@@ -492,14 +493,13 @@ bool DriverBoard::hpsw_alert(void)
   // hpsw is enabled so check it
   else
   {
-    // check tmc2209 boards for stall guard
+    // check tmc2209 boards
     if ( boardnum == PRO2ESP32TMC2209 || boardnum == PRO2ESP32TMC2209P )
     {
 #if defined(USE_STALL_GUARD)
-      // DIAG pin, High if stall guard is detected
-      return ( (bool) digitalRead(mySetupData->get_brdhpswpin()) );
-#else
-      // USE_PHYSICAL_SWITCH
+      // diag pin = HIGH if stall guard found, we return high if DIAG, low otherwise
+      return (bool) digitalRead(mySetupData->get_brdhpswpin());
+#else // USE_PHYSICAL_SWITCH, if hpsw is closed = low, so we need to invert state to return high when switch is closed
       return !( (bool)digitalRead(mySetupData->get_brdhpswpin()) );
 #endif
     }

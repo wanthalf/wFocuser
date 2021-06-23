@@ -1519,7 +1519,7 @@ void MANAGEMENT_handleadminpg2(void)
       if ( mySetupData->get_hpswitchenable() == 0)
       {
         mySetupData->set_hpswitchenable(1);
-        if ( driverboard->init_homepositionswitch() == true)
+        if ( driverboard->init_hpsw() == true)
         {
           MSrvr_DebugPrintln("hpsw init OK");
         }
@@ -2388,7 +2388,7 @@ void MANAGEMENT_handleset(void)
       if ( value == "on" )
       {
         mySetupData->set_hpswitchenable(1);
-        if ( driverboard->init_homepositionswitch() == true)
+        if ( driverboard->init_hpsw() == true)
         {
           MSrvr_DebugPrintln("hpsw init OK");
         }
