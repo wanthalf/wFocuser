@@ -32,7 +32,7 @@
 //#define DRVBRD 	PRO2EL9110S
 //#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
-#define DRVBRD 	PRO2ESP32DRV8825
+//#define DRVBRD 	PRO2ESP32DRV8825
 //#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
@@ -40,7 +40,7 @@
 //#define DRVBRD 	PRO2ESP32R3WEMOS
 //#define DRVBRD  PRO2ESP32TMC2225
 //#define DRVBRD  PRO2ESP32TMC2209
-//#define DRVBRD  PRO2ESP32TMC2209P              // this is for Paul using TMC2209 - 58.jsn
+#define DRVBRD  PRO2ESP32TMC2209P              // this is for Paul using TMC2209 - 58.jsn
 //#define DRVBRD  PRO2ESP32ST6128                // This is board for CLOSED LOOP ST6128 driver
 //#define DRVBRD 	CUSTOMBRD
 
@@ -170,7 +170,7 @@
 // If using STALLGUARD or HOMEPOSITIONSWITCH, uncomment one of the following (not both)
 //#define USE_STALL_GUARD 1
 
-//#define USE_PHYSICAL_SWITCH 2
+#define USE_PHYSICAL_SWITCH 2
 // A physical home switch for TMC2209 requires different jumper settings on the PCB
 // Please refer to documentation PDF for wiring and other options
 
@@ -188,7 +188,7 @@
 
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
 #if !defined(USE_STALL_GUARD) && !defined(USE_PHYSICAL_SWITCH)
-#error You must define either USE_STALL_GUARD or USE_PHYSICAL_SWITCH when using a board with TMC2209 driver
+#error You must define either USE_STALL_GUARD or USE_PHYSICAL_SWITCH when using a hpsw with TMC2209 driver
 #endif
 #endif
 

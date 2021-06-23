@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 227 [22-June-2021]
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 228 [23-June-2021]
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -1761,18 +1761,23 @@ void loop()
           }
           if ( mySetupData->get_brdnumber() == PRO2ESP32TMC2209 || mySetupData->get_brdnumber() == PRO2ESP32TMC2209P )
           {
-            // stall guard in effect - there is no need to find and set position. there is no real backlash
-            // finally,.... the rock has come..... home.
+#if defined(USE_STALL_GUARD)
+            // are home and no need to handle set position, simple
             DebugPrintln("Stall Guard: Pos = 0");
             TimeStampDelayAfterMove = millis();
             MainStateMachine = State_DelayAfterMove;
+#else
+            // not stall guard must be physical switch then we should jump to set home position
+            DebugPrintln("go SetHomePosition");
+            MainStateMachine = State_SetHomePosition;
+#endif // #if defined(USE_STALL_GUARD)
           }
-          else
+          else // not a tmc2209 board
           {
             // we should jump to
             DebugPrintln("go SetHomePosition");
             MainStateMachine = State_SetHomePosition;
-          }
+          } // if ( mySetupData->get_brdnumber() == PRO2ESP32TMC2209 || mySetupData->get_brdnumber() == PRO2ESP32TMC2209P )
         } // if (driverboard->hpsw_alert() )
 
         // if the update position on display when moving is enabled, then update the display

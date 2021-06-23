@@ -522,9 +522,9 @@ void ESP_Communication()
       SendPaket('L', mySetupData->get_oledupdateonmove());
       break;
     case 63: // get status of home position switch (hpsw pin 1=open, 0=closed)
-      if ( mySetupData->get_hpswitchenable() == 1)
+      if ( mySetupData->get_hpswitchenable() == 1)    // if the hpsw is enabled
       {
-        SendPaket('H', !digitalRead(mySetupData->get_brdhpswpin()));    // return 1 if closed, 0 if open
+        SendPaket('H', driverboard->hpsw_alert());    // get state of hpsw, return 1 if closed, 0 if open
       }
       else
       {
@@ -833,7 +833,7 @@ void ESP_Communication()
           if ( enablestate == 1 )
           {
             Comms_DebugPrintln("hpsw state: enabled");
-            if ( driverboard->init_homepositionswitch() == true)
+            if ( driverboard->init_hpsw() == true)
             {
               Comms_DebugPrintln("hpsw init OK");
             }
