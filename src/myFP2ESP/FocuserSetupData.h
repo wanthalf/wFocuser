@@ -83,7 +83,6 @@ class SetupData
     byte    get_oledpageoption();
     byte    get_hpswitchenable();
     byte    get_pbenable();
-    byte    get_indi();
     byte    get_stallguard();
     int     get_tmc2225current(void);
     int     get_tmc2209current(void);
@@ -132,7 +131,6 @@ class SetupData
     void set_hpswitchenable(byte);
     void set_pbenable(byte);
     void set_irremoteenable(byte);
-    void set_indi(byte);
     void set_stallguard(byte);
     void set_tmc2225current(int);
     void set_tmc2209current(int);
@@ -264,7 +262,6 @@ class SetupData
     byte    hpswitchenable;
     byte    pbenable;
     byte    inoutledenable;
-    byte    indi;
     byte    stallguard;                // value for STALL_GUARD, tmc2209
     int     tmc2209current;
     int     tmc2225current;

@@ -136,7 +136,6 @@ byte SetupData::LoadConfiguration()
       this->motorspeed            = doc_per["mspeed"];                  // motorspeed slow, med, fast
       this->hpswitchenable        = doc_per["hpswen"];
       this->pbenable              = doc_per["pbenable"];
-      this->indi                  = doc_per["indi"];
       this->stallguard            = doc_per["stallguard"];
       this->tmc2225current        = doc_per["tmc2225mA"];
       this->tmc2209current        = doc_per["tmc2209mA"];
@@ -467,7 +466,6 @@ void SetupData::LoadDefaultPersistantData()
   this->oledpageoption        = OLEDPGOPTIONALL;
   this->hpswitchenable        = DEFAULTOFF;           // this should be default OFF
   this->pbenable              = DEFAULTOFF;           // this should be default OFF
-  this->indi                  = DEFAULTOFF;           // this should be default OFF
   this->stallguard            = STALL_VALUE;
   this->tmc2225current        = TMC2225CURRENT;
   this->tmc2209current        = TMC2209CURRENT;
@@ -551,7 +549,6 @@ byte SetupData::SavePersitantConfiguration()
   doc["mspeed"]             = this->motorspeed;
   doc["hpswen"]             = this->hpswitchenable;
   doc["pbenable"]           = this->pbenable;
-  doc["indi"]               = this->indi;
   doc["stallguard"]         = this->stallguard;
   doc["tmc2225mA"]          = this->tmc2225current;
   doc["tmc2209mA"]          = this->tmc2209current;
@@ -787,11 +784,6 @@ byte SetupData::get_pbenable()
   return this->pbenable;
 }
 
-byte SetupData::get_indi()
-{
-  return this->indi;
-}
-
 byte SetupData::get_stallguard()
 {
   return this->stallguard;
@@ -1017,11 +1009,6 @@ void SetupData::set_hpswitchenable(byte newval)
 void SetupData::set_pbenable(byte newval)
 {
   this->StartDelayedUpdate(this->pbenable, newval);
-}
-
-void SetupData::set_indi(byte newval)
-{
-  this->StartDelayedUpdate(this->indi, newval);
 }
 
 void SetupData::set_stallguard(byte newval)

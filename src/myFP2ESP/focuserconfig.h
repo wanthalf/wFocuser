@@ -33,14 +33,14 @@
 //#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
 //#define DRVBRD 	PRO2ESP32DRV8825
-//#define DRVBRD 	PRO2ESP32ULN2003
+#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
 //#define DRVBRD 	PRO2ESP32L9110S
 //#define DRVBRD 	PRO2ESP32R3WEMOS
 //#define DRVBRD  PRO2ESP32TMC2225
 //#define DRVBRD  PRO2ESP32TMC2209
-#define DRVBRD  PRO2ESP32TMC2209P              // this is for Paul using TMC2209 - 58.jsn
+//#define DRVBRD  PRO2ESP32TMC2209P              // this is for Paul using TMC2209 - 58.jsn
 //#define DRVBRD  PRO2ESP32ST6128                // This is board for CLOSED LOOP ST6128 driver
 //#define DRVBRD 	CUSTOMBRD
 
@@ -415,10 +415,6 @@
 
 // To download the file [MANAGEMENTFORCEDOWNLOAD] instead of displaying file 
 // content in web browser, uncomment the next line
-// This has moved to MANAGEMENT SERVER
-
-// To make the firmware return the correct firmware value when talking to a
-// myFocuserpro2 INDI driver [use only for INDI support], uncomment the following line
 // This has moved to MANAGEMENT SERVER
 
 #endif

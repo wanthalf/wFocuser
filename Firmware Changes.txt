@@ -5,6 +5,9 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+229
+// Remove INDI code[no longer needed] due to new release of myFocuserPro2 INDI driver [v10]
+
 228
 // Fix for home position code on TMC2209 board
 
