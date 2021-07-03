@@ -840,18 +840,6 @@ void MANAGEMENT_buildadminpg3(void)
       MSpg.replace("%PBL%", "Disabled");
     }
 
-    // INDI
-    if ( mySetupData->get_indi() == 1)
-    {
-      MSpg.replace("%INDI%", String(DISABLEINDISTR));   // button
-      MSpg.replace("%INI%", "Enabled");                 // state
-    }
-    else
-    {
-      MSpg.replace("%INDI%", String(ENABLEINDISTR));
-      MSpg.replace("%INI%", "Disabled");
-    }
-
     // display heap memory for tracking memory loss?
     // only esp32?
     MSpg.replace("%HEA%", String(ESP.getFreeHeap()));
@@ -974,18 +962,6 @@ void MANAGEMENT_handleadminpg3(void)
   if ( msg != "" )
   {
     mySetupData->set_pbenable(0);
-  }
-
-  // indi enable/disable
-  msg = mserver.arg("indion");
-  if ( msg != "" )
-  {
-    mySetupData->set_indi(1);
-  }
-  msg = mserver.arg("indioff");
-  if ( msg != "" )
-  {
-    mySetupData->set_indi(0);
   }
 
   MANAGEMENT_sendadminpg3();
@@ -2079,7 +2055,7 @@ void MANAGEMENT_sendjson(String str)
 void MANAGEMENT_handleget(void)
 {
   // return json string of state, on or off or value
-  // ascom, boardconfig, coilpower, coilpowertimeout, dataconfig, display, fixedstepmode, hpsw, indi, ismoving,
+  // ascom, boardconfig, coilpower, coilpowertimeout, dataconfig, display, fixedstepmode, hpsw, ismoving,
   // leds, motorspeed, motorspeeddelay, position, reverse, rssi, tempprobe, tmc2209current, tmc2225current, webserver
   String jsonstr;
 
@@ -2153,11 +2129,6 @@ void MANAGEMENT_handleget(void)
   else if ( mserver.argName(0) == "hpsw" )
   {
     jsonstr = "{ \"hpsw\":" + String(mySetupData->get_hpswitchenable()) + " }";
-    MANAGEMENT_sendjson(jsonstr);
-  }
-  else if ( mserver.argName(0) == "indi" )
-  {
-    jsonstr = "{ \"indi\":" + String(mySetupData->get_indi()) + " }";
     MANAGEMENT_sendjson(jsonstr);
   }
   else if ( mserver.argName(0) == "ismoving" )
@@ -2259,7 +2230,7 @@ void MANAGEMENT_handleset(void)
   String jsonstr;
   String value;
   String drvbrd = mySetupData->get_brdname();
-  // ascom, coilpower, coilpowertimeout, display, fixedstepmode, hpsw, indi, leds, motorspeed, motorspeeddelay,
+  // ascom, coilpower, coilpowertimeout, display, fixedstepmode, hpsw, leds, motorspeed, motorspeeddelay,
   // move, position, reverse, stepmode, tempprobe, tmc2209current, tmc2225current, webserver,
 
   // ascom remote server
@@ -2403,24 +2374,6 @@ void MANAGEMENT_handleset(void)
         mySetupData->set_hpswitchenable(0);
         jsonstr = "{ \"hpsw\":\"off\" }";
       }
-    }
-  }
-
-  // INDI
-  value = mserver.arg("indi");
-  if ( value != "" )
-  {
-    MSrvr_DebugPrint("indi:");
-    MSrvr_DebugPrintln(value);
-    if ( value == "on" )
-    {
-      mySetupData->set_indi(1);
-      jsonstr = "{ \"indi\":\"on\" }";
-    }
-    else if ( value == "off" )
-    {
-      mySetupData->set_indi(0);
-      jsonstr = "{ \"indi\":\"off\" }";
     }
   }
 

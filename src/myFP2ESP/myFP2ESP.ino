@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 228 [23-June-2021]
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 229 [03-July-2021]
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -522,7 +522,7 @@ void update_joystick2(void)
     newpos = (newpos > (long) mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : newpos;
     ftargetPosition = newpos;
     DebugPrint("X OUT joyval:");
-    DebugPrint(joyval);
+    DebugPrintln(joyval);
   }
 
   if ( joy2swstate == true)                         // switch is pressed
@@ -554,7 +554,7 @@ void init_joystick2(void)
 // ======================================================================
 bool init_pushbuttons(void)
 {
-  //Setup_DebugPrint("initPB: ");
+  Setup_DebugPrintln("initPB: ");
   if ( (mySetupData->get_brdpb1pin() != -1) && (mySetupData->get_brdpb2pin() != -1) )
   {
     // Basic assumption rule: If associated pin is -1 then cannot set enable
@@ -562,17 +562,17 @@ bool init_pushbuttons(void)
     {
       pinMode(mySetupData->get_brdpb1pin(), INPUT);
       pinMode(mySetupData->get_brdpb2pin(), INPUT);
-      //Setup_DebugPrintln("enabled");
+      Setup_DebugPrintln("enabled");
       return true;
     }
     else
     {
-      //Setup_DebugPrintln("disabled");
+      Setup_DebugPrintln("disabled");
     }
   }
   else
   {
-    //Setup_DebugPrintln("not permitted");
+    Setup_DebugPrintln("not permitted");
   }
   return false;
 }
@@ -633,8 +633,7 @@ void update_pushbuttons(void)
 // MDNS service. find the device using dnsname.local
 void start_mdns_service(void)
 {
-  // Set up mDNS responder:
-  // the fully-qualified domain name is "mDNSNAME.local"
+  // Set up mDNS responder: the fully-qualified domain name is "mDNSNAME.local"
   Setup_DebugPrintln("MDNS: ");
 #if defined(ESP8266)
   if (!MDNS.begin(mDNSNAME, WiFi.localIP()))      // ESP8266 supports additional parameter for IP
@@ -648,11 +647,10 @@ void start_mdns_service(void)
   else
   {
     Setup_DebugPrintln("Started");
-    // Add service to MDNS-SD, MDNS.addService(service, proto, port)
-    MDNS.addService("http", "tcp", MDNSSERVERPORT);
+    MDNS.addService("http", "tcp", MDNSSERVERPORT); // Add service to MDNS-SD, MDNS.addService(service, proto, port)
     mdnsserverstate = RUNNING;
   }
-  delay(10);                      // small pause so background tasks can run
+  delay(10);                                        // small pause so background tasks can run
 }
 
 void stop_mdns_service(void)
@@ -818,7 +816,7 @@ void steppermotormove(byte ddir )               // direction moving_in, moving_o
 bool init_leds()
 {
   // Basic assumption rule: If associated pin is -1 then cannot set enable
-  Setup_DebugPrintln("initleds");
+  Setup_DebugPrint("initleds: ");
   if ( mySetupData->get_inoutledstate() == 1)
   {
     pinMode(mySetupData->get_brdinledpin(), OUTPUT);
@@ -856,8 +854,7 @@ bool readwificonfig( char* xSSID, char* xPASSWORD, bool retry )
   bool   mstatus = false;
 
   Setup_DebugPrintln("readwificonfig");
-  // SPIFFS may have failed to start
-  if ( !SPIFFS.begin() )
+  if ( !SPIFFS.begin() )                                // SPIFFS may have failed to start
   {
     TRACE();
     Setup_DebugPrintln("err: read file");
