@@ -89,7 +89,6 @@ String        ASCOMErrorMessage = "";
 long          ASCOMpos = 0L;
 byte          ASCOMTempCompState = 0;
 byte          ASCOMConnectedState = 0;
-WiFiClient    ascomclient;
 
 // ======================================================================
 // CODE: ASCOM ALPACA REMOTE SERVER
