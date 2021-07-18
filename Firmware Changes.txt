@@ -5,112 +5,118 @@ myFP2ESP Focus Controller [ESP8266/ESP32]
 (c) Copyright Paul P, 2021. All Rights Reserved.
 ==============================================================
 
+230 
+// Fix for compilation errors  (focuserconfig.h)
+// Clean up conditional compiler actions (focuserconfig.h)
+// Fix for Preset6 not being saved correctly
+// Cache presets for better interface responses  (main file and comms.h)
+
 229
-// Remove INDI code[no longer needed] due to new release of myFocuserPro2 INDI driver [v10]
+Remove INDI code[no longer needed] due to new release of myFocuserPro2 INDI driver [v10]
 
 228
-// Fix for home position code on TMC2209 board
+Fix for home position code on TMC2209 board
 
 227
-// Add PHYSICALHPSW option to TMC2209 board as an alternative to STALLGUARD
-// Fix errors in checking DRV combinations which flag errors (focuserconfig.h)
+Add PHYSICALHPSW option to TMC2209 board as an alternative to STALLGUARD
+Fix errors in checking DRV combinations which flag errors (focuserconfig.h)
 
 226
-// Add moonlite protocol option
-// Add board PRO2ESP32ST6128 for closed loop (59.jsn)
-// Fix duplication of remove() in FocuserSetupData.cpp
+Add moonlite protocol option
+Add board PRO2ESP32ST6128 for closed loop (59.jsn)
+Fix duplication of remove() in FocuserSetupData.cpp
 
 225
-// Correct spelling errors
-// Fix I2C pin number errors in ESP8266 board config files
-// Fix initialization of I2C interface for most boards
-// Fix for OLED_TEXT initialization
-// Fix for OLED_GRAPHIC
-// Additional debug messages added
-// Fix for display page option (Note: Only works with OLED_TEXT)
-// Fix for display page time (Note: Only works with OLED_TEXT)
+Correct spelling errors
+Fix I2C pin number errors in ESP8266 board config files
+Fix initialization of I2C interface for most boards
+Fix for OLED_TEXT initialization
+Fix for OLED_GRAPHIC
+Additional debug messages added
+Fix for display page option (Note: Only works with OLED_TEXT)
+Fix for display page time (Note: Only works with OLED_TEXT)
 
 224
-// Requires Updated ArduinoJson 6-18-0 Libary - https://github.com/bblanchon/ArduinoJson
-// Move DefaultBoardNumber, brdfixedstepmode, brdstepsperrev into FocuserSetupData
-// Fix circular reference between driverboard and mySetupData when controller boots
-// Fix for DEBUG errors in myBoards.cpp if BOARD_DEBUG defined
-// Add "brdnum" to every board definition file in /data/boards
-// Update test programs
-// Fix for OLED TEXT displays - remove duplicated code in Displays.cpp
+Requires Updated ArduinoJson 6-18-0 Libary - https://github.com/bblanchon/ArduinoJson
+Move DefaultBoardNumber, brdfixedstepmode, brdstepsperrev into FocuserSetupData
+Fix circular reference between driverboard and mySetupData when controller boots
+Fix for DEBUG errors in myBoards.cpp if BOARD_DEBUG defined
+Add "brdnum" to every board definition file in /data/boards
+Update test programs
+Fix for OLED TEXT displays - remove duplicated code in Displays.cpp
 
 223
-// Fix for Infra-red remote
+Fix for Infra-red remote
 
 222-8
-// Add help file
-// Fix init of Serial.begin() 
-// Fix for INDI (no longer require a revision check) in comms.h
+Add help file
+Fix init of Serial.begin() 
+Fix for INDI (no longer require a revision check) in comms.h
 
 222-7
-// add test program (thanks Paul) to do automatic calibration of joystick values
+add test program (thanks Paul) to do automatic calibration of joystick values
 
 222-6
-// fix for push button code - init_pushbuttons() and update_pushbuttons() as reported by Sven
+fix for push button code - init_pushbuttons() and update_pushbuttons() as reported by Sven
 
 222-5
-// Update for joystick2
+Update for joystick2
 
 222-4
-// Update for joystick2
+Update for joystick2
 
 222-3
-// Fix for Joystick2 SW routine
-// Add additional Joystick test programs
+Fix for Joystick2 SW routine
+Add additional Joystick test programs
 
 222-2
-// Move the init_homepositionswitch() code from main ino file to myBoards.cpp
-// Init the homeposition switch pins when driverboard constructor is called
-// Change code in comms.h myBoards.cpp ManagementServer.cpp to use new hpsw code in myBoards
+Move the init_homepositionswitch() code from main ino file to myBoards.cpp
+Init the homeposition switch pins when driverboard constructor is called
+Change code in comms.h myBoards.cpp ManagementServer.cpp to use new hpsw code in myBoards
 
 222-1
-// Fix for TMC2209 hpsw detection
+Fix for TMC2209 hpsw detection
 
 222
-// Fix for HPSW code
-// Fix for TMC2209 and TMC2225 initialization code
-// Fix for DelayAfterMove not being applied in some cases
+Fix for HPSW code
+Fix for TMC2209 and TMC2225 initialization code
+Fix for DelayAfterMove not being applied in some cases
 
 221
-// Fix for TMC2209 and TMC2225 initialization
+Fix for TMC2209 and TMC2225 initialization
 
 220
-// Fix for compilation errors on ESP8266
-// Add serial code support for get/set stall_value for tmc2209 [if fitted]
+Fix for compilation errors on ESP8266
+Add serial code support for get/set stall_value for tmc2209 [if fitted]
 
 219
-// Add stall guard value to data_per.jsn
-// Add tmc2209current and tmc2225current to data_per.jsn
-// Add stall guard value to management interface get/set
-// Add tmc22xxcurrent set/get interface to management interface get/set
-// Add mutex semaphores for halt_alert, stepcount, timerSemaphore
-// Fix for update stepmode in webserver.cpp not obeying mySetupData->get_brdmaxstepmode()
-// Fix for updatestepmode in ASCOM.cpp not obeying mySetupData->get_brdmaxstepmode()
-// Fix for set?stallguard in ManagementServer.cpp displaying wrong text
-// Fix for stallguard not updating when value is changed in Management server
-// Fix for tmc2209current reference in myBoards.cpp
-// Fix for interrupt timer not disposed once move is complete
-// Fix for saving data files to SPIFFS - delayed if focuser is moving
+Add stall guard value to data_per.jsn
+Add tmc2209current and tmc2225current to data_per.jsn
+Add stall guard value to management interface get/set
+Add tmc22xxcurrent set/get interface to management interface get/set
+Add mutex semaphores for halt_alert, stepcount, timerSemaphore
+Fix for update stepmode in webserver.cpp not obeying mySetupData->get_brdmaxstepmode()
+Fix for updatestepmode in ASCOM.cpp not obeying mySetupData->get_brdmaxstepmode()
+Fix for set?stallguard in ManagementServer.cpp displaying wrong text
+Fix for stallguard not updating when value is changed in Management server
+Fix for tmc2209current reference in myBoards.cpp
+Fix for interrupt timer not disposed once move is complete
+Fix for saving data files to SPIFFS - delayed if focuser is moving
 
 218
-// Trinamic 2225 and 2209 support
-// Add stall guard support for TMC2209
-// Add get?commands= to show a list of get/set commands in Management Server
-// Fixes for comms.h to be more compatible with INDI driver
-// Fix for set?stepmode= in management server
-// Fix for set stepmode in comms.h not being set for DRVBRD == PRO2ESP32TMC2209P
+Trinamic 2225 and 2209 support
+Add stall guard support for TMC2209
+Add get?commands= to show a list of get/set commands in Management Server
+Fixes for comms.h to be more compatible with INDI driver
+Fix for set?stepmode= in management server
+Fix for set stepmode in comms.h not being set for DRVBRD == PRO2ESP32TMC2209P
 
 217 
-// Fix for saveboardconfiguration
+Fix for saveboardconfiguration
 
 216
-// Move defines for STEPMODE and SPEED into boarddefs.h
-// Fix for stepmode not being remembered correctly or not set physically
+Move defines for STEPMODE and SPEED into boarddefs.h
+Fix for stepmode not being remembered correctly or not set physically
 
 215
 [As reported/suggested by Nightfly1704]
@@ -140,7 +146,7 @@ NEW CALLS v214
 213
 Add 51.jsn board file for TMC2225
 Add 52.jsn board file for TMC2209
-// Code yet not migrated for TMC2209 and TMC2205 - do not use at this time
+Code yet not migrated for TMC2209 and TMC2205 - do not use at this time
 Ensure controller mode and options correctly applied
 Fix issues with LocalSerial
 
@@ -251,7 +257,7 @@ Rewrite init_pushbuttons() to return bool state
 Rewrite init_inoutleds() to return bool state
 Rewrite init_homepositionswitch() to return bool state
 
-// Path 1xx now deprecated. Path 2xx created
+Path 1xx now deprecated. Path 2xx created
 148
 Add dummy pin defines to board configs to prevent compiler objections
 

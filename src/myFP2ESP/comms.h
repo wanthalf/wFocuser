@@ -54,6 +54,7 @@ extern bool  init_pushbuttons(void);
 // DATA
 // ======================================================================
 String board_data;
+unsigned long presets[10];
 
 // ======================================================================
 // CODE
@@ -62,6 +63,13 @@ String board_data;
 // forward declaration to keep compiler happy
 void send_boardconfig_file(void);
 
+void cachepresets(void)
+{
+  for( int lp = 0; lp <10; lp++ )
+  {
+    presets[lp] = mySetupData->get_focuserpreset(lp);
+  }
+}
 
 char *ftoa(char *a, double f, int precision)
 {
@@ -605,15 +613,15 @@ void ESP_Communication()
         WorkString = receiveString.substring(4, receiveString.length() - 1);
         unsigned long tmppos = (unsigned long) WorkString.toInt();
         mySetupData->set_focuserpreset( preset, tmppos );
+        // update cached copy
+        presets[preset] = tmppos;
       }
       break;
     case 91: // get focuserpreset [0-9]
       {
         WorkString = receiveString.substring(3, receiveString.length() - 1);
-        paramval = (byte)WorkString.toInt();
-        byte preset = (byte) (paramval);
-        preset = (preset > 9) ? 9 : preset;
-        SendPaket('h', mySetupData->get_focuserpreset(preset));
+        byte preset =(byte)WorkString.toInt();
+        SendPaket('h', presets[preset]);
       }
       break;
     case 92: // Set OLED page display option
@@ -659,7 +667,7 @@ void ESP_Communication()
         memset(buff, 0, 10);
         String answer = String( mySetupData->get_oledpageoption(), BIN );
         // assign leading 0's if necessary
-        while( answer.length() < 3)
+        while ( answer.length() < 3)
         {
           answer = "0" + answer;
         }

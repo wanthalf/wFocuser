@@ -179,51 +179,62 @@
 // CHECK BOARD AND HW OPTIONS
 // ======================================================================
 #ifndef DRVBRD
-#error No DRVBRD defined
-#endif
+#error //err: No DRVBRD defined
+#endif // #ifndef DRVBRD
 
-#if defined(USE_STALL_GUARD) && defined(USE_PHYSICAL_SWITCH)
-#halt // ERROR you cannot have both USE_STALL_GUARD and USE_PHYSICAL SWITCH defined - must be one or the other
-#endif
+#ifdef USE_STALL_GUARD
+#ifdef USE_PHYSICAL_SWITCH
+#error // err: you cannot have both USE_STALL_GUARD and USE_PHYSICAL SWITCH defined - must be one or the other
+#endif // #ifdef USE_PHYSICAL_SWITCH
+#endif // #ifdef USE_STALL_GUARD
 
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
-#if !defined(USE_STALL_GUARD) && !defined(USE_PHYSICAL_SWITCH)
-#error You must define either USE_STALL_GUARD or USE_PHYSICAL_SWITCH when using a hpsw with TMC2209 driver
-#endif
+#ifndef USE_STALL_GUARD 
+#ifndef defined(USE_PHYSICAL_SWITCH)
+#error // err: You must define either USE_STALL_GUARD or USE_PHYSICAL_SWITCH when using a hpsw with TMC2209 driver
+#endif // #ifndef defined(USE_PHYSICAL_SWITCH)
+#endif // #ifndef USE_STALL_GUARD 
 #endif
 
 #if (DRVBRD == WEMOSDRV8825H     || DRVBRD == WEMOSDRV8825     || DRVBRD == PRO2EULN2003      || DRVBRD == PRO2EDRV8825 \
   || DRVBRD == PRO2EDRV8825BIG   || DRVBRD == PRO2EL293DNEMA   || DRVBRD == PRO2EL293D28BYJ48 || DRVBRD == PRO2EL298N \
-  || DRVBRD == PRO2EL293DMINI    || DRVBRD == PRO2EL9110S      || DRVBRD == PRO2EL9110S       || DRVBRD == CUSTOMBRD \
-  || DRVBRD == PRO2ESP32DRV8825  || DRVBRD == PRO2ESP32ULN2003 || DRVBRD == PRO2ESP32L298N    || DRVBRD == PRO2ESP32L293DMINI \
-  || DRVBRD == PRO2ESP32L9110S   || DRVBRD == PRO2ESP32R3WEMOS || DRVBRD == PRO2ESP32TMC2225  || DRVBRD == PRO2ESP32ST6128 )
-#if defined(USE_STALL_GUARD) || defined(USE_PHYSICAL_SWITCH)
-#error You cannot use USE_STALL_GUARD or USE_PHYSICAL_SWITCH with your Board
+  || DRVBRD == PRO2EL293DMINI    || DRVBRD == PRO2EL9110S      || DRVBRD == PRO2EL9110S       || DRVBRD == CUSTOMBRD )
+#ifdef USE_STALL_GUARD
+#error // Err: You cannot use USE_STALL_GUARD with your defined Board
+#endif
+#ifdef USE_PHYSICAL_SWITCH
+#error // Err: You cannot use USE_PHYSICAL_SWITCH with your defined Board
 #endif
 #endif
 
-#if !defined(PROTOCOL)
-#error Protocol has not been defined, must be MYFP2ESP_PROTOCOL or MOONLITE_PROTOCOL
-#endif
+#ifndef PROTOCOL
+#error // err: Protocol has not been defined, must be MYFP2ESP_PROTOCOL or MOONLITE_PROTOCOL
+#endif // #ifndef PROTOCOL
 
 #if (PROTOCOL == MOONLITE_PROTOCOL)
 #if (CONTROLLERMODE == ACCESSPOINT || CONTROLLERMODE == STATIONMODE)
-#error You cannot use ACCESSPOINT or STATIONMODE with the MOONLITE Protocol
+#error // err: You cannot use ACCESSPOINT or STATIONMODE with the MOONLITE Protocol
 #endif
 #if (CONTROLLERMODE != LOCALSERIAL)
-#error MOONLITE Protocol requires LOCALSERIAL
+#error // err: MOONLITE Protocol requires LOCALSERIAL
 #endif // #if (CONTROLLERMODE != LOCALSERIAL)
 #endif // #if (PROTOCOL == MOONLITE_PROTOCOL)
 
-#if defined(USE_SSD1306) && defined(USE_SSH1106)
-#error Define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
-#endif
+#ifdef OLED_MODE
+#ifdef USE_SSD1306
+#ifdef USE_SSH1106
+#error // err: Define either USE_SSD1306 or USE_SSH1106 if using an OLEDDISPLAY
+#endif // #ifdef USE_SSH1106
+#endif // #ifdef USE_SSD1306
+#endif // #ifdef OLED_MODE
 
+#ifdef OLED_MODE
 #ifndef USE_SSD1306
 #ifndef USE_SSH1106
-#error Either USE_SSD1306 or USE_SSH1106 must be enabled if using an OLED DISPLAY
-#endif
-#endif
+#error // err: Either USE_SSD1306 or USE_SSH1106 must be enabled if using an OLED DISPLAY
+#endif // #ifndef USE_SSH1106
+#endif // #ifndef USE_SSD1306
+#endif // #ifdef OLED_MODE
 
 // DO NOT CHANGE
 #if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
@@ -231,15 +242,18 @@
   || DRVBRD == PRO2EL9110S  || DRVBRD == PRO2EL293D   || DRVBRD == PRO2ESP32R3WEMOS )
 // no support for pushbuttons, inout leds, irremote
 #ifdef PUSHBUTTONS
-#error PUSHBUTTONS not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
+#error // err: PUSHBUTTONS not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#endif // #ifdef PUSHBUTTONS
 #ifdef INFRAREDREMOTE
-#error INFRAREDREMOTE not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
-#if defined(JOYSTICK1) || defined(JOYSTICK2)
-#error JOYSTICK not supported for WEMOS or NODEMCUV1 ESP8266 chips
-#endif
-#endif // #if defined(JOYSTICK1) || defined(JOYSTICK2)
+#error // err: INFRAREDREMOTE not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#endif // #ifdef INFRAREDREMOTE
+#ifdef JOYSTICK1
+#error // err: JOYSTICK1 not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#endif // #ifdef JOYSTICK1
+#ifdef JOYSTICK2
+#error // err: JOYSTICK2 not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#endif // #ifdef JOYSTICK2
+#endif 
 
 // Check board availability for a specific controller mode
 #if (DRVBRD == WEMOSDRV8825 || DRVBRD == PRO2EDRV8825 || DRVBRD == PRO2EDRV8825BIG \
@@ -247,25 +261,31 @@
   || DRVBRD == PRO2EL9110S  || DRVBRD == PRO2EL293D )
 // no support for bluetooth mode
 #if (CONTROLLERMODE == BLUETOOTHMODE)
-#error BLUETOOTHMODE not supported for WEMOS or NODEMCUV1 ESP8266 chips
+#error // err: BLUETOOTHMODE not supported for WEMOS or NODEMCUV1 ESP8266 chips
 #endif
 #endif
 
 #if (DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48)
 #if (CONTROLLERMODE == LOCALSERIAL)
-#error LOCALSERIAL not supported L293D Motor Shield [ESP8266] boards
+#error // err: LOCALSERIAL not supported L293D Motor Shield [ESP8266] boards
 #endif
 #endif // #if ((DRVBRD == PRO2EL293DNEMA) || (DRVBRD == PRO2EL293D28BYJ48))
 
-#if defined(JOYSTICK1) || defined(JOYSTICK2)
+#ifdef JOYSTICK1
 #ifdef PUSHBUTTONS
-#error PUSHBUTTONS and JOYSTICK cannot be enabled at the same time
+#error // err: PUSHBUTTONS and JOYSTICK cannot be enabled at the same time
 #endif
-#endif // #if defined(JOYSTICK1) || defined(JOYSTICK2)
+#endif //#ifdef JOYSTICK1
+
+#ifdef JOYSTICK2
+#ifdef PUSHBUTTONS
+#error // err: PUSHBUTTONS and JOYSTICK cannot be enabled at the same time
+#endif
+#endif // #ifdef JOYSTICK2
 
 #ifdef JOYSTICK1
 #ifdef JOYSTICK2
-#error JOYSTICK1 and JOYSTICK2 cannot be defined at the same time
+#error // err: JOYSTICK1 and JOYSTICK2 cannot be defined at the same time
 #endif
 #endif // #ifdef JOYSTICK1
 
@@ -273,42 +293,42 @@
 // CHECK CONTROLLER OPTIONS
 // ======================================================================
 
-#if defined(OTAUPDATES)
+#ifdef OTAUPDATES
 #if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL)
-#error OTAUPDATES cannot be defined together with BLUETOOTHMODE or LOCALSERIAL
+#error // err: OTAUPDATES cannot be defined together with BLUETOOTHMODE or LOCALSERIAL
 #endif
 #if (CONTROLLERMODE == ACCESSPOINT)
-#error OTAUPDATES cannot be defined together with ACCESSPOINT
+#error // err: OTAUPDATES cannot be defined together with ACCESSPOINT
 #endif
 #endif // #if defined(OTAUPDATES)
 
-#if defined(MDNSSERVER)
+#ifdef MDNSSERVER
 #if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
-#error mDNS only available with CONTROLLERMODE == STATIONMODE
+#error // err: mDNS only available with CONTROLLERMODE == STATIONMODE
 #endif
 #endif // MDNSSERVER
 
 // Check management server only available in accesspoint or stationmode
 #ifdef MANAGEMENT
 #if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL)
-#error MANAGEMENT service cannot be enabled using BLUETOOTHMODE or LOCALSERIAL
+#error // err: MANAGEMENT service cannot be enabled using BLUETOOTHMODE or LOCALSERIAL
 #endif
 #endif
 
 // cannot use DuckDNS with ACCESSPOINT, BLUETOOTHMODE or LOCALSERIAL mode
 #ifdef USEDUCKDNS
 #if (CONTROLLERMODE == BLUETOOTHMODE) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
-#error DUCKDNS only works with STATIONMODE
+#error // err: DUCKDNS only works with STATIONMODE
 #endif
 #ifndef STATIONMODE
-#error DUCKDNS only works with STATIONMODE, you must enable STATIONMODE
+#error // err: DUCKDNS only works with STATIONMODE, you must enable STATIONMODE
 #endif
 #endif
 
 // DO NOT CHANGE
-#if defined(READWIFICONFIG)
+#ifdef READWIFICONFIG
 #if (CONTROLLERMODE == BLUETOOTH) || (CONTROLLERMODE == LOCALSERIAL) || (CONTROLLERMODE == ACCESSPOINT)
-#error READWIFICONFIG only available in STATIONMODE
+#error // err: READWIFICONFIG only available in STATIONMODE
 #endif
 #endif // #if defined(READWIFICONFIG)
 
@@ -317,64 +337,64 @@
 // CHECK CONTROLLER MODES
 // ======================================================================
 
-#if !defined(CONTROLLERMODE) 
-#error CONTROLLERMODE NOT DEFINED
+#ifndef CONTROLLERMODE
+#error // err: CONTROLLERMODE NOT DEFINED
 #endif
 
 // check bluetooth mode, cannot be used for esp8266 and accesspoint and stationmode and localserial
 #if (CONTROLLERMODE == BLUETOOTHMODE)
 #if defined(ESP8266)
-#error Bluetooth only available on ESP32 boards
+#error // err: Bluetooth only available on ESP32 boards
 #endif
 #ifdef OTAUPDATES
-#error OTAUPDATES cannot work in BLUETOOTHMODE
+#error // err: OTAUPDATES cannot work in BLUETOOTHMODE
 #endif
 #ifdef MDNSSERVER
-#error MDNSSERVER cannot work in BLUETOOTHMODE
+#error // err: MDNSSERVER cannot work in BLUETOOTHMODE
 #endif
 #ifdef MANAGEMENT
-#error MANAGEMENT cannot work in BLUETOOTHMODE
+#error // err: MANAGEMENT cannot work in BLUETOOTHMODE
 #endif
 #ifdef READWIFICONFIG
-#error READWIFICONFIG cannot work in BLUETOOTHMODE
+#error // err: READWIFICONFIG cannot work in BLUETOOTHMODE
 #endif
 #ifdef USEDUCKDNS
-#error DUCKDNS cannot work in BLUETOOTHMODE
+#error // err: DUCKDNS cannot work in BLUETOOTHMODE
 #endif
 #endif // #if (CONTROLLERMODE == BLUETOOTHMODE)
 
 // check localserial mode
 #if (CONTROLLERMODE == LOCALSERIAL)
 #ifdef OTAUPDATES
-#error Cannot enable OTAUPDATES with LOCALSERIAL
+#error // err: Cannot enable OTAUPDATES with LOCALSERIAL
 #endif
 #ifdef MDNSSERVER
-#error Cannot enable MDNSSERVER with LOCALSERIAL
+#error // err: Cannot enable MDNSSERVER with LOCALSERIAL
 #endif
 #ifdef MANAGEMENT
-#error Cannot enable MANAGEMENT with LOCALSERIAL
+#error // err: Cannot enable MANAGEMENT with LOCALSERIAL
 #endif
 #ifdef DEBUG
-#error Cannot enable DEBUG with LOCALSERIAL
+#error // err: Cannot enable DEBUG with LOCALSERIAL
 #endif
 #ifdef READWIFICONFIG
-#error READWIFICONFIG only available with CONTROLLERMODE == STATIONMODE
+#error // err: READWIFICONFIG only available with CONTROLLERMODE == LOCALSERIAL
 #endif
 #ifdef USEDUCKDNS
-#error Cannot enable DUCKDNS with BLUETOOTHMODE
+#error // err: Cannot enable DUCKDNS with LOCALSERIAL
 #endif
 #endif // #if (CONTROLLERMODE == LOCALSERIAL)
 
 // check accesspoint mode
 #if (CONTROLLERMODE == ACCESSPOINT)
 #ifdef MDNSSERVER
-#error Cannot enable MDNSSERVER with ACCESSPOINT
+#error // err: Cannot enable MDNSSERVER with ACCESSPOINT
 #endif
 #ifdef OTAUPDATES
-#error Cannot enable OTAUPDATES with ACCESSPOINT
+#error // err: Cannot enable OTAUPDATES with ACCESSPOINT
 #endif
 #ifdef USEDUCKDNS
-#error Cannot enable DUCKDNS with ACCESSPOINT
+#error // err: Cannot enable DUCKDNS with ACCESSPOINT
 #endif
 #endif // #if (CONTROLLERMODE == ACCESSPOINT)
 

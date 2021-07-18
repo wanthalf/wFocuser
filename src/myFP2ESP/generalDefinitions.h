@@ -62,7 +62,7 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 
 // DISPLAY
 #define OLEDPAGETIMEMIN       2             // 2s minimum oled page display time
-#define OLEDPAGETIMEMAX       8             // 8s maximum oled page display time
+#define OLEDPAGETIMEMAX       10            // 10s maximum oled page display time
 #define OLEDPGOPTIONALL       7             // oled page enable, ALL pages "111"
 #define OLEDUPDATEONMOVE      15            // defines how many steps before refreshing position when moving if oledupdateonmove is 1
 
