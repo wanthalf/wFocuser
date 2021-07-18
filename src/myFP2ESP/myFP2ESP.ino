@@ -1,5 +1,5 @@
 // ======================================================================
-// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 229 [03-July-2021]
+// myFP2ESP myp2esp.ino FIRMWARE OFFICIAL RELEASE 230 [18-July-2021]
 // (c) Copyright Robert Brown 2014-2021. All Rights Reserved.
 // (c) Copyright Holger M, 2019-2021. All Rights Reserved.
 // (c) Copyright Pieter P - OTA code and SPIFFs file handling/upload based on examples
@@ -297,6 +297,8 @@ extern void start_management(void);
 extern void start_ascomremoteserver(void);
 extern void checkASCOMALPACADiscovery(void);
 extern void start_webserver(void);
+
+extern void cachepresets(void);
 
 // ======================================================================
 // FIRMWARE CODE START - CHANGE AT YOUR OWN PERIL
@@ -944,7 +946,7 @@ void stop_tcpipserver()
 
 void setup()
 {
-  //Serial.begin(115200);
+  Serial.begin(115200);
 
 #if (CONTROLLERMODE == LOCALSERIAL)
 #if (PROTOCOL == MOONLITE_PROTOCOL)
@@ -1385,6 +1387,8 @@ void setup()
 
   reboot = false;                                           // we have finished the reboot now
 
+  cachepresets();
+  
 #if defined(TIMESETUP)
   Setup_DebugPrint("setup(): ");
   Setup_DebugPrintln(millis());
