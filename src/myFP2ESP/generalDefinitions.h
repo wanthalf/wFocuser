@@ -23,8 +23,8 @@ enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Movi
 #define ACCESSPOINT           2
 #define STATIONMODE           3
 #define LOCALSERIAL           4
-#define OLED_TEXT             1
-#define OLED_GRAPHIC          2
+//#define OLED_TEXT             1
+//#define OLED_GRAPHIC          2
 #define MYFP2ESP_PROTOCOL     1
 #define MOONLITE_PROTOCOL     2
 
