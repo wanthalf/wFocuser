@@ -33,13 +33,13 @@
 //#define DRVBRD 	CUSTOMBRD
 // ESP32 Boards
 //#define DRVBRD 	PRO2ESP32DRV8825
-#define DRVBRD 	PRO2ESP32ULN2003
+//#define DRVBRD 	PRO2ESP32ULN2003
 //#define DRVBRD 	PRO2ESP32L298N
 //#define DRVBRD 	PRO2ESP32L293DMINI
 //#define DRVBRD 	PRO2ESP32L9110S
 //#define DRVBRD 	PRO2ESP32R3WEMOS
 //#define DRVBRD  PRO2ESP32TMC2225
-//#define DRVBRD  PRO2ESP32TMC2209
+#define DRVBRD  PRO2ESP32TMC2209
 //#define DRVBRD  PRO2ESP32TMC2209P              // this is for Paul using TMC2209 - 58.jsn
 //#define DRVBRD  PRO2ESP32ST6128                // This is board for CLOSED LOOP ST6128 driver
 //#define DRVBRD 	CUSTOMBRD
@@ -73,11 +73,11 @@
 // PRO2EL293DMINI, PRO2ESP32L293MINI, PRO2EL9110S, PRO2ESPL9110S
 // PRO2EL293DNEMA, PRO2EL293D28BYJ48
 
-#define STEPSPERREVOLUTION 		2048           // 28BYJ-48 stepper motor unipolar with ULN2003 board
+//#define STEPSPERREVOLUTION 		2048           // 28BYJ-48 stepper motor unipolar with ULN2003 board
 //#define STEPSPERREVOLUTION   200        // NEMA17 FULL STEPPED
 //#define STEPSPERREVOLUTION   400        // NEMA14HM11-0404S 0.9 motor FULL STEPPED
 //#define STEPSPERREVOLUTION 	1028        // 17HS13-0404S-PG5
-//#define STEPSPERREVOLUTION 	5370        // NEMA17HS13-0404S-PG27
+#define STEPSPERREVOLUTION 	5370        // NEMA17HS13-0404S-PG27
 //#define STEPSPERREVOLUTION 	1036        // NEMA14HS13-0804S-PG5
 //#define STEPSPERREVOLUTION 	1036        // NEMA16HS13-0604S-PG5
 
@@ -88,15 +88,15 @@
 // To enable the OLED_TEXT or OLED_GRAPHIC display uncomment the related line below. 
 
 //#define OLED_MODE 	OLED_TEXT       // OLED text only mode
-//#define OLED_MODE 	OLED_GRAPHIC    // OLED graphic mode
+#define OLED_MODE 	OLED_GRAPHIC    // OLED graphic mode
 
 // and
 // only uncomment one of the following USE_SSxxxx lines depending upon your lcd type
 // For the OLED 128x64 0.96" display using the SSD1306 driver, uncomment the following line
-#define USE_SSD1306   1
+//#define USE_SSD1306   1
 
 // For the OLED 128x64 1.3" display using the SSH1106 driver, uncomment the following line
-//#define USE_SSH1106   2
+#define USE_SSH1106   2
 
 // ======================================================================
 // 5: SPECIFY HARDWARE OPTIONS
@@ -120,10 +120,10 @@
 // The following controller modes are MUTUALLY EXCLUSIVE and cannot be combined
 
 // to work as an access point, define accesspoint - cannot use DUCKDNS
-#define CONTROLLERMODE  ACCESSPOINT
+//#define CONTROLLERMODE  ACCESSPOINT
 
 // to work as a station accessing a AP, define stationmode
-//#define CONTROLLERMODE  STATIONMODE
+#define CONTROLLERMODE  STATIONMODE
 
 // to work only via USB cable as Serial port, uncomment the next line
 //#define CONTROLLERMODE  LOCALSERIAL
@@ -135,11 +135,11 @@
 // 7: SPECIFY CONTROLLER OPTIONS
 // ======================================================================
 // To enable OTA updates, uncomment the next line [only works in STATIONMODE]
-//#define OTAUPDATES 	5
+#define OTAUPDATES 	5
 
 // mdns support [myfp2eap.local:8080]
 // to enable multicast DNS, uncomment the next line [only works in STATIONMODE]
-//#define MDNSSERVER 	8
+#define MDNSSERVER 	8
 
 // Management Server Control Interface [Port 6060] - DO NOT CHANGE
 #define MANAGEMENT 	9
@@ -175,6 +175,19 @@
 // Please refer to documentation PDF for wiring and other options
 
 // ======================================================================
+// PUSH BUTTON CONTROL
+// ======================================================================
+
+#define ADVANCED_PB_MOVEMENT
+
+#define BOLDPRESS 200
+#define LONGPRESS 900
+
+#define SHORT_STEPS 1
+#define BOLD_STEPS 9
+#define LONG_STEPS 90
+
+// ======================================================================
 // DO NOT CHANGE
 // CHECK BOARD AND HW OPTIONS
 // ======================================================================
@@ -190,7 +203,7 @@
 
 #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
 #ifndef USE_STALL_GUARD 
-#ifndef defined(USE_PHYSICAL_SWITCH)
+#ifndef USE_PHYSICAL_SWITCH
 #error // err: You must define either USE_STALL_GUARD or USE_PHYSICAL_SWITCH when using a hpsw with TMC2209 driver
 #endif // #ifndef defined(USE_PHYSICAL_SWITCH)
 #endif // #ifndef USE_STALL_GUARD 

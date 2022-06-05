@@ -433,6 +433,12 @@ void DriverBoard::init_tmc2209(void)
   mytmcstepper->TCOOLTHRS(0xFFFFF);                             // 20bit max
   mytmcstepper->hysteresis_end(0);                              // use TMC22xx Calculations sheet to get these
   mytmcstepper->hysteresis_start(0);                            // use TMC22xx Calculations sheet to get these
+  //mytmcstepper->irun(4);
+  //mytmcstepper->toff(5);
+  //mytmcstepper->pwm_autoscale(true);
+  //mytmcstepper->semin(5);
+  //mytmcstepper->semax(2);
+  //mytmcstepper->sedn(0b01);
   // StallGuard4 threshold [0... 255] level for stall detection. It compensates for
   // motor specific characteristics and controls sensitivity. A higher value gives a higher
   // sensitivity. A higher value makes StallGuard4 more sensitive and requires less torque to
@@ -440,11 +446,11 @@ void DriverBoard::init_tmc2209(void)
   // The stall output becomes active if SG_RESULT falls below this value.
   mytmcstepper->SGTHRS(mySetupData->get_stallguard());
   Board_DebugPrint("TMC2209 Status: ");
-  Board_DebugPrintln( driver.test_connection() == 0 ? "OK" : "NOT OK" );
+  //Board_DebugPrintln( driver.test_connection() == 0 ? "OK" : "NOT OK" );
   Board_DebugPrint("Motor is ");
   Board_DebugPrintln(digitalRead(mySetupData->get_brdenablepin()) ? "DISABLED" : "ENABLED");
   Board_DebugPrint("stepMode is ");
-  Board_DebugPrintln(driver.microsteps());
+  //Board_DebugPrintln(driver.microsteps());
 #endif // #if (DRVBRD == PRO2ESP32TMC2209 || DRVBRD == PRO2ESP32TMC2209P)
 }
 

@@ -35,9 +35,9 @@ class SetupData
     boolean SaveConfiguration(unsigned long, byte);
     boolean SaveBoardConfiguration(void);               // delayed save board_config.jsn if changed
     boolean SaveNow(void);
-    boolean SaveBoardConfigNow(void);                   // immediate save borad_config.jsn
+    boolean SaveBoardConfigNow(void);                   // immediate save board_config.jsn
     void    SetFocuserDefaults(void);
-    boolean CreateBoardConfigfromjson(String);          // create a board config frm a json string - used by Management Server
+    boolean CreateBoardConfigfromjson(String);          // create a board config from a json string - used by Management Server
     boolean LoadBrdConfigStart(String);                 // attempt to load a board config file [DRVBRD] immediately after a firmware reprogram
 
     //  getter data_per
@@ -154,6 +154,8 @@ class SetupData
     int get_brdfixedstepmode(void);
     int get_brdpb1pin(void);
     int get_brdpb2pin(void);
+    int get_brdpb3pin(void);
+    int get_brdpb4pin(void);
     unsigned long get_brdmsdelay(void);
     int get_brdnumber(void);
     int get_fixedstepmode(void);
@@ -178,6 +180,8 @@ class SetupData
     void set_brdfixedstepmode(int);
     void set_brdpb1pin(int);
     void set_brdpb2pin(int);
+    void set_brdpb3pin(int);
+    void set_brdpb4pin(int);
     void set_brdmsdelay(unsigned long);
     void set_brdnumber(int);
     void set_fixedstepmode(int);
@@ -281,6 +285,8 @@ class SetupData
     int    outledpin;
     int    pb1pin;
     int    pb2pin;
+    int    pb3pin;
+    int    pb4pin;
     int    irpin;
     int    boardnumber;
     int    fixedstepmode;

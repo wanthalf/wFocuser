@@ -196,6 +196,8 @@ byte SetupData::LoadConfiguration()
       this->outledpin     = doc_brd["outledpin"];
       this->pb1pin        = doc_brd["pb1pin"];
       this->pb2pin        = doc_brd["pb2pin"];
+      this->pb3pin        = doc_brd["pb3pin"];
+      this->pb4pin        = doc_brd["pb4pin"];
       this->irpin         = doc_brd["irpin"];
       this->boardnumber   = doc_brd["brdnum"];
       this->stepsperrev   = doc_brd["stepsrev"];
@@ -1133,6 +1135,8 @@ boolean SetupData::LoadBrdConfigStart(String brdfile)
       this->outledpin     = doc_brd["outledpin"];
       this->pb1pin        = doc_brd["pb1pin"];
       this->pb2pin        = doc_brd["pb2pin"];
+      this->pb3pin        = doc_brd["pb3pin"];
+      this->pb4pin        = doc_brd["pb4pin"];
       this->irpin         = doc_brd["irpin"];
       this->boardnumber   = doc_brd["brdnum"];
       // brdstepsperrev comes from STEPSPERREVOLUTION and will be different so must override the default setting in the board files
@@ -1212,7 +1216,9 @@ void SetupData::LoadDefaultBoardData()
     this->inledpin      = -1;
     this->outledpin     = -1;
     this->pb1pin        = -1;
-    this->pb1pin        = -1;
+    this->pb2pin        = -1;
+    this->pb3pin        = -1;
+    this->pb4pin        = -1;
     this->irpin         = -1;
     this->boardnumber   = myboardnumber;
     this->fixedstepmode = myfixedstepmode;
@@ -1263,6 +1269,8 @@ boolean SetupData::SaveBoardConfiguration()
     doc_brd["outledpin"]    = this->outledpin;
     doc_brd["pb1pin"]       = this->pb1pin;
     doc_brd["pb2pin"]       = this->pb2pin;
+    doc_brd["pb3pin"]       = this->pb3pin;
+    doc_brd["pb4pin"]       = this->pb4pin;
     doc_brd["irpin"]        = this->irpin;
     doc_brd["brdnum"]       = this->boardnumber;
     doc_brd["stepsrev"]     = this->stepsperrev;
@@ -1331,6 +1339,8 @@ boolean SetupData::CreateBoardConfigfromjson(String jsonstr)
     this->outledpin     = doc_brd["outledpin"];
     this->pb1pin        = doc_brd["pb1pin"];
     this->pb2pin        = doc_brd["pb2pin"];
+    this->pb3pin        = doc_brd["pb3pin"];
+    this->pb4pin        = doc_brd["pb4pin"];
     this->irpin         = doc_brd["irpin"];
     this->boardnumber   = doc_brd["brdnum"];
     // brdstepsperrev comes from STEPSPERREVOLUTION and will be different so must override the default setting in the board files
@@ -1477,6 +1487,16 @@ int SetupData::get_brdpb2pin()
   return this->pb2pin;
 }
 
+int SetupData::get_brdpb3pin()
+{
+  return this->pb3pin;
+}
+
+int SetupData::get_brdpb4pin()
+{
+  return this->pb4pin;
+}
+
 unsigned long SetupData::get_brdmsdelay()
 {
   return this->msdelay;
@@ -1577,6 +1597,17 @@ void SetupData::set_brdpb2pin(int newpin)
 {
   this->StartBoardDelayedUpdate(this->pb2pin, newpin);
 }
+
+void SetupData::set_brdpb3pin(int newpin)
+{
+  this->StartBoardDelayedUpdate(this->pb3pin, newpin);
+}
+
+void SetupData::set_brdpb4pin(int newpin)
+{
+  this->StartBoardDelayedUpdate(this->pb4pin, newpin);
+}
+
 
 void SetupData::set_brdmsdelay(unsigned long newval)
 {

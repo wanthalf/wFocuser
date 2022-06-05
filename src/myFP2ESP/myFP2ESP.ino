@@ -199,6 +199,15 @@ const char* duckdnstoken = "0a0379d5-3979-44ae-b1e2-6c371a4fe9bf";
 
 
 // ======================================================================
+// PUSH BUTTON CONTROLs
+// ======================================================================
+
+pbTimer pbUpTimer = {0, 0, 0};
+pbTimer pbDnTimer = {0, 0, 0};
+pbTimer pbSetTimer = {0, 0, 0};
+pbTimer pbModTimer = {0, 0, 0};
+
+// ======================================================================
 // FIRMWARE CODE START - INCLUDES AND LIBRARIES
 // ======================================================================
 
@@ -564,6 +573,10 @@ bool init_pushbuttons(void)
     {
       pinMode(mySetupData->get_brdpb1pin(), INPUT);
       pinMode(mySetupData->get_brdpb2pin(), INPUT);
+      if (mySetupData->get_brdpb3pin() != -1)
+        pinMode(mySetupData->get_brdpb3pin(), INPUT);
+      if (mySetupData->get_brdpb4pin() != -1)
+        pinMode(mySetupData->get_brdpb4pin(), INPUT);
       Setup_DebugPrintln("enabled");
       return true;
     }
@@ -577,6 +590,18 @@ bool init_pushbuttons(void)
     Setup_DebugPrintln("not permitted");
   }
   return false;
+}
+
+void updatePbTimer(int pbPin, pbTimer &timer) {
+  if (pbPin == -1) return;
+  timer.last  = timer.current;
+  if ( digitalRead(pbPin) == 1 ) {
+    if (timer.initial == 0) timer.initial = millis();
+    timer.current = millis() - timer.initial + 1;
+  } else {
+    timer.initial = 0;
+    timer.current = 0;
+  }
 }
 
 void update_pushbuttons(void)
@@ -593,11 +618,12 @@ void update_pushbuttons(void)
     {
       // PB are active high - pins are low by virtue of pull down resistors through J16 and J17 jumpers
       // read from the board pin number, and compare the return pin value - if 1 then button is pressed
+#ifndef ADVANCED_PB_MOVEMENT
       if ( digitalRead(mySetupData->get_brdpb1pin()) == 1 )
       {
         newpos = ftargetPosition - 1;
         newpos = (newpos < 0 ) ? 0 : newpos;
-        ftargetPosition = newpos;
+        ftargetPosition = newpos; 
         //DebugPrintln("pb1 updated");
       }
       if ( digitalRead(mySetupData->get_brdpb2pin()) == 1 )
@@ -610,6 +636,15 @@ void update_pushbuttons(void)
         ftargetPosition = newpos;
         //DebugPrintln("pb2 updated");
       }
+#else
+      updatePbTimer(mySetupData->get_brdpb3pin(), pbModTimer);
+      updatePbTimer(mySetupData->get_brdpb4pin(), pbSetTimer);
+      updatePbTimer(mySetupData->get_brdpb1pin(), pbUpTimer);
+      updatePbTimer(mySetupData->get_brdpb2pin(), pbDnTimer);
+
+      myoled->pbControl(ftargetPosition, pbModTimer, pbUpTimer, pbDnTimer, pbSetTimer);
+#endif // ADVANCED_PB_MOVEMENT
+
     }
     else
     {
@@ -620,6 +655,11 @@ void update_pushbuttons(void)
   {
     //DebugPrintln("not permitted");
   }
+}
+
+bool pbAbort()
+{
+  return (mySetupData->get_brdpb3pin()!=-1 && mySetupData->get_brdpb4pin()!=-1 && digitalRead(mySetupData->get_brdpb3pin()) && digitalRead(mySetupData->get_brdpb4pin()));
 }
 
 // ======================================================================
@@ -1410,7 +1450,6 @@ void loop()
   static uint32_t steps = 0;
 
   static connection_status ConnectionStatus = disconnected;
-  static oled_state oled = oled_on;
 
   int stepstaken = 0;
   bool hpswstate = false;
@@ -1430,6 +1469,7 @@ void loop()
       {
         DebugPrintln("tcp client connected");
         ConnectionStatus = connected;
+        myoled->setConnectionStatus(ConnectionStatus);
         // a client has connected, start oled display again
         // oled = oled_on;
       }
@@ -1452,8 +1492,9 @@ void loop()
       DebugPrintln("tcp client disconnectd");
       myclient.stop();
       ConnectionStatus = disconnected;
+      myoled->setConnectionStatus(ConnectionStatus);
       // client has disconnected, turn display off
-      oled = oled_off;
+      myoled->display_off();
     }
   }
 #endif // #if ( (CONTROLLERMODE == ACCESSPOINT) || (CONTROLLERMODE == STATIONMODE) )
@@ -1538,7 +1579,7 @@ void loop()
         if (mySetupData->SaveConfiguration(driverboard->getposition(), DirOfTravel)) // save config if needed
         {
           // we have waited 30s after move has ended so turn off display
-          oled = oled_off;
+          myoled->display_off();
           DebugPrint("Save config");
         }
 
@@ -1559,9 +1600,9 @@ void loop()
         }
         else
         {
-          oled = oled_off;
+          myoled->display_off();;
         }
-        myoled->Update_Oled(oled, ConnectionStatus);
+        myoled->Update_Oled();
 
         if ( mySetupData->get_temperatureprobestate() == 1)           // if probe is enabled
         {
@@ -1724,7 +1765,7 @@ void loop()
       else
       {
         // timer semaphore is false. still moving, we need to check for halt
-        if ( halt_alert )                                 // halt_alert set by comms.h webserver.cpp
+        if ( halt_alert || pbAbort() )                                 // halt_alert set by comms.h webserver.cpp
         {
           DebugPrintln("halt_alert");
           varENTER_CRITICAL(&halt_alertMux);
@@ -1791,7 +1832,11 @@ void loop()
             if ( updatecount > OLEDUPDATEONMOVE )        // only update every 15th move to avoid overhead
             {
               updatecount = 0;
+#if OLED_MODE == OLED_GRAPHIC
+              myoled->Update_Oled();
+#else
               myoled->update_oledtext_position();
+#endif
             }
           } // if (mySetupData->get_displayenabled() == 1)
         } // if ( get_oledupdateonmove() == 1)
@@ -1869,7 +1914,7 @@ void loop()
       // apply Delayaftermove, this MUST be done here in order to get accurate timing for DelayAfterMove
       if (TimeCheck(TimeStampDelayAfterMove , mySetupData->get_DelayAfterMove()))
       {
-        oled = oled_on;
+        myoled->display_on();
         isMoving = 0;
         TimeStampPark  = millis();                      // catch current time
         Parked = false;                                 // mark to park the motor in State_Idle

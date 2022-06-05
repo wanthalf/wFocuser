@@ -9,11 +9,16 @@
 
 #include <Arduino.h>
 
+struct pbTimer {
+  uint32_t current;
+  uint32_t last;
+  uint32_t initial;
+};
+
 // ======================================================================
 // 1: GENERAL DEFINES -- DO NOT CHANGE
 // ======================================================================
 
-enum oled_state { oled_off, oled_on };
 enum connection_status { disconnected, connected };
 //  StateMachine definition
 enum StateMachineStates { State_Idle, State_InitMove, State_Backlash, State_Moving, State_DelayAfterMove, State_FinishedMove, State_SetHomePosition };

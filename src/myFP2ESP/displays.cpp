@@ -83,10 +83,41 @@ bool CheckOledConnected(void)
 void OLED_NON::oledtextmsg(String str, int val, boolean clrscr, boolean nl) {}
 void OLED_NON::update_oledtext_position(void) {}
 void OLED_NON::update_oledtextdisplay(void) {}
-void OLED_NON::Update_Oled(const oled_state x, const connection_status y) {}
+void OLED_NON::Update_Oled(bool force) {}
 void OLED_NON::oled_draw_reboot(void) {}
-void OLED_NON::display_on(void) {}
-void OLED_NON::display_off(void) {}
+void OLED_NON::display_on(void) { current_state = oled_on; }
+void OLED_NON::display_off(void) { current_state = oled_off; }
+
+void OLED_NON::setConnectionStatus(connection_status ConnectionStatus) { this->curConnectionStatus = ConnectionStatus; }
+
+void OLED_NON::pbControl(unsigned long &ftargetPosition, pbTimer &pbModTimer, pbTimer &pbUpTimer, pbTimer &pbDnTimer, pbTimer &pbSetTimer) {
+  long newpos = -1;
+
+  if (!pbModTimer.initial) {
+      if (pbUpTimer.last < LONGPRESS && pbUpTimer.current >= LONGPRESS) newpos = ftargetPosition - LONG_STEPS;
+      else if (pbUpTimer.last < BOLDPRESS && pbUpTimer.current >= BOLDPRESS) newpos = ftargetPosition - BOLD_STEPS;
+      else if (pbUpTimer.last == 0 && pbUpTimer.current > 0) newpos = ftargetPosition - SHORT_STEPS;
+      else if (pbDnTimer.last < LONGPRESS && pbDnTimer.current >= LONGPRESS) newpos = ftargetPosition + LONG_STEPS;
+      else if (pbDnTimer.last < BOLDPRESS && pbDnTimer.current >= BOLDPRESS) newpos = ftargetPosition + BOLD_STEPS;
+      else if (pbDnTimer.last == 0 && pbDnTimer.current > 0) newpos = ftargetPosition + SHORT_STEPS;
+  } /*else {
+      if (!pbSetTimer.initial && pbSetTimer.last >= LONGPRESS) newpos = 0; // after release! otherwise the same combination stops the move
+      else if (pbUpTimer.last < LONGPRESS && pbUpTimer.current >= LONGPRESS) newpos = ftargetPosition - MODLONG_STEPS;
+      else if (pbUpTimer.last < BOLDPRESS && pbUpTimer.current >= BOLDPRESS) newpos = ftargetPosition - MODBOLD_STEPS;
+      else if (pbUpTimer.last == 0 && pbUpTimer.current > 0) newpos = ftargetPosition - MODSHORT_STEPS;
+      else if (pbDnTimer.last < LONGPRESS && pbDnTimer.current >= LONGPRESS) newpos = ftargetPosition + MODLONG_STEPS;
+      else if (pbDnTimer.last < BOLDPRESS && pbDnTimer.current >= BOLDPRESS) newpos = ftargetPosition + MODBOLD_STEPS;
+      else if (pbDnTimer.last == 0 && pbDnTimer.current > 0) newpos = ftargetPosition + MODSHORT_STEPS;
+  }*/
+
+  if (newpos != -1) {
+      newpos = (newpos < 0 ) ? 0 : newpos;
+      newpos = (newpos > (long) mySetupData->get_maxstep()) ? (long) mySetupData->get_maxstep() : newpos;
+      newTargetOffset = 0;
+      ftargetPosition = newpos;
+  }
+
+}
 
 OLED_NON::OLED_NON()  {}
 
@@ -109,28 +140,40 @@ OLED_GRAPHIC::OLED_GRAPHIC(void)
   delay(1000);
 
   myoled->flipScreenVertically();
-  myoled->setFont(ArialMT_Plain_10);
-  myoled->setTextAlignment(TEXT_ALIGN_LEFT);
   myoled->clear();
   if (mySetupData->get_showstartscreen())
   {
-    myoled->drawString(0, 0, "myFocuserPro2 v:" + String(programVersion));
-    myoled->drawString(0, 12, ProgramAuthor);
+    myoled->setTextAlignment(TEXT_ALIGN_CENTER);
+    myoled->setFont(ArialMT_Plain_24);
+    myoled->drawString(64, 14, "myFocuser");
+    myoled->setFont(ArialMT_Plain_10);
+    myoled->drawString(64, 0, mySetupData->get_brdname());
+    myoled->drawString(64, 40, "v" + String(programVersion));
+    //myoled->drawString(0, 12, ProgramAuthor);
   }
   myoled->display();
 
   timestamp = millis();
 }
 
-void OLED_GRAPHIC::Update_Oled(const oled_state oled, const connection_status ConnectionStatus)
+void OLED_GRAPHIC::Update_Oled(bool force)
 {
-  if (TimeCheck(timestamp, 750))
+  if (force || TimeCheck(timestamp, 750))
   {
     timestamp = millis();
 
-    if (oled == oled_on)
+    if (current_state == oled_on)
     {
-      oled_draw_main_update(ConnectionStatus);
+      if (page == PAGE_MAIN)
+        oled_draw_main_update();
+      else if (page == PAGE_PRESETS)
+        oled_draw_presets();
+      else if (page == PAGE_SETTINGS)
+        oled_draw_settings();
+      else if (page == PAGE_NETINFO)
+        oled_draw_netinfo();
+      else if (page == PAGE_CONFIRM)
+        oled_draw_confirm();
     }
     else
     {
@@ -175,7 +218,7 @@ void OLED_GRAPHIC::oled_draw_Wifi(int j)
 
 const char heartbeat[] = { '-', '/' , '|', '\\'};
 
-void OLED_GRAPHIC::oled_draw_main_update(const connection_status ConnectionStatus)
+void OLED_GRAPHIC::oled_draw_main_update()
 {
   char buffer[80];
 
@@ -183,26 +226,23 @@ void OLED_GRAPHIC::oled_draw_main_update(const connection_status ConnectionStatu
   myoled->setTextAlignment(TEXT_ALIGN_CENTER);
   myoled->setFont(ArialMT_Plain_24);
 
-  if (ConnectionStatus == disconnected)
-  {
-    myoled->drawString(64, 28, F("offline"));
-
-    myoled->setFont(ArialMT_Plain_10);
-    myoled->drawString(64, 0, mySetupData->get_brdname());
-    snprintf(buffer, sizeof(buffer), "IP= %s", ipStr);
-    myoled->drawString(64, 14, buffer);
-  }
-  else
-  {
-    char dir = (mySetupData->get_focuserdirection() == moving_in ) ? '<' : '>';
+  char dir = (mySetupData->get_focuserdirection() == moving_in ) ? '<' : '>';
+  if (mySetupData->get_brdstepmode() != 1) {
     snprintf(buffer, sizeof(buffer), "%lu:%i %c", driverboard->getposition(), (int)(driverboard->getposition() % mySetupData->get_brdstepmode()), dir);
-    myoled->drawString(64, 28, buffer);
+  } else {
+    snprintf(buffer, sizeof(buffer), "%lu %c", driverboard->getposition(), dir);
+  }
+  myoled->drawString(64, 28, buffer);
 
-    myoled->setFont(ArialMT_Plain_10);
-    snprintf(buffer, sizeof(buffer), "µSteps: %i MaxPos: %lu", mySetupData->get_brdstepmode(), mySetupData->get_maxstep());
-    myoled->drawString(64, 0, buffer);
-    snprintf(buffer, sizeof(buffer), "TargetPos:  %lu", ftargetPosition);
-    myoled->drawString(64, 12, buffer);
+  myoled->setFont(ArialMT_Plain_10);
+  snprintf(buffer, sizeof(buffer), "µSteps: %i MaxPos: %lu", mySetupData->get_brdstepmode(), mySetupData->get_maxstep());
+  myoled->drawString(64, 0, buffer);
+  snprintf(buffer, sizeof(buffer), "TargetPos:  %lu", ftargetPosition+newTargetOffset);
+  myoled->drawString(64, 12, buffer);
+  if (newTargetOffset) {
+    uint16_t txtlen = strlen(buffer);
+    uint16_t txtwidth = myoled->getStringWidth(buffer, txtlen)+6;
+    myoled->drawRect(64-txtwidth/2, 12, txtwidth, 13);
   }
 
   myoled->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -212,15 +252,12 @@ void OLED_GRAPHIC::oled_draw_main_update(const connection_status ConnectionStatu
     snprintf(buffer, sizeof(buffer), "TEMP: %.2f C", lasttemp);
     myoled->drawString(54, 54, buffer);
   }
-  else
-  {
-    snprintf(buffer, sizeof(buffer), "TEMP: %.2f C", 20.0);
-  }
-
+  
   snprintf(buffer, sizeof(buffer), "BL: %i", mySetupData->get_backlashsteps_out());
   myoled->drawString(0, 54, buffer);
 
-  snprintf(buffer, sizeof(buffer), "%c", heartbeat[++count_hb % 4]);
+  char conn = (curConnectionStatus == disconnected) ? ' ' : '>';
+  snprintf(buffer, sizeof(buffer), "%c%c", conn, heartbeat[++count_hb % 4]);
   myoled->drawString(8, 14, buffer);
 
   myoled->display();
@@ -235,6 +272,7 @@ void OLED_GRAPHIC::oled_draw_reboot(void)
   myoled->display();
 }
 
+/*
 void OLED_GRAPHIC::display_on(void)
 {
   // do nothing here - sort out code later
@@ -244,6 +282,403 @@ void OLED_GRAPHIC::display_off(void)
 {
   // do nothing here - sort out code later
 }
+*/
+
+void OLED_GRAPHIC::adjustValue(pbTimer &pbUpTimer, pbTimer &pbDnTimer, long &curValue, long minValue, long maxValue)
+{
+  int timespan = 100;
+  int inc = 1;
+  if ((pbUpTimer.initial && pbUpTimer.current > 4000) || (pbDnTimer.initial && pbDnTimer.current > 4000)) { timespan = 5; inc = 10; }
+  else if ((pbUpTimer.initial && pbUpTimer.current > 3000) || (pbDnTimer.initial && pbDnTimer.current > 3000)) { timespan = 10; inc = 2; }
+  else if ((pbUpTimer.initial && pbUpTimer.current > 2000) || (pbDnTimer.initial && pbDnTimer.current > 2000)) timespan = 25;
+  else if ((pbUpTimer.initial && pbUpTimer.current > 1000) || (pbDnTimer.initial && pbDnTimer.current > 1000)) timespan = 50;
+  if (pbUpTimer.initial && (pbUpTimer.current / timespan) > (pbUpTimer.last / timespan)) {
+    curValue += inc;
+    if (curValue > maxValue) curValue = maxValue;
+    Update_Oled(true);
+  }
+  if (pbDnTimer.initial && (pbDnTimer.current / timespan) > (pbDnTimer.last / timespan)) {
+    curValue -= inc;
+    if (curValue < minValue) curValue = minValue;
+    Update_Oled(true);
+  }
+}
+
+void OLED_GRAPHIC::pbControl(unsigned long &ftargetPosition, pbTimer &pbModTimer, pbTimer &pbUpTimer, pbTimer &pbDnTimer, pbTimer &pbSetTimer) {
+
+  if (pbModTimer.initial || (pbSetTimer.initial && pbSetTimer.current < LONGPRESS)) display_on(); // Up/Down treated elsewhere
+
+  if (!pbModTimer.initial) {
+    // MOD not pressed
+    // SET: move to next page
+    if (page != PAGE_CONFIRM && pbSetTimer.last > 0 && pbSetTimer.last < LONGPRESS && pbSetTimer.current == 0) {
+      if (page == PAGE_MAIN) newTargetOffset = 0;
+      if (page == PAGE_SETTINGS) {
+        newCurPosOffset = 0;
+        newBlInOffset = 0;
+        newBlOutOffset = 0;
+        newMaxPosOffset = 0;
+      }
+      if (page == PAGE_NETINFO) page = PAGE_MAIN;
+      else page = (displayPage)(page + 1);
+      // (re)set initial position value of the current preset in the presets page
+      if (page == PAGE_PRESETS) curPresetPos = mySetupData->get_focuserpreset(curPreset);
+      Update_Oled(true);
+    }
+    // SET(long press): turn display off
+    if (pbSetTimer.last < LONGPRESS && pbSetTimer.current >= LONGPRESS) {
+      display_off();
+    }
+  }
+
+  if (page == PAGE_MAIN) {
+    if (pbModTimer.initial) {
+      adjustValue(pbUpTimer, pbDnTimer, newTargetOffset, 0-ftargetPosition, mySetupData->get_maxstep()-ftargetPosition);
+      if (!pbSetTimer.initial && pbSetTimer.last >= LONGPRESS) {
+        newTargetOffset = 0 - ftargetPosition;
+        confType = CONFIRM_MGOTO;
+        page = PAGE_CONFIRM;
+        Update_Oled(true);
+      } else if (newTargetOffset != 0 && !pbSetTimer.initial && pbSetTimer.last > 0 && pbSetTimer.last < LONGPRESS) {
+        confType = CONFIRM_MGOTO;
+        page = PAGE_CONFIRM;
+        Update_Oled(true);
+      }
+    }
+    OLED_NON::pbControl(ftargetPosition, pbModTimer, pbUpTimer, pbDnTimer, pbSetTimer);
+  } else if (page == PAGE_PRESETS) {
+    // handle preset editor
+    if (!pbModTimer.initial) {
+      // MOD not pressed
+      // UP/DOWN: move to previous/next preset
+      if (pbUpTimer.current && !pbUpTimer.last) {
+        // store current setting and move to previous preset
+        if (curPresetPos != mySetupData->get_focuserpreset(curPreset)){
+          confType = CONFIRM_PSTORE;
+          page = PAGE_CONFIRM;
+        } else {
+          curPreset--;
+          if (curPreset > 9) curPreset = 9;
+          curPresetPos = mySetupData->get_focuserpreset(curPreset);
+        }
+        Update_Oled(true);
+      } else if (pbDnTimer.current && !pbDnTimer.last) {
+        // store current setting and move to next preset
+        if (curPresetPos != mySetupData->get_focuserpreset(curPreset)) {
+          confType = CONFIRM_PSTORE;
+          page = PAGE_CONFIRM;
+        } else {
+          curPreset++;
+          if (curPreset > 9) curPreset = 0;
+          curPresetPos = mySetupData->get_focuserpreset(curPreset);
+        }
+        Update_Oled(true);
+      }
+    } else {
+      // MOD pressed
+      // MOD+UP/DOWN: increase or decrease curent preset position value (on display only); accellerate with press length
+      adjustValue(pbUpTimer, pbDnTimer, curPresetPos, 0, mySetupData->get_maxstep());
+      // MOD+SET: set focuser position to preset or set preset to current focuser position
+      if (!pbSetTimer.current) {
+        // button released: we can test for press length
+        if (pbSetTimer.last >= LONGPRESS) {
+          // set current preset to current focuser position
+          curPresetPos = ftargetPosition;
+        } else if (pbSetTimer.last > 0 && pbSetTimer.last < LONGPRESS) {
+          // move focuser to current preset position (store the current value if necessary; also switch to main page)
+          if (curPresetPos != mySetupData->get_focuserpreset(curPreset)) confType = CONFIRM_PSTORE_GOTO;
+          else confType = CONFIRM_PGOTO;
+          page = PAGE_CONFIRM;
+          Update_Oled(true);
+        }
+      }
+    }
+  } else if (page == PAGE_SETTINGS) {
+    // handle settings editor
+    if (!pbModTimer.initial) {
+      // MOD not pressed
+      // UP/DOWN: move to previous/next setting
+      if (pbUpTimer.current && !pbUpTimer.last) {
+        if (curSetting == 9 && newMaxPosOffset) {
+          confType = CONFIRM_SETMAXPOS;
+          page = PAGE_CONFIRM;
+        } else if (curSetting == 4 && newCurPosOffset) {
+          confType = CONFIRM_SETCURPOS;
+          page = PAGE_CONFIRM;
+        } else if (curSetting == 7 && newBlInOffset) {
+          confType = CONFIRM_SETBLIN;
+          page = PAGE_CONFIRM;
+        } else if (curSetting == 8 && newBlOutOffset) {
+          confType = CONFIRM_SETBLOUT;
+          page = PAGE_CONFIRM;
+        } else {
+          curSetting--;
+          if (curSetting > 9) curSetting = 9;
+        }
+        Update_Oled(true);
+      } else if (pbDnTimer.current && !pbDnTimer.last) {
+        if (curSetting == 9 && newMaxPosOffset) {
+          confType = CONFIRM_SETMAXPOS;
+          page = PAGE_CONFIRM;
+        } else {
+          curSetting++;
+          if (curSetting > 9) curSetting = 0;
+        }
+        Update_Oled(true);
+      }
+    } else {
+      // MOD pressed
+      if (curSetting == 9) {
+        adjustValue(pbUpTimer, pbDnTimer, newMaxPosOffset, 0-mySetupData->get_maxstep(), 999999 - mySetupData->get_maxstep());
+      } else if (curSetting == 4) {
+        adjustValue(pbUpTimer, pbDnTimer, newCurPosOffset, 0-ftargetPosition, 999999 - ftargetPosition);
+      } else if (curSetting == 7) {
+        adjustValue(pbUpTimer, pbDnTimer, newBlInOffset, 0 - mySetupData->get_backlashsteps_in(), 999999 - mySetupData->get_backlashsteps_in());
+      } else if (curSetting == 8) {
+        adjustValue(pbUpTimer, pbDnTimer, newBlOutOffset, 0 - mySetupData->get_backlashsteps_out(), 999999 - mySetupData->get_backlashsteps_out());
+      } else if (pbUpTimer.current && !pbUpTimer.last) {
+        if (curSetting == 0) mySetupData->set_hpswitchenable(mySetupData->get_hpswitchenable() ? (byte) 0 : (byte) 1);
+        else if (curSetting == 1) mySetupData->set_temperatureprobestate(mySetupData->get_temperatureprobestate() ? (byte) 0 : (byte) 1);
+        else if (curSetting == 2) mySetupData->set_backlash_in_enabled(mySetupData->get_backlash_in_enabled() ? (byte) 0 : (byte) 1);
+        else if (curSetting == 3) mySetupData->set_backlash_out_enabled(mySetupData->get_backlash_out_enabled() ? (byte) 0 : (byte) 1);
+        else if (curSetting == 5) {
+          byte spd = mySetupData->get_motorspeed();
+          if (spd == 2) spd = 0;
+          else spd++;
+          mySetupData->set_motorspeed(spd);
+        } else if (curSetting == 6) {
+          int step = mySetupData->get_brdstepmode();
+          if (step != mySetupData->get_brdmaxstepmode()) step *= 2;
+          driverboard->setstepmode(step);
+        }
+        Update_Oled(true);
+      } else
+      if (pbDnTimer.current && !pbDnTimer.last) {
+        if (curSetting == 0) mySetupData->set_hpswitchenable(mySetupData->get_hpswitchenable() ? (byte) 0 : (byte) 1);
+        else if (curSetting == 1) mySetupData->set_temperatureprobestate(mySetupData->get_temperatureprobestate() ? (byte) 0 : (byte) 1);
+        else if (curSetting == 2) mySetupData->set_backlash_in_enabled(mySetupData->get_backlash_in_enabled() ? (byte) 0 : (byte) 1);
+        else if (curSetting == 3) mySetupData->set_backlash_out_enabled(mySetupData->get_backlash_out_enabled() ? (byte) 0 : (byte) 1);
+        else if (curSetting == 5) {
+          byte spd = mySetupData->get_motorspeed();
+          if (spd == 0) spd = 2;
+          else spd--;
+          mySetupData->set_motorspeed(spd);
+        } else if (curSetting == 6) {
+          int step = mySetupData->get_brdstepmode();
+          if (step != 1) step /= 2;
+          driverboard->setstepmode(step);
+        }
+        Update_Oled(true);
+      }
+    }
+  } else if (page == PAGE_CONFIRM) {
+    // DOWN: Cancel
+    if (pbDnTimer.current && !pbDnTimer.last) {
+      if (confType == CONFIRM_PGOTO || confType == CONFIRM_PSTORE_GOTO) {
+        curPresetPos = mySetupData->get_focuserpreset(curPreset);
+        page = PAGE_PRESETS;
+      } else if (confType == CONFIRM_MGOTO) {
+        newTargetOffset = 0;
+        page = PAGE_MAIN;
+      } else if (confType == CONFIRM_PSTORE) {
+        curPresetPos = mySetupData->get_focuserpreset(curPreset);
+        page = PAGE_PRESETS;
+      } else if (confType == CONFIRM_SETCURPOS) {
+        newCurPosOffset = 0;
+        page = PAGE_SETTINGS;
+      } else if (confType == CONFIRM_SETBLIN) {
+        newBlInOffset = 0;
+        page = PAGE_SETTINGS;
+      } else if (confType == CONFIRM_SETBLOUT) {
+        newBlOutOffset = 0;
+        page = PAGE_SETTINGS;
+      } else if (confType == CONFIRM_SETMAXPOS) {
+        newMaxPosOffset = 0;
+        page = PAGE_SETTINGS;
+      }
+      confType = CONFIRM_NONE;
+      Update_Oled(true);
+    // UP: Confirm
+    } else if (pbUpTimer.current && !pbUpTimer.last) {
+      if (confType == CONFIRM_PGOTO) {
+        ftargetPosition = curPresetPos;
+        page = PAGE_MAIN;
+      } else if (confType == CONFIRM_MGOTO) {
+        ftargetPosition = ftargetPosition + newTargetOffset;
+        newTargetOffset = 0;
+        page = PAGE_MAIN;
+      } else if (confType == CONFIRM_PSTORE_GOTO) {
+        mySetupData->set_focuserpreset(curPreset, curPresetPos);
+        confType = CONFIRM_PGOTO;
+      } else if (confType == CONFIRM_PSTORE) {
+        mySetupData->set_focuserpreset(curPreset, curPresetPos);
+        page = PAGE_PRESETS;
+      } else if (confType == CONFIRM_SETCURPOS) {
+        ftargetPosition = mySetupData->get_fposition()+newCurPosOffset;
+        mySetupData->set_fposition(ftargetPosition);
+        driverboard->setposition(ftargetPosition);
+        newCurPosOffset = 0;
+        page = PAGE_SETTINGS;
+      } else if (confType == CONFIRM_SETBLIN) {
+        mySetupData->set_backlashsteps_in(mySetupData->get_backlashsteps_in()+newBlInOffset);
+        newBlInOffset = 0;
+        page = PAGE_SETTINGS;
+      } else if (confType == CONFIRM_SETBLOUT) {
+        mySetupData->set_backlashsteps_out(mySetupData->get_backlashsteps_out()+newBlOutOffset);
+        newBlOutOffset = 0;
+        page = PAGE_SETTINGS;
+      } else if (confType == CONFIRM_SETMAXPOS) {
+        mySetupData->set_maxstep(mySetupData->get_maxstep()+newMaxPosOffset);
+        newMaxPosOffset = 0;
+        page = PAGE_SETTINGS;
+      }
+      Update_Oled(true);
+    }
+  }
+
+}
+
+void OLED_GRAPHIC::oled_highlightitem(int x, int y, bool filled) {
+  myoled->setColor(INVERSE);
+  if (filled)
+    myoled->fillRect(x, y, 63, 12);
+  else
+    myoled->drawRect(x, y, 63, 12);
+  myoled->setColor(WHITE);
+}
+
+void OLED_GRAPHIC::oled_draw_presets()
+{
+  char buffer[80];
+
+  myoled->clear();
+  myoled->setTextAlignment(TEXT_ALIGN_LEFT);
+  myoled->setFont(ArialMT_Plain_10);
+
+  for (int i = 0; i <= 9; i++)
+  {
+    int x = 0;
+    if (i > 4) x = 64;
+    int y = (i % 5) * 13;
+    unsigned long presetPos = mySetupData->get_focuserpreset(i);
+    unsigned long pos = (i == curPreset) ? curPresetPos : presetPos;
+    snprintf(buffer, sizeof(buffer), "%i: %7u", i, pos);
+    myoled->drawString(x+3, y, buffer);
+    if (i == curPreset) oled_highlightitem(x, y, (curPresetPos == presetPos));
+  }
+
+
+  myoled->display();
+}
+
+void OLED_GRAPHIC::oled_draw_settings()
+{
+  char buffer[80];
+
+  myoled->clear();
+  myoled->setTextAlignment(TEXT_ALIGN_LEFT);
+  myoled->setFont(ArialMT_Plain_10);
+
+  snprintf(buffer, sizeof(buffer), "HPSw: %s", mySetupData->get_hpswitchenable() ? " on" : "off");
+  myoled->drawString(3, 0, buffer);
+  if (curSetting == 0) oled_highlightitem(0, 0);
+
+  snprintf(buffer, sizeof(buffer), "Temp: %s", mySetupData->get_temperatureprobestate() ? " on" : "off");
+  myoled->drawString(3, 13, buffer);
+  if (curSetting == 1) oled_highlightitem(0, 13);
+
+  snprintf(buffer, sizeof(buffer), "BlIn: %s", mySetupData->get_backlash_in_enabled() ? " on" : "off");
+  myoled->drawString(3, 26, buffer);
+  if (curSetting == 2) oled_highlightitem(0, 26);
+
+  snprintf(buffer, sizeof(buffer), "BlOut: %s", mySetupData->get_backlash_out_enabled() ? " on" : "off");
+  myoled->drawString(3, 39, buffer);
+  if (curSetting == 3) oled_highlightitem(0, 39);
+
+  unsigned long cpos = ftargetPosition + newCurPosOffset;
+  snprintf(buffer, sizeof(buffer), "Pos:%s%i", (cpos > 99999) ? "" : " ", cpos);
+  myoled->drawString(3, 52, buffer);
+  if (curSetting == 4) oled_highlightitem(0, 52, (newCurPosOffset == 0));
+
+  char speed[4] = "SMF";
+  snprintf(buffer, sizeof(buffer), "Speed: %c", speed[mySetupData->get_motorspeed()]);
+  myoled->drawString(67, 0, buffer);
+  if (curSetting == 5) oled_highlightitem(64, 0);
+
+  snprintf(buffer, sizeof(buffer), "µSteps: %i", mySetupData->get_brdstepmode());
+  myoled->drawString(67, 13, buffer);
+  if (curSetting == 6) oled_highlightitem(64, 13);
+
+  unsigned long bipos = mySetupData->get_backlashsteps_in() + newBlInOffset;
+  snprintf(buffer, sizeof(buffer), "BlIn: %i", bipos);
+  myoled->drawString(67, 26, buffer);
+  if (curSetting == 7) oled_highlightitem(64, 26, (newBlInOffset == 0));
+
+  unsigned long bopos = mySetupData->get_backlashsteps_out() + newBlOutOffset;
+  snprintf(buffer, sizeof(buffer), "BlOut: %i", bopos);
+  myoled->drawString(67, 39, buffer);
+  if (curSetting == 8) oled_highlightitem(64, 39, (newBlOutOffset == 0));
+
+  unsigned long mpos = mySetupData->get_maxstep() + newMaxPosOffset;
+  snprintf(buffer, sizeof(buffer), "Max:%s%i", (mpos > 99999) ? "" : " ", mpos);
+  myoled->drawString(67, 52, buffer);
+  if (curSetting == 9) oled_highlightitem(64, 52, (newMaxPosOffset == 0));
+
+  myoled->display();
+}
+
+void OLED_GRAPHIC::oled_draw_netinfo()
+{
+  char buffer[80];
+
+  myoled->clear();
+  myoled->setTextAlignment(TEXT_ALIGN_CENTER);
+
+  myoled->setFont(ArialMT_Plain_10);
+  myoled->drawString(64, 0, "SSID: " + String(mySSID));
+  snprintf(buffer, sizeof(buffer), "IP: %s", ipStr);
+  myoled->drawString(64, 14, buffer);
+
+  snprintf(buffer, sizeof(buffer), "client: %s", (curConnectionStatus == disconnected) ? "none" : "connected");
+  myoled->drawString(64, 28, buffer);
+
+  myoled->display();
+}
+
+void OLED_GRAPHIC::oled_draw_confirm()
+{
+  char buffer[80];
+
+  myoled->clear();
+  myoled->setFont(ArialMT_Plain_16);
+  myoled->setTextAlignment(TEXT_ALIGN_CENTER);
+
+  if (confType == CONFIRM_PGOTO || confType == CONFIRM_MGOTO) {
+    unsigned long pos = (confType == CONFIRM_PGOTO) ? curPresetPos : (ftargetPosition + newTargetOffset);
+    snprintf(buffer, sizeof(buffer), "Go to %u", pos);
+  } else if (confType == CONFIRM_PSTORE_GOTO || confType == CONFIRM_PSTORE) {
+    snprintf(buffer, sizeof(buffer), "Store %u", curPresetPos);
+  } else if (confType == CONFIRM_SETMAXPOS) {
+    snprintf(buffer, sizeof(buffer), "Set to %u", mySetupData->get_maxstep() + newMaxPosOffset);
+  } else if (confType == CONFIRM_SETCURPOS) {
+    snprintf(buffer, sizeof(buffer), "Set to %u", mySetupData->get_fposition() + newCurPosOffset);
+  } else if (confType == CONFIRM_SETBLIN) {
+    snprintf(buffer, sizeof(buffer), "Set to %u", mySetupData->get_backlashsteps_in() + newBlInOffset);
+  } else if (confType == CONFIRM_SETBLOUT) {
+    snprintf(buffer, sizeof(buffer), "Set to %u", mySetupData->get_backlashsteps_out() + newBlOutOffset);
+  }
+  myoled->drawString(64, 0, buffer);
+  //myoled->drawRect(0, 0, 128, 19);
+  myoled->setColor(INVERSE);
+  myoled->drawString(64, 23, "^ Confirm ^");
+  myoled->fillRect(0, 22, 128, 19);
+  myoled->drawString(64, 45, "v Cancel v");
+  myoled->fillRect(0, 44, 128, 19);
+  myoled->setColor(WHITE);
+
+  myoled->display();
+}
+
 #endif
 
 // ======================================================================
@@ -617,7 +1052,7 @@ void OLED_TEXT::display_oledtext_page2(void)
 #endif
 }
 
-void OLED_TEXT::Update_Oled(const oled_state oled, const connection_status ConnectionStatus)
+void OLED_TEXT::Update_Oled(bool force)
 {
   // do nothing
 }

@@ -35,6 +35,29 @@
 #define SCREEN_HEIGHT         64            // OLED display height, in pixels
 #define OLED_ADDR             0x3C          // some OLED displays maybe at 0x3F, use I2Cscanner to find the correct address
 
+enum oled_state { oled_off, oled_on };
+
+typedef enum displayPage {
+  PAGE_MAIN,
+  PAGE_PRESETS,
+  PAGE_SETTINGS,
+  PAGE_NETINFO,
+  PAGE_CONFIRM
+} displayPage_t;
+
+typedef enum confirmationType {
+  CONFIRM_NONE,
+  CONFIRM_MGOTO,
+  CONFIRM_PGOTO,
+  CONFIRM_PSTORE,
+  CONFIRM_PSTORE_GOTO,
+  CONFIRM_SETFPOS,
+  CONFIRM_SETCURPOS,
+  CONFIRM_SETMAXPOS,
+  CONFIRM_SETBLIN,
+  CONFIRM_SETBLOUT
+};
+
 //__helper function
 
 extern bool CheckOledConnected(void);
@@ -52,13 +75,22 @@ class OLED_NON
     virtual void oledtextmsg(String, int, boolean, boolean);
     virtual void update_oledtext_position(void);
     virtual void update_oledtextdisplay(void);
-    virtual void Update_Oled(const oled_state, const connection_status);
+    virtual void Update_Oled(bool force=false);
     virtual void oled_draw_reboot(void);
     virtual void display_on(void);
     virtual void display_off(void);
+    
+    virtual void setConnectionStatus(connection_status ConnectionStatus);
+    virtual void pbControl(unsigned long &ftargetPosition, pbTimer &pbModTimer, pbTimer &pbUpTimer, pbTimer &pbDnTimer, pbTimer &pbSetTimer);
 
-    byte  current_status = oled_on;
+    oled_state current_state = oled_on;
     byte  linecount = 0;
+    displayPage_t page = PAGE_MAIN;
+    connection_status curConnectionStatus = disconnected;
+    long newTargetOffset = 0;
+    long newCurPosOffset = 0;
+    long newBlInOffset = 0;
+    long newBlOutOffset = 0;
 };
 
 #if (OLED_MODE == OLED_TEXT)
@@ -66,7 +98,7 @@ class OLED_TEXT : public OLED_NON
 {
   public:
     OLED_TEXT();
-    void Update_Oled(const oled_state, const connection_status);
+    void Update_Oled(bool force=false);
     void oledtextmsg(String , int , boolean , boolean);
     void update_oledtext_position(void);
     void update_oledtextdisplay(void);
@@ -87,17 +119,27 @@ class OLED_GRAPHIC : public OLED_NON
 {
   public:
     OLED_GRAPHIC();
-    void Update_Oled(const oled_state, const connection_status);
+    void Update_Oled(bool force=false);
     void oledgraphicmsg(String &, int, boolean);
     void oled_draw_Wifi(int);
     void oled_draw_reboot(void);
-    void display_on(void);
-    void display_off(void);
+    void pbControl(unsigned long &ftargetPosition, pbTimer &pbModTimer, pbTimer &pbUpTimer, pbTimer &pbDnTimer, pbTimer &pbSetTimer);
 
   private:
-    void oled_draw_main_update(const connection_status);
+    void oled_draw_main_update();
+    void oled_draw_netinfo();
+    void oled_draw_presets();
+    void oled_draw_settings();
+    void oled_draw_confirm();
+    void oled_highlightitem(int x, int y, bool filled=true);
+    void adjustValue(pbTimer &pbUpTimer, pbTimer &pbDnTimer, long &curValue, long minValue, long maxValue);
     byte count_hb = 0;      // heart beat counter
     long timestamp;
+    byte curPreset = 0;
+    long curPresetPos = 0;
+    byte curSetting = 0;
+    confirmationType confType = CONFIRM_NONE;
+    long newMaxPosOffset = 0;
 
 #ifdef USE_SSD1306
     SSD1306Wire *myoled;
