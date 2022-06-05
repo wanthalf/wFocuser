@@ -1608,7 +1608,6 @@ void SetupData::set_brdpb4pin(int newpin)
   this->StartBoardDelayedUpdate(this->pb4pin, newpin);
 }
 
-
 void SetupData::set_brdmsdelay(unsigned long newval)
 {
   this->StartBoardDelayedUpdate(this->msdelay, newval);

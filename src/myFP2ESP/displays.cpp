@@ -100,15 +100,7 @@ void OLED_NON::pbControl(unsigned long &ftargetPosition, pbTimer &pbModTimer, pb
       else if (pbDnTimer.last < LONGPRESS && pbDnTimer.current >= LONGPRESS) newpos = ftargetPosition + LONG_STEPS;
       else if (pbDnTimer.last < BOLDPRESS && pbDnTimer.current >= BOLDPRESS) newpos = ftargetPosition + BOLD_STEPS;
       else if (pbDnTimer.last == 0 && pbDnTimer.current > 0) newpos = ftargetPosition + SHORT_STEPS;
-  } /*else {
-      if (!pbSetTimer.initial && pbSetTimer.last >= LONGPRESS) newpos = 0; // after release! otherwise the same combination stops the move
-      else if (pbUpTimer.last < LONGPRESS && pbUpTimer.current >= LONGPRESS) newpos = ftargetPosition - MODLONG_STEPS;
-      else if (pbUpTimer.last < BOLDPRESS && pbUpTimer.current >= BOLDPRESS) newpos = ftargetPosition - MODBOLD_STEPS;
-      else if (pbUpTimer.last == 0 && pbUpTimer.current > 0) newpos = ftargetPosition - MODSHORT_STEPS;
-      else if (pbDnTimer.last < LONGPRESS && pbDnTimer.current >= LONGPRESS) newpos = ftargetPosition + MODLONG_STEPS;
-      else if (pbDnTimer.last < BOLDPRESS && pbDnTimer.current >= BOLDPRESS) newpos = ftargetPosition + MODBOLD_STEPS;
-      else if (pbDnTimer.last == 0 && pbDnTimer.current > 0) newpos = ftargetPosition + MODSHORT_STEPS;
-  }*/
+  }
 
   if (newpos != -1) {
       newpos = (newpos < 0 ) ? 0 : newpos;
@@ -271,18 +263,6 @@ void OLED_GRAPHIC::oled_draw_reboot(void)
   myoled->drawString(64, 28, "REBOOT"); // Print currentPosition
   myoled->display();
 }
-
-/*
-void OLED_GRAPHIC::display_on(void)
-{
-  // do nothing here - sort out code later
-}
-
-void OLED_GRAPHIC::display_off(void)
-{
-  // do nothing here - sort out code later
-}
-*/
 
 void OLED_GRAPHIC::adjustValue(pbTimer &pbUpTimer, pbTimer &pbDnTimer, long &curValue, long minValue, long maxValue)
 {
